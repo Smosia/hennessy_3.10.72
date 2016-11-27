@@ -53,17 +53,10 @@ static DEFINE_SPINLOCK(g_strobeSMPLock); /* cotta-- SMP proection */
 static struct work_struct workTimeOut;
 static int g_timeOutTimeMs=0;
 static u32 strobe_Res = 0;
-static int flash_enable2 = 0;
 /*****************************************************************************
 Functions
 *****************************************************************************/
 static void work_timeOutFunc(struct work_struct *data);
-extern int FL_Enable_led1(void);
-extern int FL_dim_duty_led1(kal_uint32 duty);
-extern int FL_Disable_led1(void);
-extern void Enable_GPIO(void);
-extern void Disable_GPIO(void);
-extern int FL_current_timeout_set(void);
 
 //extern int flashEnable_sky81296_2();
 //extern int flashDisable_sky81296_2();
@@ -74,19 +67,22 @@ extern int FL_current_timeout_set(void);
 
 static int FL_Enable(void)
 {
-    FL_Enable_led1();
+//    flashEnable_sky81296_1();
+    PK_DBG("FL_Enable-");
+
     return 0;
 }
 
 static int FL_Disable(void)
 {
-    FL_Disable_led1();
+  //  flashDisable_sky81296_1();
+
     return 0;
 }
 
 static int FL_dim_duty(kal_uint32 duty)
 {
-    FL_dim_duty_led1(duty);
+    //setDuty_sky81296_1(duty);
     return 0;
 }
 
@@ -99,17 +95,18 @@ static void lowPowerCB(LOW_BATTERY_LEVEL lev)
 
 static int FL_Init(void)
 {
-    PK_DBG(" FL_Init line=%d\n", __LINE__);
-    Enable_GPIO();
-    FL_current_timeout_set();
+    PK_DBG(" FL_Init line=%d\n",__LINE__);
+    INIT_WORK(&workTimeOut, work_timeOutFunc);
+  //  register_low_battery_callback(&lowPowerCB, LOW_BATTERY_PRIO_FLASHLIGHT);
+   // register_low_battery_notify(&lowPowerCB, LOW_BATTERY_PRIO_FLASHLIGHT);
+
+
+
     return 0;
 }
-
 static int FL_Uninit(void)
 {
 	FL_Disable();
-    flash_enable2 = 0;
-    Disable_GPIO();
     return 0;
 }
 
@@ -144,9 +141,10 @@ static int g_b1stInit=1;
 static void work_timeOutFunc(struct work_struct *data)
 {
     FL_Disable();
-    flash_enable2 = 0;
     PK_DBG("ledTimeOut_callback\n");
 }
+
+
 
 static enum hrtimer_restart ledTimeOutCallback(struct hrtimer *timer)
 {
@@ -216,7 +214,7 @@ static int constant_flashlight_ioctl(unsigned int cmd, unsigned long arg)
 
     	case FLASH_IOC_SET_ONOFF :
     		PK_DBG("FLASHLIGHT_ONOFF: %d\n",(int)arg);
-    		if(arg==1 && flash_enable2 == 0)
+    		if(arg==1)
     		{
 				if(g_timeOutTimeMs!=0)
 	            {
@@ -225,14 +223,12 @@ static int constant_flashlight_ioctl(unsigned int cmd, unsigned long arg)
 					hrtimer_start( &g_timeOutTimer, ktime, HRTIMER_MODE_REL );
 	            }
     			FL_Enable();
-                flash_enable2 = 1;
     		}
-            else if (arg == 0 && flash_enable2 == 1) 
-            {
-                FL_Disable();
-                flash_enable2 = 0;
-                hrtimer_cancel(&g_timeOutTimer);
-            }
+    		else
+    		{
+    			FL_Disable();
+				hrtimer_cancel( &g_timeOutTimer );
+    		}
     		break;
 /*
     	case FLASH_IOC_PRE_ON:
@@ -312,8 +308,8 @@ static int constant_flashlight_open(void *pArg)
 
     if(strobe_Res)
     {
-	   PK_DBG(" busy!\n");
-       i4RetValue = -EBUSY;
+	PK_DBG(" busy!\n");
+        i4RetValue = -EBUSY;
     }
     else
     {
