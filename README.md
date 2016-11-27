@@ -7,7 +7,7 @@ Works in rom(CM13)
 * Works:
 	* LCM(NT35596_TIANMA , NT35596_AUO , NT35532_BOE)
 	* Touch (ATMEL , FT5206)
-	* CW2015, bq24296
+	* CW2015
 	* Wi-fi
 	* BT
 	* GPS
@@ -36,6 +36,7 @@ Works in rom(CM13)
 	
 =========================================================================
 * Don't work:
+	* Charging (bq24296)
 	* LCM (sharp, NT35532_BOE_S)
 	* Rill(sim1 and sim2)
 	* Flashlight
