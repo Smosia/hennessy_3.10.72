@@ -5,12 +5,13 @@ Works in rom(CM13)
 
 =========================================================================
 * Works:
-	* LCM(NT35596_TIANMA , NT35596_AUO , NT35532_BOE)
+	* LCM(NT35596_TIANMA , NT35532_BOE, R63315_SHARP)
 	* Touch (ATMEL , FT5206)
 	* CW2015
 	* Wi-fi
 	* BT
 	* GPS
+	* FM
 	* Button-backlight
 	* Brightness (problems on boe screen)
 	* Leds indication
@@ -21,6 +22,7 @@ Works in rom(CM13)
 	* Battery 4000mah(stock table)
 	* Camera(s5k3m2 OV5670)
 	* Lens
+	* Sound(Speaker,Headphones)
 	* Mobicore
 	* Fixed graphics bug
 
@@ -29,15 +31,10 @@ Works in rom(CM13)
     * MAGNETOMETER             (AKM09911_NEW)
 
 =========================================================================
-* Potentially works:
-	* FM
-	* OTG
-	* Sound(Speaker,Headphones)
-	
-=========================================================================
 * Don't work:
 	* Charging (bq24296)
-	* LCM (sharp, NT35532_BOE_S)
+	* OTG
+	* LCM (NT35532_BOE_S)
 	* Rill(sim1 and sim2)
 	* Flashlight
 	* IR Blaster

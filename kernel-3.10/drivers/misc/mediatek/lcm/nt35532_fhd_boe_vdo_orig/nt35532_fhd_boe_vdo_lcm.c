@@ -1539,7 +1539,7 @@ static struct LCM_setting_table lcm_resume_setting[] = {
                     global_brightnest_level = level;
                     
                     
-                    if (level < 31){
+                    /*if (level < 31){
                         KTD3116_Boe_SendData(64 - level*2);
                     }else{
                         if (boe_first_vlue >= 31){
@@ -1550,13 +1550,15 @@ static struct LCM_setting_table lcm_resume_setting[] = {
                                 KTD3116_Boe_SendData(0);
                             }
                         }	
-                    }
+                    }*/
+                    mt_set_gpio_out(GPIO_MHL_POWER_CTRL_PIN, GPIO_OUT_ONE);
+                    MDELAY(10); //10
                 }else{
                     mt_set_gpio_out(GPIO_MHL_POWER_CTRL_PIN, GPIO_OUT_ZERO);
                     MDELAY(30); //10
                 }
                 
-                lcm_backlight_level_setting[4].para_list[0] = (unsigned char)level;
+                lcm_backlight_level_setting[3].para_list[0] = (unsigned char)level;
                 push_table(lcm_backlight_level_setting, sizeof(lcm_backlight_level_setting) / sizeof(struct LCM_setting_table), 1);  
                 boe_second_vlue = boe_first_vlue;
             }
