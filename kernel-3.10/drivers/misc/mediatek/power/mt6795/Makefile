@@ -13,7 +13,7 @@ endif
 obj-$(CONFIG_MTK_SMART_BATTERY) += battery_meter_hal.o 
 
 ifeq ($(CONFIG_MTK_BQ24296_SUPPORT),y) 
-    obj-$(CONFIG_MTK_SMART_BATTERY) += bq24296.o charging_hw_bq24296.o tbl_helper_func.o
+    obj-$(CONFIG_MTK_SMART_BATTERY) += bq24296.o charging_hw_bq24296.o
 else
 	ifeq ($(CONFIG_MTK_BQ24250_SUPPORT),y)
 	     obj-$(CONFIG_MTK_SMART_BATTERY) += bq24250.o charging_hw_bq24250.o
