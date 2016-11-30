@@ -411,19 +411,9 @@ static void lcm_setbacklight_cmdq(void* handle, unsigned int level)
                 
                 global_brightnest_level = level;
                 
-                
-                if (level < 31){
-                    KTD3116_Sharp_SendData(64 - level*2);
-                }else{
-                    if (sharp_first_vlue >= 31){
-                        if (sharp_second_vlue >= 31){
-                            mt_set_gpio_out(GPIO_MHL_POWER_CTRL_PIN, GPIO_OUT_ONE);
-                            MDELAY(10);
-                        }else{
-                            KTD3116_Sharp_SendData(0);
-                        }
-                    }	
-                }
+                mt_set_gpio_out(GPIO_MHL_POWER_CTRL_PIN, GPIO_OUT_ONE);
+                MDELAY(10); //10
+            
             }else{
                 mt_set_gpio_out(GPIO_MHL_POWER_CTRL_PIN, GPIO_OUT_ZERO);
                 MDELAY(30); //10
@@ -465,5 +455,4 @@ LCM_DRIVER r63315_fhd_sharp_phantom_lcm_drv=
     #ifndef BUILD_LK
     .set_pwm			= lcm_cabc_enable_cmdq,
     #endif
-    
 };

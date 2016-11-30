@@ -376,15 +376,7 @@ static void lcm_resume(void)
     MDELAY(3);
     mt_set_gpio_out(GPIO_LCM_RST, GPIO_OUT_ONE);
     MDELAY(22);
-        #ifdef BUILD_LK
-        push_table(lcm_initialization_setting, sizeof(lcm_initialization_setting) / sizeof(struct LCM_setting_table), 1);  
-        #else
-        if (lcm_intialized){
-            push_table(lcm_resume_setting, sizeof(lcm_resume_setting) / sizeof(struct LCM_setting_table), 1);  
-        }else{
-            push_table(lcm_initialization_setting, sizeof(lcm_initialization_setting) / sizeof(struct LCM_setting_table), 1);  
-        }
-        #endif
+    push_table(lcm_initialization_setting, sizeof(lcm_initialization_setting) / sizeof(struct LCM_setting_table), 1); 
     }
 
 
@@ -398,8 +390,6 @@ static unsigned int lcm_compare_id(void)
         unsigned int id=0;
         unsigned char buffer[2];
         unsigned int array[16];  
-        
-        
         
         mt_set_gpio_mode(GPIO_LCM_RST, GPIO_MODE_00);
         mt_set_gpio_dir(GPIO_LCM_RST, GPIO_DIR_OUT);
@@ -478,19 +468,8 @@ static void lcm_setbacklight_cmdq(void* handle, unsigned int level)
                 
                 global_brightnest_level = level;
                 
-                
-                if (level < 31){
-                    KTD3116_Tianma_SendData(64 - level*2);
-                }else{
-                    if (tianma_first_vlue >= 31){
-                        if (tianma_second_vlue >= 31){
-                            mt_set_gpio_out(GPIO_MHL_POWER_CTRL_PIN, GPIO_OUT_ONE);
-                            MDELAY(10);
-                        }else{
-                            KTD3116_Tianma_SendData(0);
-                        }
-                    }	
-                }
+                mt_set_gpio_out(GPIO_MHL_POWER_CTRL_PIN, GPIO_OUT_ONE);
+                MDELAY(10); //10
             }else{
                 mt_set_gpio_out(GPIO_MHL_POWER_CTRL_PIN, GPIO_OUT_ZERO);
                 MDELAY(30); //10
