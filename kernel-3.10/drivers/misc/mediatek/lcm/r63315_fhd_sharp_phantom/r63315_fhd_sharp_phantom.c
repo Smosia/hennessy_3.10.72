@@ -36,8 +36,6 @@ static int lcm_intialized;
 
 static LCM_UTIL_FUNCS lcm_util;
 
-static raw_spinlock_t sharp_SpinLock;
-
 static int sharp_value;
 static int sharp_first_vlue;
 static int sharp_second_vlue;
@@ -80,11 +78,9 @@ static int global_brightnest_level = 0;
  * Define
  *****************************************************************************/
 
-static const unsigned char LCD_MODULE_ID = 0x02;
 // ---------------------------------------------------------------------------
 //  Local Constants
 // ---------------------------------------------------------------------------
-#define LCM_DSI_CMD_MODE									   0
 #define FRAME_WIDTH  										   (1080)
 #define FRAME_HEIGHT 										   (1920)
 
@@ -100,7 +96,6 @@ static const unsigned char LCD_MODULE_ID = 0x02;
 #ifndef FALSE
 #define FALSE 0
 #endif
-//static unsigned int lcm_esd_test = FALSE;      ///only for ESD test
 // ---------------------------------------------------------------------------
 //  Local Variables
 // ---------------------------------------------------------------------------
@@ -111,7 +106,6 @@ struct LCM_setting_table {
     unsigned char count;
     unsigned char para_list[64];
 };
-
 
 
 static struct LCM_setting_table lcm_backlight_level_setting[] = {
@@ -129,35 +123,32 @@ static struct LCM_setting_table lcm_backlight_enable[] = {
     {REGFLAG_END_OF_TABLE, 0, {}}
 };
 
-
-
 static struct LCM_setting_table lcm_suspend_setting[] = {
-    { 0x28, 0x00, {}},
-    { REGFLAG_DELAY, 40,{}},
-    { 0x10, 0x00, {}},
-    { REGFLAG_DELAY, 100,{}},
-    { REGFLAG_END_OF_TABLE, 0x00,{}},
+    {0x28, 0x00, {}},
+    {REGFLAG_DELAY, 40,{}},
+    {0x10, 0x00, {}},
+    {REGFLAG_DELAY, 100,{}},
+    {REGFLAG_END_OF_TABLE, 0x00,{}},
     
 };
 
 static struct LCM_setting_table lcm_initialization_setting[] = {
-    { 0xb0, 0x01, {0x00}},
-    { 0xc7, 0x1e, {0x05, 0x14, 0x1e, 0x2a, 0x3b, 0x4a, 0x54, 0x62, 0x47, 0x50, 0x5d, 0x69, 0x70, 0x74, 0x77, 0x07, 0x16, 0x20, 0x2a, 0x3b, 0x4a, 0x54, 0x62, 0x47, 0x4f, 0x5a, 0x66, 0x6d, 0x70, 0x73}},
-    { 0xc8, 0x13, {0x01, 0x00, 0x00, 0xfd, 0x02, 0xfc, 0x00, 0x00, 0xff, 0x01, 0xff, 0xfc, 0x00, 0x00, 0x01, 0xf5, 0xf6, 0xfc, 0x00}},
-    { 0xd6, 0x01, {0x01}},
-    { 0xb0, 0x01, {0x03}},
-    { 0x35, 0x01, {0x00}},
-    { 0x51, 0x01, {0xff}},
-    { 0x53, 0x01, {0x24}},
-    { 0x55, 0x01, {0x00}},
-    { 0x29, 0x00, {}},
-    { REGFLAG_DELAY, 20,{}},
-    { 0x11, 0x00, {}},
-    { REGFLAG_DELAY, 120,{}},
-    { REGFLAG_END_OF_TABLE, 0x00,{}},
+    {0xb0, 0x01, {0x00}},
+    {0xc7, 0x1e, {0x05, 0x14, 0x1e, 0x2a, 0x3b, 0x4a, 0x54, 0x62, 0x47, 0x50, 0x5d, 0x69, 0x70, 0x74, 0x77, 0x07, 0x16, 0x20, 0x2a, 0x3b, 0x4a, 0x54, 0x62, 0x47, 0x4f, 0x5a, 0x66, 0x6d, 0x70, 0x73}},
+    {0xc8, 0x13, {0x01, 0x00, 0x00, 0xfd, 0x02, 0xfc, 0x00, 0x00, 0xff, 0x01, 0xff, 0xfc, 0x00, 0x00, 0x01, 0xf5, 0xf6, 0xfc, 0x00}},
+    {0xd6, 0x01, {0x01}},
+    {0xb0, 0x01, {0x03}},
+    {0x35, 0x01, {0x00}},
+    {0x51, 0x01, {0xff}},
+    {0x53, 0x01, {0x24}},
+    {0x55, 0x01, {0x00}},
+    {0x29, 0x00, {}},
+    {REGFLAG_DELAY, 20,{}},
+    {0x11, 0x00, {}},
+    {REGFLAG_DELAY, 120,{}},
+    {REGFLAG_END_OF_TABLE, 0x00,{}},
     
 };
-
 
 static void push_table(struct LCM_setting_table *table, unsigned int count, unsigned char force_update)
 {
@@ -168,7 +159,8 @@ static void push_table(struct LCM_setting_table *table, unsigned int count, unsi
         unsigned cmd;
         cmd = table[i].cmd;
         
-        switch (cmd) {
+        switch (cmd) 
+        {
             case REGFLAG_DELAY :
                 if(table[i].count <= 10)
                     MDELAY(table[i].count);
@@ -185,7 +177,17 @@ static void push_table(struct LCM_setting_table *table, unsigned int count, unsi
     }
 }
 
-
+static int get_backlight_pos(struct LCM_setting_table *table, unsigned int count)
+{
+    int i;
+    
+    for(i = count - 1; i >=0; i--)
+    {
+        if (table[i].cmd == 0x51)
+            return i;
+    }
+    return -1;
+}
 
 static void tps65132_enable(bool enable){
     int i;
@@ -193,62 +195,36 @@ static void tps65132_enable(bool enable){
     mt_set_gpio_dir(GPIO_MHL_RST_B_PIN, GPIO_DIR_OUT);
     mt_set_gpio_mode(GPIO_MHL_EINT_PIN, GPIO_MODE_00);
     mt_set_gpio_dir(GPIO_MHL_EINT_PIN, GPIO_DIR_OUT);
-    if (enable){
+    if (enable)
+    {
         mt_set_gpio_out(GPIO_MHL_EINT_PIN, GPIO_OUT_ONE);
         MDELAY(12);
         mt_set_gpio_out(GPIO_MHL_RST_B_PIN, GPIO_OUT_ONE);
         MDELAY(12);
-        for (i=0; i < 3; i++){
-            if ((tps65132_write_bytes(0, 0xF) & 0x1f)==0) break;
+        for (i=0; i < 3; i++)
+        {
+            if ((tps65132_write_bytes(0, 0xF) & 0x1f)==0) 
+                break;
             MDELAY(5);
         }
-    }else{
+    }
+    else
+    {
         mt_set_gpio_out(GPIO_MHL_RST_B_PIN, GPIO_OUT_ZERO);
         MDELAY(12);
         mt_set_gpio_out(GPIO_MHL_EINT_PIN, GPIO_OUT_ZERO);
         MDELAY(12);
     }
-    
-    
 }
-
-#ifndef BUILD_LK
-static void KTD3116_Sharp_SendData(unsigned char value){
-    int i;
-    raw_spin_lock_irq(&sharp_SpinLock);
-    mt_set_gpio_out(GPIO_MHL_POWER_CTRL_PIN, GPIO_OUT_ONE);
-    UDELAY(15);
-    for (i=7; i >= 0; i--){
-        if ((value >> i)&1){
-            mt_set_gpio_out(GPIO_MHL_POWER_CTRL_PIN, GPIO_OUT_ZERO);
-            UDELAY(10);
-            mt_set_gpio_out(GPIO_MHL_POWER_CTRL_PIN, GPIO_OUT_ONE);
-            UDELAY(30);
-        }else{
-            mt_set_gpio_out(GPIO_MHL_POWER_CTRL_PIN, GPIO_OUT_ZERO);
-            UDELAY(30);
-            mt_set_gpio_out(GPIO_MHL_POWER_CTRL_PIN, GPIO_OUT_ONE);
-            UDELAY(10);
-        }
-    }
-    mt_set_gpio_out(GPIO_MHL_POWER_CTRL_PIN, GPIO_OUT_ZERO);
-    UDELAY(15);
-    mt_set_gpio_out(GPIO_MHL_POWER_CTRL_PIN, GPIO_OUT_ONE);
-    UDELAY(350);
-    raw_spin_unlock_irq(&sharp_SpinLock);
-}
-#endif
 
 // ---------------------------------------------------------------------------
 //  LCM Driver Implementations
 // ---------------------------------------------------------------------------
 
-
 static void lcm_set_util_funcs(const LCM_UTIL_FUNCS *util)
 {
     memcpy(&lcm_util, util, sizeof(LCM_UTIL_FUNCS));
 }
-
 
 static void lcm_get_params(LCM_PARAMS *params)
 {
@@ -287,7 +263,7 @@ static void lcm_get_params(LCM_PARAMS *params)
     params->dsi.vertical_frontporch = 4;
     
 }
-// GPIO_LCM_RST = 0x6A
+
 static void lcm_init(void)
 {
     mt_set_gpio_mode(GPIO_LCM_RST, GPIO_MODE_00);
@@ -298,6 +274,7 @@ static void lcm_init(void)
     MDELAY(10);
     mt_set_gpio_out(GPIO_LCM_RST, GPIO_OUT_ONE);
     MDELAY(5);
+
     // when phone initial , config output high, enable backlight drv chip  
     push_table(lcm_initialization_setting, sizeof(lcm_initialization_setting) / sizeof(struct LCM_setting_table), 1);
 }
@@ -315,18 +292,23 @@ static void lcm_suspend(void)
 
 static void lcm_resume(void)
 {
+#ifndef BUILD_LK
+    int bpos;
+#endif 
+    
     tps65132_enable(TRUE);
     MDELAY(20);
     
-    mt_set_gpio_mode(GPIO_LCM_RST, GPIO_MODE_00);
-    mt_set_gpio_dir(GPIO_LCM_RST, GPIO_DIR_OUT);
-    mt_set_gpio_out(GPIO_LCM_RST, GPIO_OUT_ONE);
-    MDELAY(10);
-    mt_set_gpio_out(GPIO_LCM_RST, GPIO_OUT_ZERO);
-    MDELAY(10);
-    mt_set_gpio_out(GPIO_LCM_RST, GPIO_OUT_ONE);
-    MDELAY(5);
+    lcm_init();    
+    
+#ifdef BUILD_LK
+    push_table(lcm_initialization_setting, sizeof(lcm_initialization_setting) / sizeof(struct LCM_setting_table), 1); 
+#else
+    bpos = get_backlight_pos(lcm_initialization_setting, sizeof(lcm_initialization_setting) / sizeof(struct LCM_setting_table));  
+    if (bpos >= 0 )
+        lcm_initialization_setting[bpos].para_list[0] = (unsigned char)global_brightnest_level;
     push_table(lcm_initialization_setting, sizeof(lcm_initialization_setting) / sizeof(struct LCM_setting_table), 1);  
+#endif 
 }
 
 static unsigned int lcm_compare_id(void)
@@ -334,8 +316,6 @@ static unsigned int lcm_compare_id(void)
     unsigned int id=0;
     unsigned char buffer[6];
     unsigned int array[16];  
-    
-    
     
     tps65132_enable(TRUE);
     MDELAY(20);
@@ -357,18 +337,20 @@ static unsigned int lcm_compare_id(void)
     MDELAY(50);
     read_reg_v2(0xBF, buffer, 5);
     id = buffer[3] | (buffer[2] << 8);
-    #ifdef BUILD_LK
+
+#ifdef BUILD_LK
     dprintf(0, "%s, LK r63315 debug: r63315 id = 0x%08x\n", __func__, id);
-    #else
+#else
     printk("%s, kernel r63315  debug: r63315 id = 0x%08x\n", __func__, id);
-    #endif
+#endif
+
     return (id == 0x3315)?1:0;
 }
 
 
 static void lcm_setbacklight_cmdq(void* handle, unsigned int level)
 {
-    #ifdef BUILD_LK
+#ifdef BUILD_LK
     
     if ( level )
     {
@@ -391,30 +373,36 @@ static void lcm_setbacklight_cmdq(void* handle, unsigned int level)
     }
     lcm_backlight_level_setting[0].para_list[0] = (unsigned char)level;
     push_table(lcm_backlight_level_setting, sizeof(lcm_backlight_level_setting) / sizeof(struct LCM_setting_table), 1);  
-    
-    #else
+
+#else
     if (level != sharp_value)
     {
         sharp_value = level;
         sharp_first_vlue = level;
-        if (sharp_first_vlue!=0 || sharp_second_vlue !=0 ){
+        if (sharp_first_vlue!=0 || sharp_second_vlue !=0 )
+        {
             mt_set_gpio_mode(GPIO_MHL_POWER_CTRL_PIN, GPIO_MODE_00);
             mt_set_gpio_dir(GPIO_MHL_POWER_CTRL_PIN, GPIO_DIR_OUT);
             
-            if (level){	
-                if (level - 1 > 3){
+            if (level)
+            { 
+                if (level - 1 > 3)
+                {
                     if (level > 255)
                         level = 255;
-                }else{
+                }
+                else
+                {
                     level = 4;
                 }
                 
                 global_brightnest_level = level;
                 
                 mt_set_gpio_out(GPIO_MHL_POWER_CTRL_PIN, GPIO_OUT_ONE);
-                MDELAY(10); //10
-            
-            }else{
+                MDELAY(10);
+            }
+            else
+            {
                 mt_set_gpio_out(GPIO_MHL_POWER_CTRL_PIN, GPIO_OUT_ZERO);
                 MDELAY(30); //10
             }
@@ -424,23 +412,18 @@ static void lcm_setbacklight_cmdq(void* handle, unsigned int level)
             sharp_second_vlue = sharp_first_vlue;
         }
     }
-    
-    #endif
+#endif
 }
 
 #ifndef BUILD_LK
 static void lcm_cabc_enable_cmdq(unsigned int mode)
 {
-    if (mode){
+    if (mode)
         push_table(lcm_backlight_enable, sizeof(lcm_backlight_enable) / sizeof(struct LCM_setting_table), 1);  
-    }else{
+    else
         push_table(lcm_backlight_disable, sizeof(lcm_backlight_disable) / sizeof(struct LCM_setting_table), 1);  
-    }
-    
 }
 #endif
-
-
 
 LCM_DRIVER r63315_fhd_sharp_phantom_lcm_drv=
 {
@@ -455,4 +438,5 @@ LCM_DRIVER r63315_fhd_sharp_phantom_lcm_drv=
     #ifndef BUILD_LK
     .set_pwm			= lcm_cabc_enable_cmdq,
     #endif
+    
 };

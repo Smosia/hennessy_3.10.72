@@ -84,7 +84,6 @@ static const unsigned char LCD_MODULE_ID = 0x02;
 // ---------------------------------------------------------------------------
 //  Local Constants
 // ---------------------------------------------------------------------------
-#define LCM_DSI_CMD_MODE									   0
 #define FRAME_WIDTH  										   (1080)
 #define FRAME_HEIGHT 										   (1920)
 
@@ -100,7 +99,6 @@ static const unsigned char LCD_MODULE_ID = 0x02;
 #ifndef FALSE
 #define FALSE 0
 #endif
-//static unsigned int lcm_esd_test = FALSE;      ///only for ESD test
 // ---------------------------------------------------------------------------
 //  Local Variables
 // ---------------------------------------------------------------------------
@@ -111,8 +109,6 @@ struct LCM_setting_table {
     unsigned char count;
     unsigned char para_list[64];
 };
-
-
 
 static struct LCM_setting_table lcm_backlight_level_setting[] = {
     {0xFF, 1, {0x00}},
@@ -170,34 +166,6 @@ static struct LCM_setting_table lcm_initialization_setting[] = {
     {REGFLAG_END_OF_TABLE, 0,{}},
 };
 
-static struct LCM_setting_table lcm_resume_setting[] = {
-    {0xFF, 1, {0xEE}},
-    {0xFB, 1, {0x01}},
-    {0x18, 1, {0x40}},
-    {REGFLAG_DELAY, 10, {}},
-    {0x18, 1, {0x00}},
-    {REGFLAG_DELAY, 20, {}},
-    {0x7C, 1, {0x31}},
-    {0xFF, 1, {0x05}},
-    {0xFB, 1, {0x01}},
-    {0xE7, 1, {0x00}},
-    {0xFF, 1, {0x04}},
-    {0xFB, 1, {0x01}},
-    {0x08, 1, {0x06}},
-    {0xFF, 1, {0x00}},
-    {0xFB, 1, {0x01}},
-    {0xD3, 1, {0x06}},
-    {0xD4, 1, {0x04}},
-    {0x51, 1, {0x06}},
-    {0x53, 1, {0x24}},
-    {0x55, 1, {0x01}},
-    {0x11, 0, {}},
-    {REGFLAG_DELAY, 120, {}},
-    {0x29, 0, {}},
-    {REGFLAG_DELAY, 20, {}},
-    {REGFLAG_END_OF_TABLE, 0x00, {}}
-};
-
 static void push_table(struct LCM_setting_table *table, unsigned int count, unsigned char force_update)
 {
     unsigned int i;
@@ -224,64 +192,50 @@ static void push_table(struct LCM_setting_table *table, unsigned int count, unsi
     }
 }
 
+static int get_backlight_pos(struct LCM_setting_table *table, unsigned int count)
+{
+    int i;
+    
+    for(i = count - 1; i >=0; i--)
+    {
+        if (table[i].cmd == 0x51)
+            return i;
+    }
+    return -1;
+}
 
-
-static void tps65132_enable(bool enable){
+static void tps65132_enable(bool enable)
+{
     int i;
     mt_set_gpio_mode(GPIO_MHL_RST_B_PIN, GPIO_MODE_00);
     mt_set_gpio_dir(GPIO_MHL_RST_B_PIN, GPIO_DIR_OUT);
     mt_set_gpio_mode(GPIO_MHL_EINT_PIN, GPIO_MODE_00);
     mt_set_gpio_dir(GPIO_MHL_EINT_PIN, GPIO_DIR_OUT);
-    if (enable){
+    if (enable)
+    {
         mt_set_gpio_out(GPIO_MHL_EINT_PIN, GPIO_OUT_ONE);
         MDELAY(12);
         mt_set_gpio_out(GPIO_MHL_RST_B_PIN, GPIO_OUT_ONE);
         MDELAY(12);
-        for (i=0; i < 3; i++){
-            if ((tps65132_write_bytes(0, 0xF) & 0x1f)==0) break;
+        for (i=0; i < 3; i++)
+        {
+            if ((tps65132_write_bytes(0, 0xF) & 0x1f)==0) 
+                break;
             MDELAY(5);
         }
-    }else{
+    }
+    else
+    {
         mt_set_gpio_out(GPIO_MHL_RST_B_PIN, GPIO_OUT_ZERO);
         MDELAY(12);
         mt_set_gpio_out(GPIO_MHL_EINT_PIN, GPIO_OUT_ZERO);
         MDELAY(12);
     }
-    
-    
 }
-
-#ifndef BUILD_LK
-static void KTD3116_Tianma_SendData(unsigned char value){
-    int i;
-    raw_spin_lock_irq(&tianma_SpinLock);
-    mt_set_gpio_out(GPIO_MHL_POWER_CTRL_PIN, GPIO_OUT_ONE);
-    UDELAY(15);
-    for (i=7; i >= 0; i--){
-        if ((value >> i)&1){
-            mt_set_gpio_out(GPIO_MHL_POWER_CTRL_PIN, GPIO_OUT_ZERO);
-            UDELAY(10);
-            mt_set_gpio_out(GPIO_MHL_POWER_CTRL_PIN, GPIO_OUT_ONE);
-            UDELAY(30);
-        }else{
-            mt_set_gpio_out(GPIO_MHL_POWER_CTRL_PIN, GPIO_OUT_ZERO);
-            UDELAY(30);
-            mt_set_gpio_out(GPIO_MHL_POWER_CTRL_PIN, GPIO_OUT_ONE);
-            UDELAY(10);
-        }
-    }
-    mt_set_gpio_out(GPIO_MHL_POWER_CTRL_PIN, GPIO_OUT_ZERO);
-    UDELAY(15);
-    mt_set_gpio_out(GPIO_MHL_POWER_CTRL_PIN, GPIO_OUT_ONE);
-    UDELAY(350);
-    raw_spin_unlock_irq(&tianma_SpinLock);
-}
-#endif
 
 // ---------------------------------------------------------------------------
 //  LCM Driver Implementations
 // ---------------------------------------------------------------------------
-
 
 static void lcm_set_util_funcs(const LCM_UTIL_FUNCS *util)
 {
@@ -363,6 +317,9 @@ static void lcm_suspend(void)
 
 static void lcm_resume(void)
 {
+#ifndef BUILD_LK
+    int bpos;
+#endif    
     tps65132_enable(TRUE);
     mt_set_gpio_mode(GPIO_LCM_RST, GPIO_MODE_00);
     mt_set_gpio_dir(GPIO_LCM_RST, GPIO_DIR_OUT);
@@ -376,17 +333,23 @@ static void lcm_resume(void)
     MDELAY(3);
     mt_set_gpio_out(GPIO_LCM_RST, GPIO_OUT_ONE);
     MDELAY(22);
+#ifdef BUILD_LK
     push_table(lcm_initialization_setting, sizeof(lcm_initialization_setting) / sizeof(struct LCM_setting_table), 1); 
-    }
+#else
+    bpos = get_backlight_pos(lcm_initialization_setting, sizeof(lcm_initialization_setting) / sizeof(struct LCM_setting_table));  
+    if (bpos >= 0 )
+        lcm_initialization_setting[bpos].para_list[0] = (unsigned char)global_brightnest_level;
+    push_table(lcm_initialization_setting, sizeof(lcm_initialization_setting) / sizeof(struct LCM_setting_table), 1);  
+#endif
+}
 
 
 static unsigned int lcm_compare_id(void)
 {
     unsigned char LCD_ID_value = 0;
     LCD_ID_value = which_lcd_module_triple();
-    if (LCD_MODULE_ID == LCD_ID_value){
-        
-        
+    if (LCD_MODULE_ID == LCD_ID_value)
+    {    
         unsigned int id=0;
         unsigned char buffer[2];
         unsigned int array[16];  
@@ -409,22 +372,21 @@ static unsigned int lcm_compare_id(void)
         MDELAY(10);
         read_reg_v2(0xF4, buffer, 1);
         id = buffer[0]; //we only need ID
-        #ifdef BUILD_LK
+#ifdef BUILD_LK
         dprintf(0, "%s, LK nt35596 debug: nt35596 id = 0x%08x\n", __func__, id);
-        #else
+#else
         printk("%s, kernel nt35596 horse debug: nt35596 id = 0x%08x\n", __func__, id);
-        #endif
+#endif
         return (id == 0x96)?1:0;
-    }else{
-        return 0;
     }
+    else
+        return 0;
 }
 
 
 static void lcm_setbacklight_cmdq(void* handle, unsigned int level)
 {
-    #ifdef BUILD_LK
-    
+#ifdef BUILD_LK  
     if ( level )
     {
         if ( level - 1 > 3 )
@@ -446,7 +408,7 @@ static void lcm_setbacklight_cmdq(void* handle, unsigned int level)
     }
     push_table(lcm_backlight_level_setting, sizeof(lcm_backlight_level_setting) / sizeof(struct LCM_setting_table), 1);  
     
-    #else
+#else
     if (level != tianma_value)
     {
         tianma_value = level;
@@ -455,33 +417,33 @@ static void lcm_setbacklight_cmdq(void* handle, unsigned int level)
             mt_set_gpio_mode(GPIO_MHL_POWER_CTRL_PIN, GPIO_MODE_00);
             mt_set_gpio_dir(GPIO_MHL_POWER_CTRL_PIN, GPIO_DIR_OUT);
             
-            if (level){	
-                
-                
-                
-                if (level - 1 > 3){
+            if (level)
+            {	
+                if (level - 1 > 3)
+                {
                     if (level > 255)
                         level = 255;
-                }else{
-                    level = 4;
                 }
+                else
+                    level = 4;
                 
                 global_brightnest_level = level;
                 
                 mt_set_gpio_out(GPIO_MHL_POWER_CTRL_PIN, GPIO_OUT_ONE);
-                MDELAY(10); //10
-            }else{
+                MDELAY(10);
+            }
+            else
+            {
                 mt_set_gpio_out(GPIO_MHL_POWER_CTRL_PIN, GPIO_OUT_ZERO);
-                MDELAY(30); //10
+                MDELAY(30);
             }
             
             lcm_backlight_level_setting[2].para_list[0] = (unsigned char)level;
             push_table(lcm_backlight_level_setting, sizeof(lcm_backlight_level_setting) / sizeof(struct LCM_setting_table), 1);  
             tianma_second_vlue = tianma_first_vlue;
         }
-    }
-    
-    #endif
+    }    
+#endif
 }
 
 #ifndef BUILD_LK
@@ -496,8 +458,6 @@ static void lcm_cabc_enable_cmdq(unsigned int mode)
 }
 #endif
 
-
-
 LCM_DRIVER nt35596_fhd_tianma_phantom_lcm_drv=
 {
     .name           	= "nt35596_fhd_tianma_phantom",
@@ -508,8 +468,8 @@ LCM_DRIVER nt35596_fhd_tianma_phantom_lcm_drv=
     .resume         	= lcm_resume,
     .compare_id     	= lcm_compare_id,
     .set_backlight_cmdq	= lcm_setbacklight_cmdq,
-    #ifndef BUILD_LK
+#ifndef BUILD_LK
     .set_pwm			= lcm_cabc_enable_cmdq,
-    #endif
+#endif
     
 };
