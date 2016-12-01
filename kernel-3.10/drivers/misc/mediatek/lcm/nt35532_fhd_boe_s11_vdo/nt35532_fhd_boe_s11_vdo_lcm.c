@@ -36,8 +36,6 @@ static int lcm_intialized;
 
 static LCM_UTIL_FUNCS lcm_util;
 
-static raw_spinlock_t boe_SpinLock;
-
 static int boe_value;
 static int boe_first_vlue;
 static int boe_second_vlue;
@@ -868,37 +866,40 @@ static void lcm_resume(void)
 static unsigned int lcm_compare_id(void)
 {
     unsigned int id=0;
-    unsigned char buffer[6];
+    unsigned int vendor_id=0
+    unsigned char buffer[2];
     unsigned int array[16];  
-    
-    
-    
-    tps65132_enable(TRUE);
-    MDELAY();
     
     mt_set_gpio_mode(GPIO_LCM_RST, GPIO_MODE_00);
     mt_set_gpio_dir(GPIO_LCM_RST, GPIO_DIR_OUT);
     mt_set_gpio_out(GPIO_LCM_RST, GPIO_OUT_ONE);
-    MDELAY(10);
+    MDELAY(1);
     mt_set_gpio_out(GPIO_LCM_RST, GPIO_OUT_ZERO);
     MDELAY(10);
     mt_set_gpio_out(GPIO_LCM_RST, GPIO_OUT_ONE);
     MDELAY(10);
     
-    array[0] = 0x53700;// read id return two byte,version and id
+    array[0] = 0x23700;// read id return two byte,version and id
     dsi_set_cmdq(array, 1, 1);
+    array[0] = 0xFF1500;
+    dsi_set_cmdq(array, 1, 1);
+    array[0] = 0x1FB1500;
+    dsi_set_cmdq(array, 1, 1);
+    MDELAY(10);
+    read_reg_v2(0xF4, buffer, 1);
+    id = buffer[0]; 
     MDELAY(20);
-    array[0] = 0x4B02900;
-    dsi_set_cmdq(array, 1, 1);
-    MDELAY(50);
-    read_reg_v2(0xBF, buffer, 5);
-    id = buffer[3] | (buffer[2] << 8);
+    MDELAY(10);
+    read_reg_v2(0x4, buffer, 1);
+    vendor_id = buffer[0]; //we only need ID
+    MDELAY(20);
+    
     #ifdef BUILD_LK
-    dprintf(0, "%s, LK r63315 debug: r63315 id = 0x%08x\n", __func__, id);
+    dprintf(0, "%s, LK NT35532 debug: NT35532 id = 0x%08x, vendor_id = 0x%08x\n", __func__, id);
     #else
-    printk("%s, kernel r63315  debug: r63315 id = 0x%08x\n", __func__, id);
+    printk("%s, kernel NT35532 horse debug: NT35532 id = 0x%08x, vendor_id = 0x%08x\n", __func__, id);
     #endif
-    return (id == 0x3315)?1:0;
+    return (id == 0x32 && vendor_id == 0x6)?1:0;
 }
 
 
