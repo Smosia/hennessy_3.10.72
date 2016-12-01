@@ -1,28 +1,30 @@
 # Custom kernel for Xiaomi Redmi Note 3 (Hennessy)
 # Kernel version 3.10.72
 # Vendor Vanzo (ALPS-MP-M0.MP11-V1_VZ6795_LWT_M)
-Works in rom(CM13)
+
+Works in rom(CM13): http://4pda.ru/forum/index.php?showtopic=716960&view=findpost&p=55392848
 
 =========================================================================
 * Works:
-	* LCM(NT35596_TIANMA , NT35532_BOE, R63315_SHARP)
+	* LCM(NT35596_TIANMA , NT35532_BOE, NT35532_BOE_S, R63315_SHARP)
 	* Touch (ATMEL , FT5206)
-	* CW2015
+	* BQ24296 (TODO: add OTG support)
+	* CW2015 (TODO: fix battery capacity)
 	* Wi-fi
 	* BT
 	* GPS
 	* FM
 	* Button-backlight
-	* Brightness (problems on boe screen)
+	* Brightness
 	* Leds indication
 	* Alsps (LT559 and STK)
 	* Accel(BMI160_ACC LSM6DS3_ACCEL)
 	* Giro
 	* Vibrator
 	* Battery 4000mah(stock table)
-	* Camera(s5k3m2 OV5670)
+	* Camera (s5k3m2, OV5670)
 	* Lens
-	* Sound(Speaker,Headphones)
+	* Sound(Speaker, Headphones)
 	* Mobicore
 	* Fixed graphics bug
 
@@ -32,9 +34,7 @@ Works in rom(CM13)
 
 =========================================================================
 * Don't work:
-	* Charging (bq24296)
 	* OTG
-	* LCM (NT35532_BOE_S)
 	* Rill(sim1 and sim2)
 	* Flashlight
 	* IR Blaster
@@ -82,10 +82,10 @@ make -j4 -C kernel-3.10 O=$TOP/KERNEL_OBJ ROOTDIR=$TOP
 * SPI0.1:
 	* fp_spi							
 
-# Ported by
+# AUTOR:
 * Smosia
 
-# AUTORS
+# Original kernel by:
 * nofearnohappy
 * LazyC0DEr
 * Anomalchik
