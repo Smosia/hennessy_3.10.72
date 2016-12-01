@@ -38,6 +38,7 @@ Works in rom(CM13): http://4pda.ru/forum/index.php?showtopic=716960&view=findpos
 	* Rill(sim1 and sim2)
 	* Flashlight
 	* IR Blaster
+	* HALL sensor
 	* Fingerprint
     * MAGNETOMETER             (YAS537)
 
