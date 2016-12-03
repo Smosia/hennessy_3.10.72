@@ -866,7 +866,7 @@ static void lcm_resume(void)
 static unsigned int lcm_compare_id(void)
 {
     unsigned int id=0;
-    unsigned int vendor_id=0
+    unsigned int vendor_id=0;
     unsigned char buffer[2];
     unsigned int array[16];  
     
@@ -895,9 +895,9 @@ static unsigned int lcm_compare_id(void)
     MDELAY(20);
     
     #ifdef BUILD_LK
-    dprintf(0, "%s, LK NT35532 debug: NT35532 id = 0x%08x, vendor_id = 0x%08x\n", __func__, id);
+    dprintf(0, "%s, LK NT35532 debug: NT35532 id = 0x%08x, vendor_id = 0x%08x\n", __func__, id, vendor_id);
     #else
-    printk("%s, kernel NT35532 horse debug: NT35532 id = 0x%08x, vendor_id = 0x%08x\n", __func__, id);
+    printk("%s, kernel NT35532 horse debug: NT35532 id = 0x%08x, vendor_id = 0x%08x\n", __func__, id, vendor_id);
     #endif
     return (id == 0x32 && vendor_id == 0x6)?1:0;
 }
