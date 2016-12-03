@@ -6,22 +6,22 @@ Works in rom(CM13): http://4pda.ru/forum/index.php?showtopic=716960&view=findpos
 
 =========================================================================
 * Works:
-	* LCM(NT35596_TIANMA , NT35532_BOE, NT35532_BOE_S, R63315_SHARP)
+	* LCM (NT35596_TIANMA , NT35532_BOE, NT35532_BOE_S, R63315_SHARP)
 	* Touch (ATMEL , FT5206)
-	* BQ24296 (TODO: add OTG support)
-	* CW2015 (TODO: fix battery capacity)
+	* BQ24296 (TODO: add OTG support, gpio in func:ext_buck_vproc_en)
+	* CW2015 (TODO: fix battery capacity, temperature table)
 	* Wi-fi
 	* BT
 	* GPS
 	* FM
 	* Button-backlight
-	* Brightness
+	* Brightness 
 	* Leds indication
 	* Alsps (LT559 and STK)
 	* Accel(BMI160_ACC LSM6DS3_ACCEL)
 	* Giro
 	* Vibrator
-	* Battery 4000mah(stock table)
+	* Battery 4000mah (TODO: Check table)
 	* Camera (s5k3m2, OV5670)
 	* Lens
 	* Sound(Speaker, Headphones)
@@ -34,11 +34,12 @@ Works in rom(CM13): http://4pda.ru/forum/index.php?showtopic=716960&view=findpos
 
 =========================================================================
 * Don't work:
-	* OTG
-	* Rill(sim1 and sim2)
-	* Flashlight
+	* OTG (reverse mtk_enable_pmic_otg_mode in xhci-mtk-power)
+	* Rill(sim1 and sim2) (need to reverse voltage of vsim)
+	* Flashlight (flashlight_onoff: GPIO95; lm3646_probe:116,95,96, FL_init:GPIO116)
+	* Security chip: GF516M (gf516m_probe: 94,167,115,166,168,169, gf516m_debug_store:166,167,168,169,115,eint_3)
 	* IR Blaster
-	* HALL sensor
+	* HALL sensor (ah1903_probe: GPIO11)
 	* Fingerprint
     * MAGNETOMETER             (YAS537)
 
