@@ -154,6 +154,10 @@ ifeq (,$(filter $(CONFIG_MTK_PLATFORM), "mt6735"))
 obj-y	+=  flashlight/src/
 endif
 
+ifeq ($(CONFIG_MTK_FINGERPRINT),y)
+obj-y   += fingerprint/
+endif
+
 obj-$(CONFIG_MTK_SYNC)	+= sync/
 
 #rtc must compile before power, because they are both in fs_initcall, rtc need initial first for PMIC alarm call back
