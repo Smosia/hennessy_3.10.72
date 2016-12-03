@@ -556,9 +556,12 @@ int BattVoltToTemp(int dwVolt)
 	kal_int64 TRes;
 	int sBaTTMP = -100;
 
-	/* TRes_temp = ((kal_int64)RBAT_PULL_UP_R*(kal_int64)dwVolt) / (RBAT_PULL_UP_VOLT-dwVolt); */
-	/* TRes = (TRes_temp * (kal_int64)RBAT_PULL_DOWN_R)/((kal_int64)RBAT_PULL_DOWN_R - TRes_temp); */
+// Reverse from sourse kernel TODO: need to correct function
+// TRes = ((kal_int64)RBAT_PULL_UP_R*(kal_int64)dwVolt) / (RBAT_PULL_UP_VOLT-dwVolt);
 
+	/*TRes_temp = ((kal_int64)RBAT_PULL_UP_R*(kal_int64)dwVolt) / (RBAT_PULL_UP_VOLT-dwVolt);*/
+	/* TRes = (TRes_temp * (kal_int64)RBAT_PULL_DOWN_R)/((kal_int64)RBAT_PULL_DOWN_R - TRes_temp); */
+	
 	TRes_temp = (RBAT_PULL_UP_R * (kal_int64) dwVolt);
 	do_div(TRes_temp, (RBAT_PULL_UP_VOLT - dwVolt));
 
@@ -568,7 +571,7 @@ int BattVoltToTemp(int dwVolt)
 #else
 	TRes = TRes_temp;
 #endif
-
+	
 	/* convert register to temperature */
 	sBaTTMP = BattThermistorConverTemp((int)TRes);
 
