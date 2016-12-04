@@ -9,7 +9,7 @@ Works in rom(CM13): http://4pda.ru/forum/index.php?showtopic=716960&view=findpos
 	* LCM (NT35596_TIANMA , NT35532_BOE, NT35532_BOE_S, R63315_SHARP)
 	* Touch (ATMEL , FT5206)
 	* BQ24296 (TODO: add OTG support, gpio in func:ext_buck_vproc_en)
-	* CW2015 (TODO: fix battery capacity, temperature table)
+	* CW2015 (TODO: fix capacity in aida)
 	* Wi-fi
 	* BT
 	* GPS
@@ -21,7 +21,7 @@ Works in rom(CM13): http://4pda.ru/forum/index.php?showtopic=716960&view=findpos
 	* Accel(BMI160_ACC LSM6DS3_ACCEL)
 	* Giro
 	* Vibrator
-	* Battery 4000mah (TODO: Check table)
+	* Battery 4000mah
 	* Camera (s5k3m2, OV5670)
 	* Lens
 	* Sound(Speaker, Headphones)
