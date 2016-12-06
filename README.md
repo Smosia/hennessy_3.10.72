@@ -8,8 +8,8 @@ Works in rom(CM13): http://4pda.ru/forum/index.php?showtopic=716960&view=findpos
 * Works:
 	* LCM (NT35596_TIANMA , NT35532_BOE, NT35532_BOE_S, R63315_SHARP)
 	* Touch (ATMEL , FT5206)
-	* BQ24296 (TODO: add OTG support, gpio in func:ext_buck_vproc_en)
-	* CW2015 (TODO: fix capacity in aida)
+	* BQ24296
+	* CW2015
 	* Wi-fi
 	* BT
 	* GPS

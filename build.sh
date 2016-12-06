@@ -6,4 +6,4 @@ make -j4 -C kernel-3.10 O=$TOP/KERNEL_OBJ ROOTDIR=$TOP
 
 # userfriendly :)
 rm /media/psf/Home/Android/CarlivImageKitchen64/boot/boot.img-kernel
-cp /media/psf/Home/Android/kernel/hennessy_3.10.72/KERNEL_OBJ/arch/arm64/boot/Image.gz-dtb /media/psf/Home/Android/CarlivImageKitchen64/boot/boot.img-kernel
+cp /media/psf/Home/Android/kernel/3.10.72/KERNEL_OBJ/arch/arm64/boot/Image.gz-dtb /media/psf/Home/Android/CarlivImageKitchen64/boot/boot.img-kernel
