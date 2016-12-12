@@ -6,8 +6,8 @@ Works in rom(CM13): http://4pda.ru/forum/index.php?showtopic=716960&view=findpos
 
 =========================================================================
 * Works:
-	* LCM (NT35596_TIANMA , NT35532_BOE, NT35532_BOE_S, R63315_SHARP)
-	* Touch (ATMEL , FT5206)
+	* LCM (NT35596_TIANMA, NT35532_BOE, NT35532_BOE_S, R63315_SHARP)
+	* Touch (ATMEL, FT5206)
 	* BQ24296
 	* CW2015
 	* Wi-fi
@@ -25,7 +25,7 @@ Works in rom(CM13): http://4pda.ru/forum/index.php?showtopic=716960&view=findpos
 	* Camera (s5k3m2, OV5670)
 	* Lens
 	* Sound(Speaker, Headphones)
-	* Mobicore
+	* OTG
 	* Fixed graphics bug
 
 =========================================================================
@@ -34,13 +34,13 @@ Works in rom(CM13): http://4pda.ru/forum/index.php?showtopic=716960&view=findpos
 
 =========================================================================
 * Don't work:
-	* OTG (reverse mtk_enable_pmic_otg_mode in xhci-mtk-power)
 	* Rill(sim1 and sim2) (need to reverse voltage of vsim)
 	* Flashlight (flashlight_onoff: GPIO95; lm3646_probe:116,95,96, FL_init:GPIO116)
-	* Security chip: GF516M (gf516m_probe: 94,167,115,166,168,169, gf516m_debug_store:166,167,168,169,115,eint_3)
 	* IR Blaster
 	* HALL sensor (ah1903_probe: GPIO11)
-	* Fingerprint
+	* Fingerprint:
+		* GF516M (gf516m_probe: 94,167,115,166,168,169, gf516m_debug_store:166,167,168,169,115,eint_3)
+		* FPC1020
     * MAGNETOMETER             (YAS537)
 
 =================================================
