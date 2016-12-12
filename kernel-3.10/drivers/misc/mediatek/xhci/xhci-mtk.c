@@ -401,6 +401,7 @@ static void mtk_xhci_imod_set(u32 imod)
 }
 
 extern void usb20_pll_settings(bool host, bool forceOn);
+extern void bq24296_set_otg_config(kal_uint32 val);
 
 static int mtk_xhci_driver_load(void)
 {
@@ -424,7 +425,8 @@ static int mtk_xhci_driver_load(void)
 #ifdef CONFIG_MTK_OTG_PMIC_BOOST_5V
 	mtk_enable_pmic_otg_mode();
 #else
-	enableXhciAllPortPower(mtk_xhci);
+	bq24296_set_otg_config(0x1); 
+	//enableXhciAllPortPower(mtk_xhci);
 #endif
 #endif
 	/* USB PLL Force settings */
@@ -449,7 +451,8 @@ static void mtk_xhci_disPortPower(void)
 	#ifdef CONFIG_MTK_OTG_PMIC_BOOST_5V
 	mtk_disable_pmic_otg_mode();
 	#else
-	disableXhciAllPortPower(mtk_xhci);
+	bq24296_set_otg_config(0x1); 
+	//disableXhciAllPortPower(mtk_xhci);
 	#endif
 #endif
 }
