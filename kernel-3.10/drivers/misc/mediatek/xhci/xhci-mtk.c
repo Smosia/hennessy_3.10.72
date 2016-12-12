@@ -451,7 +451,7 @@ static void mtk_xhci_disPortPower(void)
 	#ifdef CONFIG_MTK_OTG_PMIC_BOOST_5V
 	mtk_disable_pmic_otg_mode();
 	#else
-	bq24296_set_otg_config(0x1); 
+	bq24296_set_otg_config(0x0); 
 	//disableXhciAllPortPower(mtk_xhci);
 	#endif
 #endif
