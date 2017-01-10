@@ -34,7 +34,7 @@ Works in rom(CM13): http://4pda.ru/forum/index.php?showtopic=716960&view=findpos
 
 =========================================================================
 * Don't work:
-	* Rill(sim1 and sim2) (need to reverse voltage of vsim)
+	* Rill(sim1 and sim2) (need to build modem from sources) 
 	* Flashlight (flashlight_onoff: GPIO95; lm3646_probe:116,95,96, FL_init:GPIO116)
 	* IR Blaster
 	* HALL sensor (ah1903_probe: GPIO11)
@@ -43,7 +43,11 @@ Works in rom(CM13): http://4pda.ru/forum/index.php?showtopic=716960&view=findpos
 		* FPC1020
     * MAGNETOMETER             (YAS537)
 
-=================================================
+=========================================================================
+* TODO:
+	* battery_meter.c: correct current mesurements in amperka apk
+
+=========================================================================
 # BUILD
 export TOP=$(pwd)
 export CROSS_COMPILE=/home/smosia/Android/utility/aarch64-linux-android-4.9-linaro-master/bin/aarch64-linux-android-

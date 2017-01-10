@@ -1,3 +1,4 @@
 KERNEL_OBJ/
 *.DS_Store
 logs/
+*.log
