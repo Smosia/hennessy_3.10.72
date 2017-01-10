@@ -2471,9 +2471,12 @@ int mtkfb_ipo_init(void)
 	return 0;
 }
 
+extern void bq24296_set_otg_config(kal_uint32 val);
+
 static void mtkfb_shutdown(struct device *pdev)
 {
 	MTKFB_LOG("[FB Driver] mtkfb_shutdown()\n");
+	bq24296_set_otg_config(0x0);
 	/* mt65xx_leds_brightness_set(MT65XX_LED_TYPE_LCD, LED_OFF); */
 	if (!lcd_fps)
 		msleep(30);

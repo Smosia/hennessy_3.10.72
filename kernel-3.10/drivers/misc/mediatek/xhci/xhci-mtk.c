@@ -91,6 +91,7 @@ enum idpin_state {
 static int mtk_idpin_irqnum;
 static enum idpin_state mtk_idpin_cur_stat = IDPIN_OUT;
 static struct switch_dev mtk_otg_state;
+static int vbus_on;
 
 static struct delayed_work mtk_xhci_delaywork;
 
@@ -164,13 +165,25 @@ static void pmic_restore_regs(void){
 	}
 }
 
+extern void bq24296_set_otg_config(kal_uint32 val);
+
 static void mtk_enable_pmic_otg_mode(void)
 {
-	int val;
+	int val = 0;
+	int cnt = 0;
 
+#if 0
 	mt_set_gpio_mode(GPIO_OTG_DRVVBUS_PIN, GPIO_MODE_GPIO);
 	mt_set_gpio_pull_select(GPIO_OTG_DRVVBUS_PIN, GPIO_PULL_DOWN);
 	mt_set_gpio_pull_enable(GPIO_OTG_DRVVBUS_PIN, GPIO_PULL_ENABLE);
+#endif
+
+	vbus_on++;
+	mtk_xhci_mtk_log("set pmic power on, %d\n", vbus_on);
+	if (vbus_on > 1)
+		return;
+
+	bq24296_set_otg_config(0x1);
 
 	/* save PMIC related registers */
 	pmic_save_regs();
@@ -211,19 +224,33 @@ static void mtk_enable_pmic_otg_mode(void)
 	mdelay(50);
 
 	val = 0;
-	while (val == 0) {
+	while (val == 0 && cnt < 20) {
 		pmic_read_interface(0x8060, &val, 0x1, 14);
+		cnt++;
+		mdelay(2);
 	}
 
 	#ifdef CONFIG_MTK_OTG_OC_DETECTOR
 	schedule_delayed_work_on(0, &mtk_xhci_oc_delaywork, msecs_to_jiffies(OC_DETECTOR_TIMER));
 	#endif
-	mtk_xhci_mtk_log("set pmic power on, done\n");
+	mtk_xhci_mtk_log("set pmic power on(cnt:%d), done\n", cnt);
 }
 
 static void mtk_disable_pmic_otg_mode(void)
 {
-	int val;
+	int val = 0;
+	int cnt = 0;
+
+	vbus_on--;
+	mtk_xhci_mtk_log("set pmic power off %d\n", vbus_on);
+
+	if (vbus_on < 0 || vbus_on > 0) {
+		if (vbus_on < 0)
+			vbus_on = 0;
+		return;
+	}
+
+	bq24296_set_otg_config(0x0);
 
 	pmic_config_interface(0x8068, 0x0, 0x1, 0);
 	pmic_config_interface(0x8084, 0x0, 0x1, 0);
@@ -231,8 +258,10 @@ static void mtk_disable_pmic_otg_mode(void)
 	pmic_config_interface(0x8068, 0x0, 0x1, 1);
 
 	val = 1;
-	while (val == 1) {
+	while (val == 1 && cnt < 20) {
 		pmic_read_interface(0x805E, &val, 0x1, 4);
+		cnt++;
+		mdelay(2);
 	}
 
 	#if 0
@@ -401,7 +430,7 @@ static void mtk_xhci_imod_set(u32 imod)
 }
 
 extern void usb20_pll_settings(bool host, bool forceOn);
-extern void bq24296_set_otg_config(kal_uint32 val);
+
 
 static int mtk_xhci_driver_load(void)
 {
@@ -425,8 +454,7 @@ static int mtk_xhci_driver_load(void)
 #ifdef CONFIG_MTK_OTG_PMIC_BOOST_5V
 	mtk_enable_pmic_otg_mode();
 #else
-	bq24296_set_otg_config(0x1); 
-	//enableXhciAllPortPower(mtk_xhci);
+	enableXhciAllPortPower(mtk_xhci);
 #endif
 #endif
 	/* USB PLL Force settings */
@@ -451,8 +479,7 @@ static void mtk_xhci_disPortPower(void)
 	#ifdef CONFIG_MTK_OTG_PMIC_BOOST_5V
 	mtk_disable_pmic_otg_mode();
 	#else
-	bq24296_set_otg_config(0x0); 
-	//disableXhciAllPortPower(mtk_xhci);
+	disableXhciAllPortPower(mtk_xhci);
 	#endif
 #endif
 }
@@ -637,7 +664,7 @@ void mtk_set_host_mode_out(void)
 
 bool mtk_is_host_mode(void)
 {
-	return (mtk_idpin_cur_stat == IDPIN_IN_HOST) ? true : false;
+	return (vbus_on > 0 || mtk_idpin_cur_stat == IDPIN_IN_HOST) ? true : false;
 }
 
 #endif

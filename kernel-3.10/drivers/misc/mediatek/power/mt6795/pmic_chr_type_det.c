@@ -121,7 +121,7 @@ static U32 hw_bc12_DCD(void)
     else                                            mt6332_upmu_set_rg_bc12_cmp_en(0x2);
 
     //msleep(20);
-    msleep(80);
+    msleep(200);
 
     wChargerAvail = mt6332_upmu_get_rgs_bc12_cmp_out();
 

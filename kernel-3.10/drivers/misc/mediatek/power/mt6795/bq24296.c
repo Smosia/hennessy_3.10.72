@@ -191,10 +191,9 @@ kal_uint32 bq24296_config_interface (kal_uint8 RegNum, kal_uint8 val, kal_uint8 
     ret = bq24296_write_byte(RegNum, bq24296_reg);
     pr_info("[bq24296_config_interface] write Reg[%x]=0x%x\n", RegNum, bq24296_reg);
 
-    //smosia todo: reset bit clear
     // Check
-    bq24296_read_byte(RegNum, &bq24296_reg);
-    pr_info("[bq24296_config_interface] Check Reg[%x]=0x%x\n", RegNum, bq24296_reg);
+    // bq24296_read_byte(RegNum, &bq24296_reg);
+    // pr_info("[bq24296_config_interface] Check Reg[%x]=0x%x\n", RegNum, bq24296_reg);
 
     return ret;
 }
@@ -622,14 +621,11 @@ void bq24296_dump_register(void)
 
 static int bq24296_driver_probe(struct i2c_client *client, const struct i2c_device_id *id) 
 {             
-    int err=0; 
-
     pr_notice("[bq24296_driver_probe] \n");
 
-    if (!(new_client = kmalloc(sizeof(struct i2c_client), GFP_KERNEL))) {
-        err = -ENOMEM;
-        goto exit;
-    }    
+    if (!(new_client = kmalloc(sizeof(struct i2c_client), GFP_KERNEL))) 
+        return -ENOMEM;
+  
     memset(new_client, 0, sizeof(struct i2c_client));
 
     new_client = client;    
@@ -640,9 +636,6 @@ static int bq24296_driver_probe(struct i2c_client *client, const struct i2c_devi
     chargin_hw_init_done = KAL_TRUE;
 
     return 0;                                                                                       
-
-exit:
-    return err;
 
 }
 
@@ -718,24 +711,26 @@ static int __init bq24296_subsys_init(void)
     
     pr_notice("[bq24296_init] init start. ch=%d\n", bq24296_BUSNUM);
 
+    i2c_register_board_info(bq24296_BUSNUM, &i2c_bq24296, 1);
+
     if(i2c_add_driver(&bq24296_driver)!=0)
     {
-        pr_notice("[bq24261_init] failed to register bq24261 i2c driver.\n");
+        battery_log(BAT_LOG_CRTI, "[bq24296_init] failed to register bq24296 i2c driver.\n");
     }
     else
     {
-        pr_notice("[bq24261_init] Success to register bq24261 i2c driver.\n");
+        battery_log(BAT_LOG_CRTI, "[bq24296_init] Success to register bq24296 i2c driver.\n");
     }
 
     // bq24296 user space access interface
     ret = platform_device_register(&bq24296_user_space_device);
     if (ret) {
-        pr_notice("****[bq24296_init] Unable to device register(%d)\n", ret);
+        battery_log(BAT_LOG_CRTI, "****[bq24296_init] Unable to device register(%d)\n", ret);
         return ret;
     }
     ret = platform_driver_register(&bq24296_user_space_driver);
     if (ret) {
-        pr_notice("****[bq24296_init] Unable to register driver (%d)\n", ret);
+        battery_log(BAT_LOG_CRTI, "****[bq24296_init] Unable to register driver (%d)\n", ret);
         return ret;
     }
     
