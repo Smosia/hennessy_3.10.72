@@ -1,0 +1,84 @@
+//https://github.com/naota/linusoku/blob/9f7e00b6e7c3ab0c9b26be83a7672619988230a2/articles2/1338693
+//https://github.com/SanniZ/spi_pxa2xxx_driver/blob/da01045278a001a00e93ddc86f83c6791176cefd/drivers/media/i2c/lm3643.c
+//https://github.com/ztemt/NX541J_L_kernel/blob/5f202974622837b056def7a974edc631e348d41a/drivers/misc/mediatek/flashlight/src/mt6755/strobe_main_sid1_part2.c
+//https://github.com/ztemt/NX541J_L_kernel/blob/5f202974622837b056def7a974edc631e348d41a/drivers/misc/mediatek/flashlight/src/mt6755/constant_flashlight/leds_strobe.c
+// тут remove exit https://github.com/Grace5921/linux_kernel_patch/blob/b0917ecdf8cbfad6024e95da70c61efc837c6ba6/7213-leds-Add-LED-driver-for-lm3556-chip.patch
+https://github.com/FeyoMx/android_kernel_lenovo_A7010a48/blob/0be4b68ac9ee32a6ee0094e4f72451de4c82c591/drivers/misc/mediatek/flashlight/src/mt6735/constant_flashlight/leds_strobe.c
+
+
+flashlight
+sub_strobe.c - описываает работу предней вспышки (поднятие яркости экрана)
+
+kd_flashlight - модуль отвечающий за интерфейс между вспышкой и системой
+
+sensorDev - хранит номер камеры
+  * e_CAMERA_SUB_SENSOR - передняя камера
+  * e_CAMERA_MAIN_SENSOR - задняя камера
+
+strobeId - номер вспышки?
+
+strobe_main_sid2_part1.c:
+strobe_Res 				0xFFFFFFC000FFA508 = 0xFFFFFFC000FFA4C0 + #0x48
+g_strobeSMPLock			0xFFFFFFC000FFA510 = 0xFFFFFFC000FFA4C0 + #0x50
+g_b1stInit				0xFFFFFFC000E90498 = 0xFFFFFFC000E90480 + #0x18
+g_timeOutTimeMs			0xFFFFFFC000FFA4C0
+
+lm3644.c:
+g_timeOutTimeMs - 		0xFFFFFFC000FFA558
+workTimeOut				0xFFFFFFC000FFA538
+?bbb					0xFFFFFFC000FFA540
+strobe_Res - 			0xFFFFFFC000FFA5a4 = 0xFFFFFFC000FFA538 + #0x6c
+strobe_Timeus			0xFFFFFFC000FFA5b0 = 0xFFFFFFC000FFA538 + #0x78
+g_strobe_On				0xFFFFFFC000FFA5b4 = 0xFFFFFFC000FFA538 + #0x7c
+g_strobeSMPLock			0xFFFFFFC000FFA5a8 = 0xFFFFFFC000FFA538 + #0x70
+LED1Closeflag_flash2	0xFFFFFFC000FFA5a0 = 0xFFFFFFC000FFA538 + #0x68
+LED2Closeflag_flash2	0xFFFFFFC000FFA5c0 = 0xFFFFFFC000FFA538 + #0x88
+m_duty2_flash2			0xFFFFFFC000FFA5c4 = 0xFFFFFFC000FFA538 + #0x8c
+m_duty1_flash2			0xFFFFFFC000FFA55c = 0xFFFFFFC000FFA538 + #0x24
+isMovieMode				0xFFFFFFC000A66070
+isKTDchip				0xFFFFFFC0011E74C8
+??abc					0xFFFFFFC000FFA5c8 = 0xFFFFFFC000FFA538 + #0x90
+
+??name1					0xFFFFFFC0011E6820 = 0xFFFFFFC0011E6780 + #0xA0
+
+
+в мтк  leds_drv.c
+current_level 			0xFFFFFFC0011E6788 = 0xFFFFFFC0011E6780 + #0x8
+
+cl
+need to revers:
+flashlight_onoff()
+flashlight_clear_brightness(); хз что это
+lm3643_mode_show() - девайс показывающий статус 
+
+mt65xx_leds***
+cust_leds.c - добавить flashlight
+fm_dim_duty - нет вызовов
+setDuty_LM3643_1 - никто не вызывает
+
+constant_open без цифр - это mainsid2part1
+
+A65E70 + E70 = 0xA66CE0 - start_adr_case
+
+
+/*torch
+n  0  1  2  3   4   5  
+i  25 50 75 100 125 150 
+i  26 53 94 115 150 178
+n  18 36 66 82  106 127  
+*/
+
+/*flash
+0   1   2   3   4   5   6   7   8
+150 300 400 500 600 700 800 900 1000  
+
+12	25	34	42	50	60  68  76	86
+151 304 409 503 598 714 808 902 1019
+
+18	38  50  64  76  90   102  114  127
+221 456 597 761 902 1066 1200 1347 1500
+*/
+
+
+int fl_torchInd6332[39]={ 0, 1, 2, 3, 4, 5,0,1,2,3,4,-1,0,1,2,-1,4,5,2,-1,4,5,2,-1,4,5,2,-1,4,5,2,-1,5,-1,5,-1,5,3,5,};
+int fl_flashInd6332[39]={-1,-1,-1,-1,-1,-1,0,0,0,0,0, 1,1,1,1,2,1,1,2,3,2,2,3,4,3,3,4,5,4,4,5,6,5,7,6,8,7,8,8};
