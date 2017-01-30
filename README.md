@@ -26,6 +26,7 @@ Works in rom(CM13): http://4pda.ru/forum/index.php?showtopic=716960&view=findpos
 	* Lens
 	* Sound(Speaker, Headphones)
 	* OTG
+	* Flashlight
 	* Fixed graphics bug
 
 =========================================================================
@@ -35,7 +36,6 @@ Works in rom(CM13): http://4pda.ru/forum/index.php?showtopic=716960&view=findpos
 =========================================================================
 * Don't work:
 	* Rill(sim1 and sim2) (need to build modem from sources) 
-	* Flashlight (flashlight_onoff: GPIO95; lm3646_probe:116,95,96, FL_init:GPIO116)
 	* IR Blaster
 	* HALL sensor (ah1903_probe: GPIO11)
 	* Fingerprint:
