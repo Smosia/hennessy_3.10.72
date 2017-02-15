@@ -320,12 +320,11 @@
 		};
 
 		eintc: EINTC@0x1000B000 {
-                 		compatible = "mediatek,EINTC";
-                        //compatible = "mtk,mt-eic";
+                 		compatible = "mtk,mt-eic";
                         reg = <0x1000B000 0x1000>;
                         interrupts = <0 153 0x4>;
-			max_deint_cnt = <4>;
-                        deint_possible_irq = <189 190 191 192>;
+						max_deint_cnt = <4>;
+                        deint_possible_irq = <189 190 191 192 0 0 0 0>;
 
                         #interrupt-cells = <2>;
                         interrupt-controller;
@@ -529,7 +528,7 @@
 			reg = <0x10211000 0x1000>;
 		};
 
-		gce@10212000 {
+		gce@0x10212000 {
 			compatible = "mediatek,gce";
 			reg = <0x10212000 0x1000>;
 			interrupts = <0 143 0x8>,
@@ -1100,61 +1099,61 @@
 			interrupts = <0 203 0x8>;
 		};
 
-		mdp_rdma0@14001000 {
+		mdp_rdma0@0x14001000 {
 			compatible = "mediatek,mdp_rdma0";
 			reg = <0x14001000 0x1000>;
 			interrupts = <0 178 0x8>;
 		};
 
-		mdp_rdma1@14002000 {
+		mdp_rdma1@0x14002000 {
 			compatible = "mediatek,mdp_rdma1";
 			reg = <0x14002000 0x1000>;
 			interrupts = <0 179 0x8>;
 		};
 
-		mdp_rsz0@14003000 {
+		mdp_rsz0@0x14003000 {
 			compatible = "mediatek,mdp_rsz0";
 			reg = <0x14003000 0x1000>;
 			interrupts = <0 180 0x8>;
 		};
 
-		mdp_rsz1@14004000 {
+		mdp_rsz1@0x14004000 {
 			compatible = "mediatek,mdp_rsz1";
 			reg = <0x14004000 0x1000>;
 			interrupts = <0 181 0x8>;
 		};
 
-		mdp_rsz2@14005000 {
+		mdp_rsz2@0x14005000 {
 			compatible = "mediatek,mdp_rsz2";
 			reg = <0x14005000 0x1000>;
 			interrupts = <0 182 0x8>;
 		};
 
-		mdp_wdma@14006000 {
+		mdp_wdma@0x14006000 {
 			compatible = "mediatek,mdp_wdma";
 			reg = <0x14006000 0x1000>;
 			interrupts = <0 185 0x8>;
 		};
 
-		mdp_wrot0@14007000 {
+		mdp_wrot0@0x14007000 {
 			compatible = "mediatek,mdp_wrot0";
 			reg = <0x14007000 0x1000>;
 			interrupts = <0 186 0x8>;
 		};
 
-		mdp_wrot1@14008000 {
+		mdp_wrot1@0x14008000 {
 			compatible = "mediatek,mdp_wrot1";
 			reg = <0x14008000 0x1000>;
 			interrupts = <0 187 0x8>;
 		};
 
-		mdp_tdshp0@14009000 {
+		mdp_tdshp0@0x14009000 {
 			compatible = "mediatek,mdp_tdshp0";
 			reg = <0x14009000 0x1000>;
 			interrupts = <0 183 0x8>;
 		};
 
-		mdp_tdshp1@1400A000 {
+		mdp_tdshp1@0x1400A000 {
 			compatible = "mediatek,mdp_tdshp1";
 			reg = <0x1400A000 0x1000>;
 			interrupts = <0 184 0x8>;
@@ -1609,7 +1608,7 @@
 
 	MOBICORE {
 		compatible = "trustonic,mobicore";
-		interrupts = <0 0x118 0x1>;
+		interrupts = <0 280 0x1>;
 		//interrupts = <0 248 0x1>;
 	};
 

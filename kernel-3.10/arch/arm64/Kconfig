@@ -280,6 +280,7 @@ config ARCH_MT6795
 	select MTK_CPU_STRESS
 	select MTK_SYSTRACKER
 	select MTK_LASTPC
+	select MTK_EIC
 	select MTK_ETM
 	select ARMV7_COMPAT
         select ARMV7_COMPAT_CPUINFO

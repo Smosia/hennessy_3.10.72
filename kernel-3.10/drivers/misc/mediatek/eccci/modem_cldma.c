@@ -1103,10 +1103,8 @@ static void cldma_rx_queue_init(struct md_cd_queue *queue)
 {
 	struct ccci_modem *md = queue->modem;
 
-	pr_debug("Smosia: dump begin");
 	cldma_queue_switch_ring(queue);
 
-	pr_debug("Smosia: dump end");
 	/*
 	 * we hope work item of different CLDMA queue can work concurrently, but work items of the same
 	 * CLDMA queue must be work sequentially as wo didn't implement any lock in rx_done or tx_done.
