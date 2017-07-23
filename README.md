@@ -6,9 +6,10 @@ Works in rom(CM13): http://4pda.ru/forum/index.php?showtopic=716960&view=findpos
 
 =========================================================================
 * Works:
+	* Rill
 	* LCM (NT35596_TIANMA, NT35532_BOE, NT35532_BOE_S, R63315_SHARP)
 	* Touch (ATMEL, FT5206)
-	* BQ24296
+	* BQ24296 (small bug with charging)
 	* CW2015
 	* Wi-fi
 	* BT
@@ -18,7 +19,7 @@ Works in rom(CM13): http://4pda.ru/forum/index.php?showtopic=716960&view=findpos
 	* Brightness 
 	* Leds indication
 	* Alsps (LT559 and STK)
-	* Accel(BMI160_ACC LSM6DS3_ACCEL)
+	* Accel (BMI160_ACC LSM6DS3_ACCEL)
 	* Giro
 	* Vibrator
 	* Battery 4000mah
@@ -35,17 +36,20 @@ Works in rom(CM13): http://4pda.ru/forum/index.php?showtopic=716960&view=findpos
 
 =========================================================================
 * Don't work:
-	* Rill(sim1 and sim2) (need to build modem from sources) 
 	* IR Blaster
 	* HALL sensor (ah1903_probe: GPIO11)
 	* Fingerprint:
-		* GF516M (gf516m_probe: 94,167,115,166,168,169, gf516m_debug_store:166,167,168,169,115,eint_3)
-		* FPC1020
+		* GF516M (reset=115, irq=3, pwr_gpio=94, gf516m_probe: 94,167,115,166,168,169, gf516m_debug_store:166,167,168,169,115,3)
+		* FPC1020 (reset=115, irq=3)
     * MAGNETOMETER             (YAS537)
 
 =========================================================================
 * TODO:
 	* battery_meter.c: correct current mesurements in amperka apk
+	* fix charging bug
+	* fix problems with LSM6DS3_ACCEL
+	* fix problems with camera
+	* make flashlight brighter
 
 =========================================================================
 # BUILD
@@ -88,7 +92,7 @@ make -j4 -C kernel-3.10 O=$TOP/KERNEL_OBJ ROOTDIR=$TOP
 * SPI0.1:
 	* fp_spi							
 
-# AUTOR:
+# AUTHOR:
 * Smosia
 
 # Original kernel by:

@@ -240,10 +240,10 @@ LCM_DRIVER* lcm_driver_list[] =
 #if defined(NT35596_FHD_TIANMA_PHANTOM)
 	&nt35596_fhd_tianma_phantom_lcm_drv,
 #endif
-#if defined(NT35596_FHD_TIANMA_PHANTOM)
+#if defined(NT35532_FHD_BOE_VDO)
     &nt35532_fhd_boe_vdo_lcm_drv,
 #endif
-#if defined(NT35596_FHD_TIANMA_PHANTOM)
+#if defined(NT35532_FHD_BOE_S11_VDO)
     &nt35532_fhd_boe_s11_vdo_lcm_drv,
 #endif
 #if defined(R63315_FHD_SHARP_PHANTOM)
