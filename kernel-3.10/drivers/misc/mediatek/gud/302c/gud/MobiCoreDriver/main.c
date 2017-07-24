@@ -113,10 +113,13 @@ static struct mc_instance *get_instance(struct file *file)
 	return (struct mc_instance *)(file->private_data);
 }
 
+extern struct mc_mmu_table *find_mmu_table(unsigned int handle);
 uint32_t mc_get_new_handle(void)
 {
 	uint32_t handle;
 	struct mc_buffer *buffer;
+	struct mc_mmu_table *table;
+
 
 	mutex_lock(&ctx.cont_bufs_lock);
 retry:
@@ -134,6 +137,12 @@ retry:
 		if (buffer->handle == handle)
 			goto retry;
 	}
+
+	/* here we assume table_lock is already taken. */
+	table = find_mmu_table(handle);
+	if (table != NULL)
+		goto retry;
+
 	mutex_unlock(&ctx.cont_bufs_lock);
 
 	return handle;

@@ -517,7 +517,7 @@ int do_settimeofday(const struct timespec *tv)
 	/* signal hrtimers about time change */
 	clock_was_set();
 
-	notify_time_update();
+	//notify_time_update();
 	return 0;
 }
 EXPORT_SYMBOL(do_settimeofday);

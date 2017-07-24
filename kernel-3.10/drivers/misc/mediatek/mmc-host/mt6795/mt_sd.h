@@ -1247,7 +1247,6 @@ struct msdc_saved_para {
 	u8 ds_dly3;
 	u32 emmc50_pad_cmd_tune;
 #endif
-	u32 vcore_uv;//ALPS01919187
 };
 
 #if defined(MTK_SDIO30_ONLINE_TUNING_SUPPORT) || defined(ONLINE_TUNING_DVTTEST)
@@ -1335,7 +1334,6 @@ struct msdc_host {
 	u32 xfer_size;		/* total transferred size */
 
 	struct msdc_dma dma;	/* dma channel */
-	u64 dma_mask;
 	u32 dma_addr;		/* dma transfer address */
 	u32 dma_left_size;	/* dma transfer left size */
 	u32 dma_xfer_size;	/* dma transfer size in bytes */
@@ -1393,10 +1391,8 @@ struct msdc_host {
     u8                          autocmd;
     u32                         sw_timeout;
     u32                         power_cycle; /* power cycle done in tuning flow*/
-		bool                        power_cycle_enable;/*Enable power cycle*/
-
-		u32							continuous_fail_request_count;
-
+    bool                        power_cycle_enable;/*Enable power cycle*/    
+    bool error_tune_enable; /* enable error tune flow */
     u32                         sd_30_busy;
     bool                        tune;
     MSDC_POWER_DOMAIN           power_domain;

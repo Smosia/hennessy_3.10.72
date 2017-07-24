@@ -32,7 +32,7 @@ typedef unsigned char uchar;
 #define MSG(evt, fmt, args...) \
 do {    \
     if ((DBG_EVT_##evt) & DBG_EVT_MASK) { \
-        pr_debug(fmt, ##args); \
+        printk(fmt, ##args); \
     }   \
 } while(0)
 #else

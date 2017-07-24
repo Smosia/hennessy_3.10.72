@@ -91,11 +91,12 @@ void mcapi_remove_connection(uint32_t seq)
 	struct connection *tmp;
 	struct list_head *pos, *q;
 
+	mutex_lock(&(mod_ctx->peers_lock));
+
 	/*
 	 * Delete all session objects. Usually this should not be needed as
 	 * closeDevice() requires that all sessions have been closed before.
 	 */
-	mutex_lock(&(mod_ctx->peers_lock));
 	list_for_each_safe(pos, q, &mod_ctx->peers) {
 		tmp = list_entry(pos, struct connection, list);
 		if (tmp->sequence_magic == seq) {
@@ -190,7 +191,6 @@ static int __init mcapi_init(void)
 	INIT_LIST_HEAD(&mod_ctx->peers);
 
 	mutex_init(&mod_ctx->peers_lock);
-	mutex_init(&device_mutex);
 
 	return 0;
 }

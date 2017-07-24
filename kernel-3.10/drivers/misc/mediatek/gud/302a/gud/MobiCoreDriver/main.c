@@ -39,9 +39,6 @@
 #ifdef CONFIG_OF
 #include <linux/of_irq.h>
 #endif
-#ifdef CONFIG_MT_TRUSTONIC_TEE_DEBUGFS
-#include <linux/debugfs.h>
-#endif
 #include <net/net_namespace.h>
 #include <net/sock.h>
 #include <net/tcp_states.h>
@@ -1424,43 +1421,6 @@ static irqreturn_t mc_ssiq_isr(int intr, void *context)
 	return IRQ_HANDLED;
 }
 
-#ifdef CONFIG_MT_TRUSTONIC_TEE_DEBUGFS
-uint8_t trustonic_swd_debug;
-static ssize_t debugfs_read(struct file *filep, char __user *buf, size_t len, loff_t *ppos)
-{
-	char mybuf[2];
-
-	if (*ppos != 0)
-		return 0;
-	mybuf[0] = trustonic_swd_debug + '0';
-	mybuf[1] = '\n';
-	if (copy_to_user(buf, mybuf + *ppos, 2))
-		return -EFAULT;
-	*ppos = 2;
-	return 2;
-}
-
-static ssize_t debugfs_write(struct file *filep, const char __user *buf, size_t len, loff_t *ppos)
-{
-	uint8_t val=0;
-
-	if (len >=2) {
-		if (!copy_from_user(&val, &buf[0], 1))
-			if (val >= '0' && val <= '9') {
-				trustonic_swd_debug = val - '0';
-			}
-		return len;
-	}
-
-	return -EFAULT;
-}
-
-const struct file_operations debug_fops = {
-	.read = debugfs_read,
-	.write = debugfs_write
-};
-#endif
-
 /* function table structure of this device driver. */
 static const struct file_operations mc_admin_fops = {
 	.owner		= THIS_MODULE,
@@ -1552,26 +1512,20 @@ out:
  * This device is installed and registered as cdev, then interrupt and
  * queue handling is set up
  */
-static unsigned int mobicore_irq_id = MC_INTR_SSIQ;
+static unsigned int mobicore_irq_id = MC_INTR_SSIQ; 
 static int __init mobicore_init(void)
 {
 	int ret = 0;
 	dev_set_name(mcd, "mcd");
-#ifdef CONFIG_MT_TRUSTONIC_TEE_DEBUGFS
-//	struct dentry *debug_file;
-	struct dentry *debug_root;
-#endif
 #ifdef CONFIG_OF
 	struct device_node *node;
-#if 0
 	unsigned int irq_info[3] = {0, 0, 0};
-#endif
 #endif
 
 	/* Do not remove or change the following trace.
 	 * The string "MobiCore" is used to detect if <t-base is in of the image
 	 */
-	dev_info(mcd, "MobiCore Driver, Build: " "\n");
+	dev_info(mcd, "MobiCore Driver, Build: " __TIMESTAMP__ "\n");
 	dev_info(mcd, "MobiCore mcDrvModuleApi version is %i.%i\n",
 		 MCDRVMODULEAPI_VERSION_MAJOR,
 		 MCDRVMODULEAPI_VERSION_MINOR);
@@ -1602,16 +1556,12 @@ static int __init mobicore_init(void)
 
 #ifdef CONFIG_OF
 	node = of_find_compatible_node(NULL, NULL, "trustonic,mobicore");
-#if 0
 	if (of_property_read_u32_array(node, "interrupts", irq_info, ARRAY_SIZE(irq_info))) {
 		MCDRV_DBG_ERROR(mcd,
 				"Fail to get SSIQ id from device tree!");
 		return -ENODEV;
 	}
 	mobicore_irq_id = irq_info[1];
-#else
-    mobicore_irq_id = irq_of_parse_and_map(node, 0);
-#endif
 	MCDRV_DBG_VERBOSE(mcd, "Interrupt from device tree is %d\n", mobicore_irq_id);
 #endif
 
@@ -1656,24 +1606,14 @@ static int __init mobicore_init(void)
 
 	memset(&ctx.mci_base, 0, sizeof(ctx.mci_base));
 	MCDRV_DBG(mcd, "initialized");
-#ifdef CONFIG_MT_TRUSTONIC_TEE_DEBUGFS
-	debug_root = debugfs_create_dir("trustonic", NULL);
-	if (debug_root) {
-		if (!debugfs_create_file("swd_debug", 0644, debug_root, NULL, &debug_fops)) {
-			MCDRV_DBG_ERROR(mcd, "Create trustonic debugfs swd_debug failed!");
-		}
-	} else {
-		MCDRV_DBG_ERROR(mcd, "Create trustonic debugfs directory failed!");
-	}
-#endif
 	return 0;
 
 free_pm:
 #ifdef MC_PM_RUNTIME
 	mc_pm_free();
 free_isr:
+	free_irq(mobicore_irq_id, &ctx);
 #endif
-	free_irq(MC_INTR_SSIQ, &ctx);
 err_req_irq:
 	mc_fastcall_destroy();
 error:

@@ -1608,8 +1608,8 @@
 
 	MOBICORE {
 		compatible = "trustonic,mobicore";
-		interrupts = <0 280 0x1>;
-		//interrupts = <0 248 0x1>;
+		//interrupts = <0 280 0x1>; //5.0 android
+		interrupts = <0 248 0x1>;
 	};
 
 /* sensor part */

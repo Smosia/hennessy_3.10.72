@@ -41,7 +41,6 @@
 #include "sec_cipher_header.h"
 #include "sec_error.h"
 #include "sec_nvram.h"
-#include "sec_mod.h"
 
 /******************************************************************************
  *  INTERNAL CONFIGURATION

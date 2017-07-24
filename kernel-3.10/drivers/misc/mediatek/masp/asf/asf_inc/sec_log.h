@@ -10,7 +10,7 @@
 #define SMSG(debug_level, ...) do \
                                     { \
                                         if(NEED_TO_PRINT(debug_level)) \
-                                            pr_debug(__VA_ARGS__); \
+                                            printk(__VA_ARGS__); \
                                     } while(0);
 
 /**************************************************************************

@@ -93,7 +93,7 @@ size_t connection_read_data_msg(struct connection *conn, void *buffer,
 size_t connection_read_datablock(struct connection *conn, void *buffer,
 				 uint32_t len)
 {
-	return connection_read_data(conn, buffer, len, -1);
+	return connection_read_data(conn, buffer, len, 2000);
 }
 
 size_t connection_read_data(struct connection *conn, void *buffer, uint32_t len,
@@ -104,6 +104,8 @@ size_t connection_read_data(struct connection *conn, void *buffer, uint32_t len,
 	MCDRV_ASSERT(buffer != NULL);
 	MCDRV_ASSERT(conn->socket_descriptor != NULL);
 
+	printk("Smosia: read data len = %u for PID = %u",
+			  len, conn->sequence_magic);
 	MCDRV_DBG_VERBOSE(mc_kapi, "read data len = %u for PID = %u",
 			  len, conn->sequence_magic);
 	do {
@@ -118,6 +120,7 @@ size_t connection_read_data(struct connection *conn, void *buffer, uint32_t len,
 			ret = -2;
 			break;
 		}
+		printk("Smosia: connection_read_data if1 pass\n");
 
 		if (mutex_lock_interruptible(&(conn->data_lock))) {
 			MCDRV_DBG_ERROR(mc_kapi,
@@ -125,7 +128,7 @@ size_t connection_read_data(struct connection *conn, void *buffer, uint32_t len,
 			ret = -1;
 			break;
 		}
-
+		printk("Smosia: connection_read_data if2 pass\n");
 		/* Have data, use it */
 		if (conn->data_len > 0)
 			ret = connection_read_data_msg(conn, buffer, len);
@@ -138,37 +141,44 @@ size_t connection_read_data(struct connection *conn, void *buffer, uint32_t len,
 
 	} while (0);
 
+	printk("Smosia: connection_read_data %i\n", (int)ret);
 	return ret;
 }
 
-int connection_write_data(struct connection *conn, void *buffer,
+size_t connection_write_data(struct connection *conn, void *buffer,
 			     uint32_t len)
 {
 	struct sk_buff *skb = NULL;
 	struct nlmsghdr *nlh;
-	int ret;
+	int ret = 0;
 
-	MCDRV_DBG_VERBOSE(mc_kapi, "buffer length %u from pid %u\n", len,
-			  conn->sequence_magic);
-	skb = nlmsg_new(NLMSG_SPACE(len), GFP_KERNEL);
-	if (!skb)
-		return -ENOMEM;
+	printk("Smosia: buffer length %u from pid %u\n",
+			  len,  conn->sequence_magic);
+	MCDRV_DBG_VERBOSE(mc_kapi, "buffer length %u from pid %u\n",
+			  len,  conn->sequence_magic);
+	do {
+		skb = nlmsg_new(len, GFP_KERNEL);
+		if (!skb) {
+			ret = -1;
+			break;
+		}
 
-	nlh = nlmsg_put(skb, 0, conn->sequence_magic, 2, NLMSG_LENGTH(len),
-			NLM_F_REQUEST);
-	if (!nlh) {
-		kfree_skb(skb);
-		return -EINVAL;
-	}
+		nlh = nlmsg_put(skb, 0, conn->sequence_magic, 2,
+				len, NLM_F_REQUEST);
+		if (!nlh) {
+			ret = -2;
+			kfree_skb(skb);
+			break;
+		}
+		memcpy(NLMSG_DATA(nlh), buffer, len);
 
-	/* netlink_unicast frees skb */
-	memcpy(NLMSG_DATA(nlh), buffer, len);
-	ret = netlink_unicast(conn->socket_descriptor, skb, conn->peer_pid,
-			      MSG_DONTWAIT);
-	if (ret < 0)
-		return ret;
-
-	return len;
+		/* netlink_unicast frees skb */
+		netlink_unicast(conn->socket_descriptor, skb,
+				conn->peer_pid, MSG_DONTWAIT);
+		ret = len;
+	} while (0);
+	printk("Smosia: connection_write_data: %i\n",ret);
+	return ret;
 }
 
 int connection_process(struct connection *conn, struct sk_buff *skb)

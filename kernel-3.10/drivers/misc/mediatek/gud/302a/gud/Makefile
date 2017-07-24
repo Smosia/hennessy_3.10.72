@@ -10,7 +10,6 @@ GUD_ROOT_FOLDER := $(dir $(lastword $(MAKEFILE_LIST)))
 # add our modules to kernel.
 obj-$(CONFIG_TRUSTONIC_TEE_SUPPORT) += mcKernelApi.o
 obj-$(CONFIG_TRUSTONIC_TEE_SUPPORT) += mcDrvModule.o
-obj-$(CONFIG_TRUSTONIC_TRUSTED_UI) += TlcTui.o
 
 mcDrvModule-objs := MobiCoreDriver/logging.o \
 		MobiCoreDriver/ops.o \
@@ -25,15 +24,9 @@ mcKernelApi-objs := MobiCoreKernelApi/main.o \
 		MobiCoreKernelApi/session.o \
 		MobiCoreKernelApi/connection.o
 
-TlcTui-objs := TlcTui/main.o \
-		       TlcTui/tlcTui.o \
-		       TlcTui/trustedui.o \
-		       TlcTui/tui-hal_$(MTK_PLATFORM).o
-
 # Release mode by default
 ccflags-y := -DNDEBUG
 ccflags-y += -Wno-declaration-after-statement
-#ccflags-y += -Wno-error=date-time
 
 ccflags-$(CONFIG_MOBICORE_DEBUG) += -DDEBUG
 ccflags-$(CONFIG_MOBICORE_VERBOSE) += -DDEBUG_VERBOSE
@@ -49,9 +42,3 @@ ccflags-y += -I$(GUD_ROOT_FOLDER)MobiCoreDriver/public
 # MobiCore KernelApi required incldes
 ccflags-y += -I$(GUD_ROOT_FOLDER)MobiCoreKernelApi/include \
 		-I$(GUD_ROOT_FOLDER)MobiCoreKernelApi/public
-
-# MobiCore TlcTui required includes
-ccflags-y += -I$(GUD_ROOT_FOLDER)/TlcTui \
-		     -I$(GUD_ROOT_FOLDER)/TlcTui/inc \
-		     -I$(GUD_ROOT_FOLDER)/TlcTui/public \
-             include

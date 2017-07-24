@@ -55,15 +55,13 @@ struct mcore_device_t *mcore_device_create(uint32_t device_id,
 
 	INIT_LIST_HEAD(&dev->session_vector);
 	INIT_LIST_HEAD(&dev->wsm_mmu_vector);
-	mutex_init(&(dev->session_vector_lock));
-	mutex_init(&(dev->wsm_mmu_vector_lock));
 
 	return dev;
 }
 
 void mcore_device_cleanup(struct mcore_device_t *dev)
 {
-	struct session *session = NULL;
+	struct session *tmp;
 	struct wsm *wsm;
 	struct list_head *pos, *q;
 
@@ -71,29 +69,18 @@ void mcore_device_cleanup(struct mcore_device_t *dev)
 	 * Delete all session objects. Usually this should not be needed
 	 * as close_device() requires that all sessions have been closed before.
 	 */
-	do {
-		session = NULL;
-		mutex_lock(&(dev->session_vector_lock));
-		if (!list_empty(&(dev->session_vector))) {
-			session = list_first_entry(&(dev->session_vector),
-							struct session,
-							list);
-			list_del(&(session->list));
-		}
-		mutex_unlock(&(dev->session_vector_lock));
-		if (!session)
-			break;
-		session_cleanup(session);
-	} while (true);
+	list_for_each_safe(pos, q, &dev->session_vector) {
+		tmp = list_entry(pos, struct session, list);
+		list_del(pos);
+		session_cleanup(tmp);
+	}
 
 	/* Free all allocated WSM descriptors */
-	mutex_lock(&(dev->wsm_mmu_vector_lock));
-	list_for_each_safe(pos, q, &(dev->wsm_mmu_vector)) {
+	list_for_each_safe(pos, q, &dev->wsm_mmu_vector) {
 		wsm = list_entry(pos, struct wsm, list);
 		list_del(pos);
 		kfree(wsm);
 	}
-	mutex_unlock(&(dev->wsm_mmu_vector_lock));
 	connection_cleanup(dev->connection);
 
 	mcore_device_close(dev);
@@ -113,11 +100,7 @@ void mcore_device_close(struct mcore_device_t *dev)
 
 bool mcore_device_has_sessions(struct mcore_device_t *dev)
 {
-	int ret = 0;
-	mutex_lock(&(dev->session_vector_lock));
-	ret = !list_empty(&dev->session_vector);
-	mutex_unlock(&(dev->session_vector_lock));
-	return ret;
+	return !list_empty(&dev->session_vector);
 }
 
 bool mcore_device_create_new_session(struct mcore_device_t *dev,
@@ -134,49 +117,44 @@ bool mcore_device_create_new_session(struct mcore_device_t *dev,
 			session_create(session_id, dev->instance, connection);
 	if (session == NULL)
 		return false;
-	mutex_lock(&(dev->session_vector_lock));
 	list_add_tail(&(session->list), &(dev->session_vector));
-	mutex_unlock(&(dev->session_vector_lock));
 	return true;
 }
 
 bool mcore_device_remove_session(struct mcore_device_t *dev,
 				 uint32_t session_id)
 {
-	bool found = false;
-	struct session *session = NULL;
-	struct list_head *pos;
+	bool ret = false;
+	struct session *tmp;
+	struct list_head *pos, *q;
 
-	mutex_lock(&(dev->session_vector_lock));
-	list_for_each(pos, &dev->session_vector) {
-		session = list_entry(pos, struct session, list);
-		if (session->session_id == session_id) {
+	list_for_each_safe(pos, q, &dev->session_vector) {
+		tmp = list_entry(pos, struct session, list);
+		if (tmp->session_id == session_id) {
 			list_del(pos);
-			found = true;
+			session_cleanup(tmp);
+			ret = true;
 			break;
 		}
 	}
-	mutex_unlock(&(dev->session_vector_lock));
-	if (found)
-		session_cleanup(session);
-	return found;
+	return ret;
 }
 
 struct session *mcore_device_resolve_session_id(struct mcore_device_t *dev,
 						uint32_t session_id)
 {
 	struct session *ret = NULL;
-	struct session *session;
+	struct session *tmp;
+	struct list_head *pos;
 
 	/* Get session for session_id */
-	mutex_lock(&(dev->session_vector_lock));
-	list_for_each_entry(session, &dev->session_vector, list) {
-		if (session->session_id == session_id) {
-			ret = session;
+	list_for_each(pos, &dev->session_vector) {
+		tmp = list_entry(pos, struct session, list);
+		if (tmp->session_id == session_id) {
+			ret = tmp;
 			break;
 		}
 	}
-	mutex_unlock(&(dev->session_vector_lock));
 	return ret;
 }
 
@@ -203,9 +181,7 @@ struct wsm *mcore_device_allocate_contiguous_wsm(struct mcore_device_t *dev,
 			break;
 		}
 
-		mutex_lock(&(dev->wsm_mmu_vector_lock));
 		list_add_tail(&(wsm->list), &(dev->wsm_mmu_vector));
-		mutex_unlock(&(dev->wsm_mmu_vector_lock));
 
 	} while (0);
 
@@ -219,7 +195,6 @@ bool mcore_device_free_contiguous_wsm(struct mcore_device_t *dev,
 	struct wsm *tmp;
 	struct list_head *pos;
 
-	mutex_lock(&(dev->wsm_mmu_vector_lock));
 	list_for_each(pos, &dev->wsm_mmu_vector) {
 		tmp = list_entry(pos, struct wsm, list);
 		if (tmp == wsm) {
@@ -227,7 +202,7 @@ bool mcore_device_free_contiguous_wsm(struct mcore_device_t *dev,
 			break;
 		}
 	}
-	mutex_unlock(&(dev->wsm_mmu_vector_lock));
+
 	if (ret) {
 		MCDRV_DBG_VERBOSE(mc_kapi,
 				  "freeWsm virt_addr=0x%p, handle=%d",
@@ -245,16 +220,14 @@ bool mcore_device_free_contiguous_wsm(struct mcore_device_t *dev,
 struct wsm *mcore_device_find_contiguous_wsm(struct mcore_device_t *dev,
 					     void *virt_addr)
 {
-	struct wsm *wsm, *candidate = NULL;
+	struct wsm *wsm;
+	struct list_head *pos;
 
-	mutex_lock(&(dev->wsm_mmu_vector_lock));
-	list_for_each_entry(wsm, &dev->wsm_mmu_vector, list) {
-		if (virt_addr == wsm->virt_addr) {
-			candidate = wsm;
-			break;
-		}
+	list_for_each(pos, &dev->wsm_mmu_vector) {
+		wsm = list_entry(pos, struct wsm, list);
+		if (virt_addr == wsm->virt_addr)
+			return wsm;
 	}
-	mutex_unlock(&(dev->wsm_mmu_vector_lock));
 
-	return candidate;
+	return NULL;
 }
