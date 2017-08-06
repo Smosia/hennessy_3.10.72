@@ -166,6 +166,8 @@ struct cw_battery {
     int bat_change;
 };
 
+struct cw_battery *cw_bat;
+
 /***************************************
  *      prototypes 
  ***************************************/
@@ -192,6 +194,7 @@ static int cw2015_i2c_remove(struct i2c_client *client);
 static int cw2015_i2c_detect(struct i2c_client *client, struct i2c_board_info *info);
 static int cw2015_i2c_suspend(struct i2c_client *client, pm_message_t mesg);
 static int cw2015_i2c_resume(struct i2c_client *client);
+int get_capacity();
 
 extern int PMIC_IMM_GetOneChannelValue(int dwChannel, int deCount, int trimd);
 
@@ -199,6 +202,11 @@ extern int PMIC_IMM_GetOneChannelValue(int dwChannel, int deCount, int trimd);
 /***************************************
  *      functions 
  ***************************************/
+int get_capacity() 
+{
+    return cw_bat->capacity;
+}
+
 static void cw_get_battery_version(void)
 {
     int id_volt;
@@ -828,7 +836,6 @@ static void cw_bat_work(struct work_struct *work)
 {
     int ret;
     struct delayed_work *delay_work;
-    struct cw_battery *cw_bat;
 
     printk("[CW2015] cw_bat_work started\n");
 
