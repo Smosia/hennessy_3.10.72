@@ -52,6 +52,8 @@
 
 #define LTR556_SW_CALI //lisong test
 
+#define MTK_AUTO_DETECT_ALSPS
+
 #define POWER_NONE_MACRO MT65XX_POWER_NONE
 #ifndef LTR556_SW_CALI//lisong test
 #define GN_MTK_BSP_PS_DYNAMIC_CALI
@@ -124,14 +126,16 @@ static DEFINE_MUTEX(read_lock);
 
 #if defined(MTK_AUTO_DETECT_ALSPS)
 static int  ltr559_local_init(void);
-static int  ltr559_remove(void);
+static int  ltr559_local_uninit(struct platform_device *pdev);
 static int ltr559_init_flag =-1; // 0<==>OK -1 <==> fail
 
 static struct alsps_init_info ltr559_init_info = {
         .name = "ltr559",
         .init = ltr559_local_init,
-        .uninit = ltr559_remove,
+        .uninit = ltr559_local_uninit,
 };
+#else
+static int  ltr559_remove(void);
 #endif
 
 static int ltr559_als_read(int gainrange);
@@ -2421,14 +2425,21 @@ static int ltr559_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 		goto exit_misc_device_register_failed;
 	}
 
-	
+	#if defined(MTK_AUTO_DETECT_ALSPS)
+	/* Register sysfs attribute */
+	if(err = ltr559_create_attr(&(ltr559_init_info.platform_diver_addr->driver)))
+	{
+		printk(KERN_ERR "create attribute err = %d\n", err);
+		goto exit_create_attr_failed;
+	}
+	#else
 	/* Register sysfs attribute */
 	if(err = ltr559_create_attr(&ltr559_alsps_driver.driver))
 	{
 		printk(KERN_ERR "create attribute err = %d\n", err);
 		goto exit_create_attr_failed;
 	}
-
+	#endif
 
 	obj_ps.self = ltr559_obj;
 	/*for interrup work mode support -- by liaoxl.lenovo 12.08.2011*/
@@ -2511,22 +2522,12 @@ static int ltr559_i2c_remove(struct i2c_client *client)
 }
 /*----------------------------------------------------------------------------*/
 #if defined(MTK_AUTO_DETECT_ALSPS)
-static int TMD2771_remove(void)
-{
-    struct alsps_hw *hw = get_cust_alsps_hw();
-
-    APS_FUN();    
-    ltr559_power(hw, 0);    
-    i2c_del_driver(&ltr559_i2c_driver);
-    return 0;
-}
-/*----------------------------------------------------------------------------*/
 static int ltr559_local_init(void)
 {
    struct alsps_hw *hw = get_cust_alsps_hw();
     APS_FUN();
 
-    ltr559_power(hw, 1);
+    //ltr559_power(hw, 1);
     if(i2c_add_driver(&ltr559_i2c_driver))
     {
         APS_ERR("add driver error\n");
@@ -2539,6 +2540,17 @@ static int ltr559_local_init(void)
     
     return 0;
 }
+
+/*----------------------------------------------------------------------------*/
+static int ltr559_local_uninit(struct platform_device *pdev)
+{
+	struct alsps_hw *hw = get_cust_alsps_hw();
+	APS_FUN();    
+	ltr559_power(hw, 0);    
+	i2c_del_driver(&ltr559_i2c_driver);
+	return 0;
+}
+/*----------------------------------------------------------------------------*/
 #else
 /*----------------------------------------------------------------------------*/
 static int ltr559_probe(struct platform_device *pdev) 
@@ -2605,7 +2617,8 @@ static int __init ltr559_init(void)
 	i2c_register_board_info(hw->i2c_num, &i2c_ltr559, 1);
 	
 #if defined(MTK_AUTO_DETECT_ALSPS)
-        hwmsen_alsps_sensor_add(&ltr559_init_info);
+	alsps_driver_add(&ltr559_init_info);
+    //    hwmsen_alsps_sensor_add(&ltr559_init_info);
 #else
 	if(platform_driver_register(&ltr559_alsps_driver))
 	{
