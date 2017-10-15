@@ -316,7 +316,7 @@ static BATTERY_VOLTAGE_ENUM select_jeita_cv(void)
 		cv_voltage = JEITA_TEMP_POS_45_TO_POS_60_CV_VOLTAGE;
 	} else if (g_temp_status == TEMP_POS_10_TO_POS_45) {
 #ifdef HIGH_BATTERY_VOLTAGE_SUPPORT
-		cv_voltage = BATTERY_VOLT_04_340000_V;
+		cv_voltage = BATTERY_VOLT_04_400000_V;
 #else
 		cv_voltage = JEITA_TEMP_POS_10_TO_POS_45_CV_VOLTAGE;
 #endif
@@ -604,7 +604,7 @@ void select_charging_curret(void)
 			}
 #else
 			{
-				g_temp_input_CC_value = USB_CHARGER_CURRENT;
+				g_temp_input_CC_value = CHARGE_CURRENT_1050_00_MA;
 				g_temp_CC_value = USB_CHARGER_CURRENT;
 			}
 #endif
@@ -735,7 +735,7 @@ static void pchr_turn_on_charging(void)
 			/*Set CV Voltage */
 #if !defined(CONFIG_MTK_JEITA_STANDARD_SUPPORT)
 #ifdef HIGH_BATTERY_VOLTAGE_SUPPORT
-			cv_voltage = BATTERY_VOLT_04_340000_V;
+			cv_voltage = BATTERY_VOLT_04_400000_V;
 #else
 			cv_voltage = BATTERY_VOLT_04_200000_V;
 #endif
@@ -751,7 +751,7 @@ static void pchr_turn_on_charging(void)
 			    charging_enable);
 }
 
-
+//ok
 PMU_STATUS BAT_PreChargeModeAction(void)
 {
 	battery_log(BAT_LOG_CRTI, "[BATTERY] Pre-CC mode charge, timer=%d on %d !!\n\r",
@@ -778,7 +778,7 @@ PMU_STATUS BAT_PreChargeModeAction(void)
 	return PMU_STATUS_OK;
 }
 
-
+//ok
 PMU_STATUS BAT_ConstantCurrentModeAction(void)
 {
 	battery_log(BAT_LOG_FULL, "[BATTERY] CC mode charge, timer=%d on %d !!\n\r",
@@ -801,7 +801,7 @@ PMU_STATUS BAT_ConstantCurrentModeAction(void)
 	return PMU_STATUS_OK;
 }
 
-
+//ok
 PMU_STATUS BAT_BatteryFullAction(void)
 {
 	battery_log(BAT_LOG_CRTI, "[BATTERY] Battery full !!\n\r");
@@ -825,7 +825,7 @@ PMU_STATUS BAT_BatteryFullAction(void)
 	return PMU_STATUS_OK;
 }
 
-
+//ok
 PMU_STATUS BAT_BatteryHoldAction(void)
 {
 	kal_uint32 charging_enable;
@@ -845,7 +845,7 @@ PMU_STATUS BAT_BatteryHoldAction(void)
 	return PMU_STATUS_OK;
 }
 
-
+//ok
 PMU_STATUS BAT_BatteryStatusFailAction(void)
 {
 	kal_uint32 charging_enable;
@@ -876,7 +876,7 @@ PMU_STATUS BAT_BatteryStatusFailAction(void)
 	return PMU_STATUS_OK;
 }
 
-
+//checked
 void mt_battery_charging_algorithm(void)
 {
 	battery_charging_control(CHARGING_CMD_RESET_WATCH_DOG_TIMER, NULL);

@@ -378,8 +378,7 @@ kal_bool upmu_is_chr_det(void)
 	/* return KAL_TRUE; */
 	return get_charger_detect_status();
 #else
-        if (suspend_discharging==1)
-        return KAL_FALSE;
+    if (suspend_discharging==1) return KAL_FALSE;
 
 	tmp32 = get_charger_detect_status();
 
@@ -389,6 +388,8 @@ kal_bool upmu_is_chr_det(void)
 #endif
 
 	if (tmp32 == 0) {
+		battery_log(BAT_LOG_FULL,
+					    "[upmu_is_chr_det] Smosia: get_charger_detect_status return 0\n");
 		return KAL_FALSE;
 	} else {
 		#if !defined(CONFIG_MTK_DUAL_INPUT_CHARGER_SUPPORT)

@@ -555,7 +555,7 @@ static int cw_get_capacity(struct cw_battery *cw_bat)
     get_monotonic_boottime(&ts);
     new_sleep_time = ts.tv_sec - new_run_time;
 
-    if (((cw_bat->charger_mode > 0) && (cw_capacity <= (cw_bat->capacity - 1)) && (cw_capacity > (cw_bat->capacity - 30/*9*/)))
+    if (((cw_bat->charger_mode > 0) && (cw_capacity <= (cw_bat->capacity - 1)) && (cw_capacity > (cw_bat->capacity - 9)))
                 || ((cw_bat->charger_mode == 0) && (cw_capacity == (cw_bat->capacity + 1)))) 
     {
         if (!(cw_capacity == 0 && cw_bat->capacity <= 2)) 
