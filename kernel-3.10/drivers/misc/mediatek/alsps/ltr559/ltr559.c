@@ -50,7 +50,7 @@
 #include <SCP_sensorHub.h>
 #endif
 
-#define LTR556_SW_CALI //lisong test
+//#define LTR556_SW_CALI //lisong test
 
 #define MTK_AUTO_DETECT_ALSPS
 
@@ -109,7 +109,7 @@ static int ltr559_i2c_detect(struct i2c_client *client, int kind, struct i2c_boa
 static int ltr559_i2c_suspend(struct i2c_client *client, pm_message_t msg);
 static int ltr559_i2c_resume(struct i2c_client *client);
 static int ltr559_ps_enable(int gainrange);
-static int dynamic_calibrate=0;
+static int dynamic_calibrate=2047;
 
 static int ps_trigger_high = 800; 
 static int ps_trigger_low = 760;
@@ -292,98 +292,90 @@ static int ltr559_i2c_write_reg(u8 regnum, u8 value)
 }
 
 /*----------------------------------------------------------------------------*/
-// #ifdef GN_MTK_BSP_PS_DYNAMIC_CALI
-// static ssize_t ltr559_dynamic_calibrate(void)     
-// {                                       
-//   int ret=0;
-//   int i=0;
-//   int data;
-//   int data_total=0;
-//   ssize_t len = 0;
-//   int noise = 0;
-//   int count = 5;
-//   int max = 0;
-//   struct ltr559_priv *obj = ltr559_obj;
-//   if(!ltr559_obj)
-//   { 
-//     APS_ERR("ltr559_obj is null!!\n");
-//     //len = sprintf(buf, "ltr559_obj is null\n");
-//     return -1;
-//   }
+#ifdef GN_MTK_BSP_PS_DYNAMIC_CALI
+static ssize_t ltr559_dynamic_calibrate(void)     
+{                                       
+  int ret=0;
+  int i=0;
+  int data;
+  int data_total=0;
+  ssize_t len = 0;
+  int noise = 0;
+  int count = 5;
+  int max = 0;
+  struct ltr559_priv *obj = ltr559_obj;
+  if(!ltr559_obj)
+  { 
+    APS_ERR("ltr559_obj is null!!\n");
+    //len = sprintf(buf, "ltr559_obj is null\n");
+    return -1;
+  }
 
-//   // wait for register to be stable
-//   msleep(15);
+  // wait for register to be stable
+  msleep(15);
 
 
-//   for (i = 0; i < count; i++) {
-//     // wait for ps value be stable
+  for (i = 0; i < count; i++) {
+    // wait for ps value be stable
     
-//     msleep(15);
+    msleep(15);
     
-//     data=ltr559_ps_read();
-//     if (data < 0) {
-//       i--;
-//       continue;
-//     }
+    data=ltr559_ps_read();
+    if (data < 0) {
+      i--;
+      continue;
+    }
         
-//     if(data & 0x8000){
-//       noise = 0;
-//       break;
-//     }else{
-//       noise=data;
-//     } 
+    if(data & 0x8000){
+      noise = 0;
+      break;
+    }else{
+      noise=data;
+    } 
     
-//     data_total+=data;
+    data_total+=data;
 
-//     if (max++ > 100) {
-//       //len = sprintf(buf,"adjust fail\n");
-//       return len;
-//     }
-//   }
-
+    if (max++ > 100) {
+      //len = sprintf(buf,"adjust fail\n");
+      return len;
+    }
+  }
   
-//   noise=data_total/count;
-
-//   dynamic_calibrate = noise;
-//   if(noise < 100){
-
-//       atomic_set(&obj->ps_thd_val_high,  noise+300);//wangxiqiang
-//       atomic_set(&obj->ps_thd_val_low, noise+250);
-//   }else if(noise < 200){
-//       atomic_set(&obj->ps_thd_val_high,  noise+350);
-//       atomic_set(&obj->ps_thd_val_low, noise+260);
-//   }else if(noise < 300){
-//       atomic_set(&obj->ps_thd_val_high,  noise+350);
-//       atomic_set(&obj->ps_thd_val_low, noise+260);
-//   }else if(noise < 400){
-//       atomic_set(&obj->ps_thd_val_high,  noise+350);
-//       atomic_set(&obj->ps_thd_val_low, noise+260);
-//   }else if(noise < 600){
-//       atomic_set(&obj->ps_thd_val_high,  noise+380);
-//       atomic_set(&obj->ps_thd_val_low, noise+290);
-//   }else if(noise < 1000){
-//     atomic_set(&obj->ps_thd_val_high,  noise+300);
-//     atomic_set(&obj->ps_thd_val_low, noise+180);  
-//   }else if(noise < 1250){
-//       atomic_set(&obj->ps_thd_val_high,  noise+400);
-//       atomic_set(&obj->ps_thd_val_low, noise+300);
-//   }
-//   else{
-//       atomic_set(&obj->ps_thd_val_high,  1650);
-//       atomic_set(&obj->ps_thd_val_low, 1600);
-//       //isadjust = 0;
-//     printk(KERN_ERR "ltr558 the proximity sensor structure is error\n");
-//   }
-  
-//   //
-//   int ps_thd_val_low, ps_thd_val_high ;
-  
-//   ps_thd_val_low = atomic_read(&obj->ps_thd_val_low);
-//   ps_thd_val_high = atomic_read(&obj->ps_thd_val_high);
-
-//   return 0;
-// }
-// #endif
+  noise=data_total/count;
+  if((noise < dynamic_calibrate+200)){
+    dynamic_calibrate = noise;
+    if(noise < 100){
+        atomic_set(&obj->ps_thd_val_high,  noise+70);//wangxiqiang
+        atomic_set(&obj->ps_thd_val_low, noise+55);
+    }else if(noise < 200){
+        atomic_set(&obj->ps_thd_val_high,  noise+75);
+        atomic_set(&obj->ps_thd_val_low, noise+60);
+    }else if(noise < 300){
+        atomic_set(&obj->ps_thd_val_high,  noise+100);
+        atomic_set(&obj->ps_thd_val_low, noise+70);
+    }else if(noise < 400){
+        atomic_set(&obj->ps_thd_val_high,  noise+150);
+        atomic_set(&obj->ps_thd_val_low, noise+100);
+    }else if(noise < 600){
+        atomic_set(&obj->ps_thd_val_high,  noise+200);
+        atomic_set(&obj->ps_thd_val_low, noise+150);
+    }else if(noise < 1000){
+      atomic_set(&obj->ps_thd_val_high,  noise+250);
+      atomic_set(&obj->ps_thd_val_low, noise+200);  
+    }else if(noise < 1600){
+        atomic_set(&obj->ps_thd_val_high,  noise+300);
+        atomic_set(&obj->ps_thd_val_low, noise+200);
+    }
+    else{
+        atomic_set(&obj->ps_thd_val_high,  1750);
+        atomic_set(&obj->ps_thd_val_low, 1700);
+        //isadjust = 0;
+      printk(KERN_ERR "ltr558 the proximity sensor structure is error\n");
+    }
+  }
+  return 0;
+}
+#endif
 
 /*----------------------------------------------------------------------------*/
 static ssize_t ltr559_show_als(struct device_driver *ddri, char *buf)
@@ -771,17 +763,17 @@ static int ltr559_ps_enable(int gainrange)
 
   data = ltr559_i2c_read_reg(LTR559_PS_CONTR);
   
-  // #ifdef GN_MTK_BSP_PS_DYNAMIC_CALI  //wangxiqiang
-  // if (data & 0x02) {
+  #ifdef GN_MTK_BSP_PS_DYNAMIC_CALI  //wangxiqiang
+  if (data & 0x02) {
 
-  //   if(0 == obj->hw->polling_mode_ps){
-  //     mt_eint_mask(CUST_EINT_ALS_NUM);
-  //   }
+    if(0 == obj->hw->polling_mode_ps){
+      mt_eint_mask(CUST_EINT_ALS_NUM);
+    }
     
-  //   if (ltr559_dynamic_calibrate() < 0)
-  //     return -1;
-  // }
-  // #endif  
+    if (ltr559_dynamic_calibrate() < 0)
+      return -1;
+  }
+  #endif  
 
   /*for interrup work mode support -- by liaoxl.lenovo 12.08.2011*/
     if(0 == obj->hw->polling_mode_ps)
