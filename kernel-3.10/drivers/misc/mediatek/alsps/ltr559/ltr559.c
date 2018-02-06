@@ -1,5 +1,6 @@
-/*
- *
+/* 
+ * Revised for Xiaomi Redmi Note 3 MTK by:
+ *   Smosia 
  * Author: MingHsien Hsieh <minghsien.hsieh@mediatek.com>
  *
  * This software is licensed under the terms of the GNU General Public
@@ -45,16 +46,11 @@
 #include <alsps.h>
 #include <linux/mutex.h>
 
-#undef CUSTOM_KERNEL_SENSORHUB
-#ifdef CUSTOM_KERNEL_SENSORHUB
-#include <SCP_sensorHub.h>
-#endif
-
-//#define LTR556_SW_CALI //lisong test
-
 #define MTK_AUTO_DETECT_ALSPS
 
 #define POWER_NONE_MACRO MT65XX_POWER_NONE
+
+#undef LTR556_SW_CALI
 #ifndef LTR556_SW_CALI//lisong test
 #define GN_MTK_BSP_PS_DYNAMIC_CALI
 #endif
@@ -90,63 +86,65 @@ extern struct alsps_hw* ltr559_get_cust_alsps_hw(void);
 /*----------------------------------------------------------------------------*/
 
 static struct i2c_client *ltr559_i2c_client = NULL;
-
-/*----------------------------------------------------------------------------*/
 static const struct i2c_device_id ltr559_i2c_id[] = {{LTR559_DEV_NAME,0},{}};
-/*the adapter id & i2c address will be available in customization*/
 static struct i2c_board_info __initdata i2c_ltr559={ I2C_BOARD_INFO("LTR_559ALS", 0x23)};
 
-//static unsigned short ltr559_force[] = {0x00, 0x46, I2C_CLIENT_END, I2C_CLIENT_END};
-//static const unsigned short *const ltr559_forces[] = { ltr559_force, NULL };
-//static struct i2c_client_address_data ltr559_addr_data = { .forces = ltr559_forces,};
 /*----------------------------------------------------------------------------*/
+
 static int ltr559_i2c_probe(struct i2c_client *client, const struct i2c_device_id *id); 
 static int ltr559_i2c_remove(struct i2c_client *client);
 #if !defined(MTK_AUTO_DETECT_ALSPS)
 static int ltr559_i2c_detect(struct i2c_client *client, int kind, struct i2c_board_info *info);
 #endif
-/*----------------------------------------------------------------------------*/
 static int ltr559_i2c_suspend(struct i2c_client *client, pm_message_t msg);
 static int ltr559_i2c_resume(struct i2c_client *client);
+/*----------------------------------------------------------------------------*/
+
 static int ltr559_ps_enable(int gainrange);
-static int dynamic_calibrate=2047;
-
-static int ps_trigger_high = 800; 
-static int ps_trigger_low = 760;
-
-static int ps_gainrange;
-static int als_gainrange;
-
-static int final_prox_val , prox_val;
-static int final_lux_val;
-
-/*----------------------------------------------------------------------------*/
-static DEFINE_MUTEX(read_lock);
-
-/*----------------------------------------------------------------------------*/
+static int ltr559_als_read(int gainrange);
+static int ltr559_ps_read(void);
+static int ltr559_devinit(void);
+static int ltr559_als_enable(int gainrange);
 
 #if defined(MTK_AUTO_DETECT_ALSPS)
 static int  ltr559_local_init(void);
 static int  ltr559_local_uninit(struct platform_device *pdev);
-static int ltr559_init_flag =-1; // 0<==>OK -1 <==> fail
 
 static struct alsps_init_info ltr559_init_info = {
         .name = "ltr559",
         .init = ltr559_local_init,
         .uninit = ltr559_local_uninit,
 };
+
+static int ltr559_init_flag =-1; // 0<==>OK -1 <==> fail
 #else
 static int  ltr559_remove(void);
 #endif
+/*----------------------------------------------------------------------------*/
 
-static int ltr559_als_read(int gainrange);
-static int ltr559_ps_read(void);
-static int ltr559_devinit(void);
-static int ltr559_als_enable(int gainrange);
+static DEFINE_MUTEX(read_lock);
 
+static int dynamic_calibrate=2047;
+static int ps_gainrange;
+static int als_gainrange;
+static int final_prox_val , prox_val;
+static int final_lux_val;
+static int intr_flag_value = 0;
+static struct ltr559_priv *ltr559_obj = NULL;
+
+#if !defined(MTK_AUTO_DETECT_ALSPS)
+static struct platform_driver ltr559_alsps_driver;
+#endif
 
 /*----------------------------------------------------------------------------*/
 
+struct PS_CALI_DATA_STRUCT
+{
+    int close;
+    int far_away;
+    int valid;
+};
+static struct PS_CALI_DATA_STRUCT ps_cali={0,0,0};
 
 typedef enum {
     CMC_BIT_ALS    = 1,
@@ -158,8 +156,6 @@ struct ltr559_i2c_addr {    /*define a series of i2c slave address*/
     u8  write_addr;  
     u8  ps_thd;     /*PS INT threshold*/
 };
-
-/*----------------------------------------------------------------------------*/
 
 struct ltr559_priv {
     struct alsps_hw  *hw;
@@ -190,15 +186,13 @@ struct ltr559_priv {
     u16         als_value_num;
     u32         als_level[C_CUST_ALS_LEVEL-1];
     u32         als_value[C_CUST_ALS_LEVEL];
-  int      ps_cali;
-
-  
+    int      ps_cali;
 
     atomic_t    als_cmd_val;    /*the cmd value can't be read, stored in ram*/
     atomic_t    ps_cmd_val;     /*the cmd value can't be read, stored in ram*/
     atomic_t    ps_thd_val;     /*the cmd value can't be read, stored in ram*/
-  atomic_t    ps_thd_val_high;     /*the cmd value can't be read, stored in ram*/
-  atomic_t    ps_thd_val_low;     /*the cmd value can't be read, stored in ram*/
+    atomic_t    ps_thd_val_high;     /*the cmd value can't be read, stored in ram*/
+    atomic_t    ps_thd_val_low;     /*the cmd value can't be read, stored in ram*/
     ulong       enable;         /*enable mask*/
     ulong       pending_intr;   /*pending interrupt*/
 
@@ -207,22 +201,6 @@ struct ltr559_priv {
     struct early_suspend    early_drv;
 #endif     
 };
-
- struct PS_CALI_DATA_STRUCT
-{
-    int close;
-    int far_away;
-    int valid;
-} ;
-
-static struct PS_CALI_DATA_STRUCT ps_cali={0,0,0};
-static int intr_flag_value = 0;
-
-
-static struct ltr559_priv *ltr559_obj = NULL;
-#if !defined(MTK_AUTO_DETECT_ALSPS)
-static struct platform_driver ltr559_alsps_driver;
-#endif
 /*----------------------------------------------------------------------------*/
 static struct i2c_driver ltr559_i2c_driver = {  
   .probe      = ltr559_i2c_probe,
@@ -240,6 +218,7 @@ static struct i2c_driver ltr559_i2c_driver = {
   },
 };
 
+/*----------------------------------------------------------------------------*/
 
 /* 
  * #########
@@ -250,15 +229,15 @@ static struct i2c_driver ltr559_i2c_driver = {
 // I2C Read
 static int ltr559_i2c_read_reg(u8 regnum)
 {
-    u8 buffer[1],reg_value[1];
+  u8 buffer[1],reg_value[1];
   int res = 0;
   mutex_lock(&read_lock);
   
   buffer[0]= regnum;
   res = i2c_master_send(ltr559_obj->client, buffer, 0x1);
-  if(res <= 0)  {
-     
-     APS_ERR("read reg send res = %d\n",res);
+  if(res <= 0)
+  {   
+    APS_ERR("read reg send res = %d\n",res);
     return res;
   }
   res = i2c_master_recv(ltr559_obj->client, reg_value, 0x1);
@@ -282,11 +261,10 @@ static int ltr559_i2c_write_reg(u8 regnum, u8 value)
   res = i2c_master_send(ltr559_obj->client, databuf, 0x2);
 
   if (res < 0)
-    {
-      APS_ERR("wirte reg send res = %d\n",res);
-        return res;
-    }
-    
+  {
+    APS_ERR("wirte reg send res = %d\n",res);
+    return res;
+  }  
   else
     return 0;
 }
@@ -307,13 +285,11 @@ static ssize_t ltr559_dynamic_calibrate(void)
   if(!ltr559_obj)
   { 
     APS_ERR("ltr559_obj is null!!\n");
-    //len = sprintf(buf, "ltr559_obj is null\n");
     return -1;
   }
 
   // wait for register to be stable
   msleep(15);
-
 
   for (i = 0; i < count; i++) {
     // wait for ps value be stable
@@ -336,7 +312,6 @@ static ssize_t ltr559_dynamic_calibrate(void)
     data_total+=data;
 
     if (max++ > 100) {
-      //len = sprintf(buf,"adjust fail\n");
       return len;
     }
   }
@@ -345,31 +320,30 @@ static ssize_t ltr559_dynamic_calibrate(void)
   if((noise < dynamic_calibrate+200)){
     dynamic_calibrate = noise;
     if(noise < 100){
-        atomic_set(&obj->ps_thd_val_high,  noise+70);//wangxiqiang
-        atomic_set(&obj->ps_thd_val_low, noise+55);
+      atomic_set(&obj->ps_thd_val_high,  noise+70);//wangxiqiang
+      atomic_set(&obj->ps_thd_val_low, noise+55);
     }else if(noise < 200){
-        atomic_set(&obj->ps_thd_val_high,  noise+75);
-        atomic_set(&obj->ps_thd_val_low, noise+60);
+      atomic_set(&obj->ps_thd_val_high,  noise+75);
+      atomic_set(&obj->ps_thd_val_low, noise+60);
     }else if(noise < 300){
-        atomic_set(&obj->ps_thd_val_high,  noise+100);
-        atomic_set(&obj->ps_thd_val_low, noise+70);
+      atomic_set(&obj->ps_thd_val_high,  noise+100);
+      atomic_set(&obj->ps_thd_val_low, noise+70);
     }else if(noise < 400){
-        atomic_set(&obj->ps_thd_val_high,  noise+150);
-        atomic_set(&obj->ps_thd_val_low, noise+100);
+      atomic_set(&obj->ps_thd_val_high,  noise+150);
+      atomic_set(&obj->ps_thd_val_low, noise+100);
     }else if(noise < 600){
-        atomic_set(&obj->ps_thd_val_high,  noise+200);
-        atomic_set(&obj->ps_thd_val_low, noise+150);
+      atomic_set(&obj->ps_thd_val_high,  noise+200);
+      atomic_set(&obj->ps_thd_val_low, noise+150);
     }else if(noise < 1000){
       atomic_set(&obj->ps_thd_val_high,  noise+250);
       atomic_set(&obj->ps_thd_val_low, noise+200);  
     }else if(noise < 1600){
-        atomic_set(&obj->ps_thd_val_high,  noise+300);
-        atomic_set(&obj->ps_thd_val_low, noise+200);
+      atomic_set(&obj->ps_thd_val_high,  noise+300);
+      atomic_set(&obj->ps_thd_val_low, noise+200);
     }
     else{
-        atomic_set(&obj->ps_thd_val_high,  1750);
-        atomic_set(&obj->ps_thd_val_low, 1700);
-        //isadjust = 0;
+      atomic_set(&obj->ps_thd_val_high,  1750);
+      atomic_set(&obj->ps_thd_val_low, 1700);
       printk(KERN_ERR "ltr558 the proximity sensor structure is error\n");
     }
   }
@@ -389,7 +363,7 @@ static ssize_t ltr559_show_als(struct device_driver *ddri, char *buf)
     return 0;
   }
   res = ltr559_als_read(als_gainrange);
-    return snprintf(buf, PAGE_SIZE, "0x%04X\n", res);    
+  return snprintf(buf, PAGE_SIZE, "0x%04X\n", res);    
   
 }
 /*----------------------------------------------------------------------------*/
@@ -402,7 +376,7 @@ static ssize_t ltr559_show_ps(struct device_driver *ddri, char *buf)
     return 0;
   }
   res = ltr559_ps_read();
-    return snprintf(buf, PAGE_SIZE, "0x%04X\n", res);     
+  return snprintf(buf, PAGE_SIZE, "0x%04X\n", res);     
 }
 /*----------------------------------------------------------------------------*/
 
@@ -420,16 +394,13 @@ static ssize_t ltr559_show_status(struct device_driver *ddri, char *buf)
   
   if(ltr559_obj->hw)
   {
-  
     len += snprintf(buf+len, PAGE_SIZE-len, "CUST: %d, (%d %d)\n", 
-      ltr559_obj->hw->i2c_num, ltr559_obj->hw->power_id, ltr559_obj->hw->power_vol);
-    
+    ltr559_obj->hw->i2c_num, ltr559_obj->hw->power_id, ltr559_obj->hw->power_vol);
   }
   else
   {
     len += snprintf(buf+len, PAGE_SIZE-len, "CUST: NULL\n");
   }
-
 
   len += snprintf(buf+len, PAGE_SIZE-len, "MISC: %d %d\n", atomic_read(&ltr559_obj->als_suspend), atomic_read(&ltr559_obj->ps_suspend));
 
@@ -466,10 +437,9 @@ static ssize_t ltr559_show_reg(struct device_driver *ddri, char *buf, size_t cou
   int reg[]={0x80,0x81,0x82,0x83,0x84,0x85,0x86,0x87,0x88,0x89,0x8a,0x8b,0x8c,
     0x8d,0x8e,0x8f,0x90,0x91,0x92,0x93,0x94,0x95,0x97,0x98,0x99,0x9a,0x9e};
   for(i=0;i<27;i++)
-    {
+  {
     len += snprintf(buf+len, PAGE_SIZE-len, "reg:0x%04X value: 0x%04X\n", reg[i],ltr559_i2c_read_reg(reg[i]));  
-
-      }
+  }
   return len;
 }
 /*----------------------------------------------------------------------------*/
@@ -504,10 +474,9 @@ static ssize_t ltr559_show_als_en(struct device_driver *ddri, char *buf, size_t 
   int reg[]={0x80,0x81,0x82,0x83,0x84,0x85,0x86,0x87,0x88,0x89,0x8a,0x8b,0x8c,
     0x8d,0x8e,0x8f,0x90,0x91,0x92,0x93,0x94,0x95,0x97,0x98,0x99,0x9a,0x9e};
   for(i=0;i<27;i++)
-    {
+  {
     len += snprintf(buf+len, PAGE_SIZE-len, "reg:0x%04X value: 0x%04X\n", reg[i],ltr559_i2c_read_reg(reg[i]));  
-
-      }
+  }
   return len;
 }
 /*----------------------------------------------------------------------------*/
@@ -529,8 +498,6 @@ static ssize_t ltr559_store_als_en(struct device_driver *ddri, char *buf, size_t
   
   return count;    
 }
-
-
 
 /*----------------------------------------------------------------------------*/
 static DRIVER_ATTR(als_en,     S_IWUSR | S_IRUGO, ltr559_show_als_en,   ltr559_store_als_en);
@@ -614,43 +581,43 @@ static int ltr559_ps_set_thres()
     struct i2c_client *client = ltr559_obj->client;
     struct ltr559_priv *obj = ltr559_obj;
     APS_DBG("ps_cali.valid: %d\n", ps_cali.valid);
-  // if(1 == ps_cali.valid)
-  // {
-  //   databuf[0] = LTR559_PS_THRES_LOW_0; 
-  //   databuf[1] = (u8)(ps_cali.far_away & 0x00FF);
-  //   res = i2c_master_send(client, databuf, 0x2);
-  //   if(res <= 0)
-  //   {
-  //     goto EXIT_ERR;
-  //     return ltr559_ERR_I2C;
-  //   }
-  //   databuf[0] = LTR559_PS_THRES_LOW_1; 
-  //   databuf[1] = (u8)((ps_cali.far_away & 0xFF00) >> 8);
-  //   res = i2c_master_send(client, databuf, 0x2);
-  //   if(res <= 0)
-  //   {
-  //     goto EXIT_ERR;
-  //     return ltr559_ERR_I2C;
-  //   }
-  //   databuf[0] = LTR559_PS_THRES_UP_0;  
-  //   databuf[1] = (u8)(ps_cali.close & 0x00FF);
-  //   res = i2c_master_send(client, databuf, 0x2);
-  //   if(res <= 0)
-  //   {
-  //     goto EXIT_ERR;
-  //     return ltr559_ERR_I2C;
-  //   }
-  //   databuf[0] = LTR559_PS_THRES_UP_1;  
-  //   databuf[1] = (u8)((ps_cali.close & 0xFF00) >> 8);;
-  //   res = i2c_master_send(client, databuf, 0x2);
-  //   if(res <= 0)
-  //   {
-  //     goto EXIT_ERR;
-  //     return ltr559_ERR_I2C;
-  //   }
-  // }
-  // else
-  // {
+  if(1 == ps_cali.valid)
+  {
+    databuf[0] = LTR559_PS_THRES_LOW_0; 
+    databuf[1] = (u8)(ps_cali.far_away & 0x00FF);
+    res = i2c_master_send(client, databuf, 0x2);
+    if(res <= 0)
+    {
+      goto EXIT_ERR;
+      return ltr559_ERR_I2C;
+    }
+    databuf[0] = LTR559_PS_THRES_LOW_1; 
+    databuf[1] = (u8)((ps_cali.far_away & 0xFF00) >> 8);
+    res = i2c_master_send(client, databuf, 0x2);
+    if(res <= 0)
+    {
+      goto EXIT_ERR;
+      return ltr559_ERR_I2C;
+    }
+    databuf[0] = LTR559_PS_THRES_UP_0;  
+    databuf[1] = (u8)(ps_cali.close & 0x00FF);
+    res = i2c_master_send(client, databuf, 0x2);
+    if(res <= 0)
+    {
+      goto EXIT_ERR;
+      return ltr559_ERR_I2C;
+    }
+    databuf[0] = LTR559_PS_THRES_UP_1;  
+    databuf[1] = (u8)((ps_cali.close & 0xFF00) >> 8);;
+    res = i2c_master_send(client, databuf, 0x2);
+    if(res <= 0)
+    {
+      goto EXIT_ERR;
+      return ltr559_ERR_I2C;
+    }
+  }
+  else
+  {
     databuf[0] = LTR559_PS_THRES_LOW_0; 
     databuf[1] = (u8)((atomic_read(&obj->ps_thd_val_low)) & 0x00FF);
     res = i2c_master_send(client, databuf, 0x2);
@@ -684,9 +651,7 @@ static int ltr559_ps_set_thres()
       goto EXIT_ERR;
       return ltr559_ERR_I2C;
     }
-  
-  // }
-
+  }
   res = 0;
   return res;
   
@@ -707,7 +672,6 @@ static int ltr559_ps_enable(int gainrange)
   int data;
   hwm_sensor_data sensor_data;  
 
-
   int error;
   int setgain;
     APS_LOG("ltr559_ps_enable() ...start!\n");
@@ -724,7 +688,6 @@ static int ltr559_ps_enable(int gainrange)
     case PS_RANGE64:
       setgain = MODE_PS_ON_Gain64;
       break;
-
 
     default:
       setgain = MODE_PS_ON_Gain16;
@@ -754,12 +717,6 @@ static int ltr559_ps_enable(int gainrange)
         APS_LOG("ltr559_ps_enable() error2\n");
       return error;
   } 
-  /*error = ltr559_i2c_write_reg(LTR559_PS_LED, 0x63); 
-  if(error<0)
-    {
-        APS_LOG("ltr559_ps_enable() error3...\n");
-      return error;
-  }*/
 
   data = ltr559_i2c_read_reg(LTR559_PS_CONTR);
   
@@ -803,9 +760,6 @@ static int ltr559_ps_enable(int gainrange)
     }
   
   APS_LOG("ltr559_ps_enable ...OK!\n");
-
-
-  
   return error;
 
   EXIT_ERR:
@@ -838,9 +792,9 @@ static int ltr559_ps_disable(void)
 static int ltr559_ps_read(void)
 {
   int psval_lo, psval_hi, psdata;
-// #ifdef LTR556_SW_CALI//lisong test
-//     struct ltr559_priv *obj = ltr559_obj;
-// #endif
+#ifdef LTR556_SW_CALI//lisong test
+    struct ltr559_priv *obj = ltr559_obj;
+#endif
   psval_lo = ltr559_i2c_read_reg(LTR559_PS_DATA_0);
   APS_DBG("ps_rawdata_psval_lo = %d\n", psval_lo);
   if (psval_lo < 0){
@@ -859,14 +813,14 @@ static int ltr559_ps_read(void)
   }
   
   psdata = ((psval_hi & 7)* 256) + psval_lo;
-// #ifdef LTR556_SW_CALI//lisong test
-//     //psdata = (psdata >> 3);
+#ifdef LTR556_SW_CALI//lisong test
+    //psdata = (psdata >> 3);
 
-//     if(psdata < obj->ps_cali)
-//     psdata = 0;
-//   else
-//     psdata = psdata - obj->ps_cali;
-// #endif
+    if(psdata < obj->ps_cali)
+    psdata = 0;
+  else
+    psdata = psdata - obj->ps_cali;
+#endif
   APS_DBG("ps_rawdata = %d\n", psdata);
 
   //prox_val = psdata;
@@ -921,7 +875,6 @@ static int ltr559_als_enable(int gainrange)
 
   msleep(WAKEUP_DELAY);
 
-  ltr559_i2c_write_reg(LTR559_ALS_MEAS_RATE, 0x08);
   /* =============== 
    * ** IMPORTANT **
    * ===============
@@ -1113,7 +1066,7 @@ static void ltr559_power(struct alsps_hw *hw, unsigned int on)
 
 /*----------------------------------------------------------------------------*/
 /*for interrup work mode support -- by liaoxl.lenovo 12.08.2011*/
-//revers
+
 static int ltr559_check_and_clear_intr(struct i2c_client *client) 
 {
 //***
@@ -1273,9 +1226,6 @@ EXIT_ERR:
   return 1;
 }
 
-
-
-//revers
 static int ltr559_devinit(void)
 {
   int res;
@@ -1308,7 +1258,7 @@ static int ltr559_devinit(void)
   als_gainrange = init_als_gain;
 
   databuf[0] = LTR559_ALS_MEAS_RATE;  //wangxiqiang
-  databuf[1] = 0x34;
+  databuf[1] = 0x22;
 
   res = i2c_master_send(client, databuf, 0x2);
   if (res <= 0)
@@ -1527,7 +1477,7 @@ static int ltr559_get_ps_value(struct ltr559_priv *obj, u16 ps)
 
 /*----------------------------------------------------------------------------*/
 /*for interrup work mode support */
-//revers
+
 static void ltr559_eint_work(struct work_struct *work)
 {
   struct ltr559_priv *obj = (struct ltr559_priv *)container_of(work, struct ltr559_priv, eint_work);
@@ -1679,8 +1629,6 @@ static void ltr559_eint_work(struct work_struct *work)
   mt_eint_unmask(CUST_EINT_ALS_NUM);        
 }
 
-
-
 /****************************************************************************** 
  * Function Configuration
 ******************************************************************************/
@@ -1703,7 +1651,6 @@ static int ltr559_release(struct inode *inode, struct file *file)
   return 0;
 }
 /*----------------------------------------------------------------------------*/
-
 
 static int ltr559_unlocked_ioctl(struct file *file, unsigned int cmd,
        unsigned long arg)       
@@ -1887,7 +1834,6 @@ static int ltr559_unlocked_ioctl(struct file *file, unsigned int cmd,
       }      
       break;
 
-
     case ALSPS_IOCTL_CLR_CALI: //0x4004840f
     
       if(copy_from_user(&dat, ptr, sizeof(dat)))
@@ -1895,14 +1841,6 @@ static int ltr559_unlocked_ioctl(struct file *file, unsigned int cmd,
         err = -EFAULT;
         goto err_out;
       }
-      // if(dat == 0)
-      //   obj->ps_cali = 0;
-
-      //       atomic_set(&obj->ps_thd_val_high, (obj->hw->ps_threshold_high));
-      //       atomic_set(&obj->ps_thd_val_low,  (obj->hw->ps_threshold_low));//need to confirm
-
-      //       ltr559_ps_set_thres();
-
       break;      
 
     case ALSPS_IOCTL_GET_CALI: //0x80048410
@@ -1921,24 +1859,10 @@ static int ltr559_unlocked_ioctl(struct file *file, unsigned int cmd,
         goto err_out;
       }
       obj->ps_cali = ps_cali;
+      break;  
 
-      // if(obj->ps_cali < (int)(obj->hw->ps_threshold_low-40))
-      // {       
-      //   atomic_set(&obj->ps_thd_val_high,  (obj->hw->ps_threshold_high-obj->ps_cali));
-      //   atomic_set(&obj->ps_thd_val_low,  (obj->hw->ps_threshold_low-obj->ps_cali));
-      // }
-      // else
-      // {
-      //   atomic_set(&obj->ps_thd_val_high, (obj->ps_cali+120));
-      //   atomic_set(&obj->ps_thd_val_low,  (obj->ps_cali+48));
-      // }    
-
-      //       ltr559_ps_set_thres();
-        
-            break;  
-
-        case ALSPS_SET_PS_THRESHOLD: //0x40048412
-            break;
+    case ALSPS_SET_PS_THRESHOLD: //0x40048412
+      break;
                 
     case ALSPS_GET_PS_THRESHOLD_HIGH:  //0x8004840b
       //threshold[0] = atomic_read(&obj->ps_thd_val_high) - obj->ps_cali;
@@ -1952,15 +1876,15 @@ static int ltr559_unlocked_ioctl(struct file *file, unsigned int cmd,
       break;  
             
     case ALSPS_GET_PS_THRESHOLD_LOW:  //0x8004840c
-            //threshold[0] = atomic_read(&obj->ps_thd_val_low) - obj->ps_cali;
-            threshold[0] = atomic_read(&obj->ps_thd_val_low);
-            APS_ERR("%s get threshold low: 0x%x\n", __func__, threshold[0]); 
-            if(copy_to_user(ptr, &threshold[0], sizeof(threshold[0])))
-            {
-              err = -EFAULT;
-              goto err_out;
-            }
-            break;      
+      //threshold[0] = atomic_read(&obj->ps_thd_val_low) - obj->ps_cali;
+      threshold[0] = atomic_read(&obj->ps_thd_val_low);
+      APS_ERR("%s get threshold low: 0x%x\n", __func__, threshold[0]); 
+      if(copy_to_user(ptr, &threshold[0], sizeof(threshold[0])))
+      {
+        err = -EFAULT;
+        goto err_out;
+      }
+      break;      
     default:
       APS_ERR("%s not supported = 0x%04x", __FUNCTION__, cmd);
       err = -ENOIOCTLCMD;
@@ -2272,7 +2196,6 @@ int ltr559_als_operate(void* self, uint32_t command, void* buff_in, int size_in,
   return err;
 }
 
-
 /*----------------------------------------------------------------------------*/
 #if !defined(MTK_AUTO_DETECT_ALSPS)
 static int ltr559_i2c_detect(struct i2c_client *client, int kind, struct i2c_board_info *info) 
@@ -2395,31 +2318,28 @@ static int ltr559_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 #endif
 
   APS_LOG("%s: OK\n", __func__);
-  return 0;
-
 #if defined(MTK_AUTO_DETECT_ALSPS)
-        ltr559_init_flag = 0;
+  ltr559_init_flag = 0;
 #endif
 
+  return 0;
   exit_create_attr_failed:
   misc_deregister(&ltr559_device);
   exit_misc_device_register_failed:
   exit_init_failed:
-  //i2c_detach_client(client);
   exit_kfree:
   kfree(obj);
   exit:
   ltr559_i2c_client = NULL;           
-//  MT6516_EINTIRQMask(CUST_EINT_ALS_NUM);  /*mask interrupt if fail*/
   APS_ERR("%s: err = %d\n", __func__, err);
 #if defined(MTK_AUTO_DETECT_ALSPS)
-        ltr559_init_flag = -1;
+  ltr559_init_flag = -1;
 #endif
   return err;
 }
 
 /*----------------------------------------------------------------------------*/
-//revers
+
 static int ltr559_i2c_remove(struct i2c_client *client)
 {
   int err;  
@@ -2439,22 +2359,20 @@ static int ltr559_i2c_remove(struct i2c_client *client)
 
   return 0;
 }
+
 /*----------------------------------------------------------------------------*/
-//revers
 static int ltr559_local_init(void)
 {
-    APS_FUN();
-    //ltr559_power(hw, 1);
-    if(i2c_add_driver(&ltr559_i2c_driver))
-    {
-        APS_ERR("add driver error\n");
-        return -1;
-    } 
-    return 0;
+  APS_FUN();
+  if(i2c_add_driver(&ltr559_i2c_driver))
+  {
+      APS_ERR("add driver error\n");
+      return -1;
+  } 
+  return 0;
 }
 
 /*----------------------------------------------------------------------------*/
-//revers
 static int ltr559_local_uninit(struct platform_device *pdev)
 {
   APS_FUN();  
@@ -2465,7 +2383,6 @@ static int ltr559_local_uninit(struct platform_device *pdev)
 }
 
 /*----------------------------------------------------------------------------*/
-//revers
 static int __init ltr559_init(void)
 {
   APS_FUN();
@@ -2474,8 +2391,8 @@ static int __init ltr559_init(void)
   alsps_driver_add(&ltr559_init_info);
   return 0;
 }
+
 /*----------------------------------------------------------------------------*/
-//revers
 static void __exit ltr559_exit(void)
 {
   APS_FUN();
