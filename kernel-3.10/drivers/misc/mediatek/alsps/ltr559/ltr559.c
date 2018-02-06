@@ -756,7 +756,7 @@ static int ltr559_ps_enable(int gainrange)
    * Other settings like timing and threshold to be set here, if required.
    * Not set and kept as device default for now.
    */
-   error = ltr559_i2c_write_reg(LTR559_PS_N_PULSES, 8); 
+   error = ltr559_i2c_write_reg(LTR559_PS_N_PULSES, 2); 
   if(error<0)
     {
         APS_LOG("ltr559_ps_enable() error2\n");
@@ -789,7 +789,6 @@ static int ltr559_ps_enable(int gainrange)
 
       ltr559_ps_set_thres();
 
-      #if 1
       databuf[0] = LTR559_INTERRUPT;  
       databuf[1] = 0x01;
       res = i2c_master_send(client, databuf, 0x2);
@@ -808,7 +807,6 @@ static int ltr559_ps_enable(int gainrange)
         return ltr559_ERR_I2C;
       }
       mt_eint_unmask(CUST_EINT_ALS_NUM);      
-      #endif
   
     }
   
@@ -848,9 +846,9 @@ static int ltr559_ps_disable(void)
 static int ltr559_ps_read(void)
 {
   int psval_lo, psval_hi, psdata;
-#ifdef LTR556_SW_CALI//lisong test
-    struct ltr559_priv *obj = ltr559_obj;
-#endif
+// #ifdef LTR556_SW_CALI//lisong test
+//     struct ltr559_priv *obj = ltr559_obj;
+// #endif
   psval_lo = ltr559_i2c_read_reg(LTR559_PS_DATA_0);
   APS_DBG("ps_rawdata_psval_lo = %d\n", psval_lo);
   if (psval_lo < 0){
@@ -869,21 +867,20 @@ static int ltr559_ps_read(void)
   }
   
   psdata = ((psval_hi & 7)* 256) + psval_lo;
-#ifdef LTR556_SW_CALI//lisong test
-    //psdata = (psdata >> 3);
+// #ifdef LTR556_SW_CALI//lisong test
+//     //psdata = (psdata >> 3);
 
-    if(psdata < obj->ps_cali)
-    psdata = 0;
-  else
-    psdata = psdata - obj->ps_cali;
-#endif
-    APS_DBG("ps_rawdata = %d\n", psdata);
+//     if(psdata < obj->ps_cali)
+//     psdata = 0;
+//   else
+//     psdata = psdata - obj->ps_cali;
+// #endif
+  APS_DBG("ps_rawdata = %d\n", psdata);
 
-  prox_val = psdata;
+  //prox_val = psdata;
     
   out:
   final_prox_val = psdata;
-  
   
   return psdata;
 }
