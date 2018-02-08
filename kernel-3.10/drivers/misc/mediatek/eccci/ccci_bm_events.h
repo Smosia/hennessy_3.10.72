@@ -22,7 +22,7 @@
  * protection, just like TRACE_INCLUDE_FILE.
  */
 #undef TRACE_SYSTEM
-#define TRACE_SYSTEM modem_ut
+#define TRACE_SYSTEM ccci
 
 /*
  * Notice that this file is not protected like a normal header.
@@ -74,32 +74,24 @@
  * to the data structure in the ring buffer, and is defined by the
  * TP_STRUCT__entry.
  */
-TRACE_EVENT(process_count,
-
-	TP_PROTO(unsigned int rx_cnt, unsigned int tx_cnt, unsigned int rx_rate, unsigned int tx_rate),
-
-	TP_ARGS(rx_cnt, tx_cnt, rx_rate, tx_rate),
-
-	TP_STRUCT__entry(
-		__field(	unsigned int,	rx_cnt			)
-		__field(	unsigned int,	tx_cnt			)
-		__field(	unsigned int,	rx_rate			)
-		__field(	unsigned int,	tx_rate			)
-	),
-
-	TP_fast_assign(
-		__entry->rx_cnt	= rx_cnt;
-		__entry->tx_cnt	= tx_cnt;
-		__entry->rx_rate	= rx_rate;
-		__entry->tx_rate	= tx_rate;
-	),
-
-	TP_printk("%u,%u,%u,%u", __entry->rx_cnt, __entry->tx_cnt, __entry->rx_rate, __entry->tx_rate)
-);
+TRACE_EVENT(ccci_bm,
+	    TP_PROTO(unsigned int req_bool_size, unsigned int bm_pool1_size, unsigned int bm_pool2_size,
+		     unsigned int bm_pool3_size), TP_ARGS(req_bool_size, bm_pool1_size, bm_pool2_size, bm_pool3_size),
+	    TP_STRUCT__entry(__field(unsigned int, req_bool_size)
+			     __field(unsigned int, bm_pool1_size)
+			     __field(unsigned int, bm_pool2_size)
+			     __field(unsigned int, bm_pool3_size)
+		),
+	    TP_fast_assign(__entry->req_bool_size = req_bool_size;
+			   __entry->bm_pool1_size = bm_pool1_size;
+			   __entry->bm_pool2_size = bm_pool2_size;
+			   __entry->bm_pool3_size = bm_pool3_size;),
+	    TP_printk("%u,%u,%u,%u", _entry->req_bool_size, __entry->bm_pool1_size, __entry->bm_pool2_size,
+		      __entry->bm_pool3_size)
+	);
 #endif
 
 /***** NOTICE! The #if protection ends here. *****/
-
 
 /*
  * There are several ways I could have done this. If I left out the
@@ -137,5 +129,5 @@ TRACE_EVENT(process_count,
 /*
  * TRACE_INCLUDE_FILE is not needed if the filename and TRACE_SYSTEM are equal
  */
-#define TRACE_INCLUDE_FILE modem_ut_events
+#define TRACE_INCLUDE_FILE ccci_events
 #include <trace/define_trace.h>

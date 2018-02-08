@@ -2,7 +2,7 @@ ifeq ($(CONFIG_MTK_ECCCI_DRIVER), y)
 
 include $(srctree)/drivers/misc/mediatek/Makefile.custom
 ccflags-y += -I$(srctree)/
-ccflags-y += -I$(srctree)/drivers/misc/mediatek/eccci/$(MTK_PLATFORM)
+ccflags-y += -I$(srctree)/drivers/misc/mediatek/eccci/mt6795/
 ccflags-y += -I$(srctree)/drivers/misc/mediatek/eccci/
 # security objects
 MASP_CORE_DRIVER_DIR := $(srctree)/drivers/misc/mediatek/drivers/masp

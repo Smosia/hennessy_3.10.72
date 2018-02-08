@@ -1,7 +1,7 @@
 #ifndef __CLDMA_PLATFORM_H__
 #define __CLDMA_PLATFORM_H__
 
-// this is the platform header file for CLDMA MODEM, not just CLDMA!
+/* this is the platform header file for CLDMA MODEM, not just CLDMA! */
 
 /* Modem WDT */
 #define WDT_MD_MODE		(0x00)
@@ -20,28 +20,27 @@
 #define APCCIF_ACK    (0x14)
 #define APCCIF_CHDATA (0x100)
 #define APCCIF_SRAM_SIZE 512
-// channel usage
+/* channel usage */
 #define EXCEPTION_NONE (0)
-// AP to MD
+/* AP to MD */
 #define H2D_EXCEPTION_ACK (1)
 #define H2D_EXCEPTION_CLEARQ_ACK (2)
 #define H2D_FORCE_MD_ASSERT (3)
-// MD to AP
+/* MD to AP */
 #define D2H_EXCEPTION_INIT (1)
 #define D2H_EXCEPTION_INIT_DONE (2)
 #define D2H_EXCEPTION_CLEARQ_DONE (3)
 #define D2H_EXCEPTION_ALLQ_RESET (4)
-// peer
+/* peer */
 #define AP_MD_PEER_WAKEUP (5)
 #define AP_MD_SEQ_ERROR (6)
 
-struct md_hw_info
-{
-	// HW info - Register Address
+struct md_hw_info {
+	/* HW info - Register Address */
 	unsigned long cldma_ap_ao_base;
 	unsigned long cldma_md_ao_base;
 	unsigned long cldma_ap_pdn_base;
-	unsigned long cldma_md_pdn_base;    
+	unsigned long cldma_md_pdn_base;
 	unsigned long md_rgu_base;
 	unsigned long md_boot_slave_Vector;
 	unsigned long md_boot_slave_Key;
@@ -50,13 +49,13 @@ struct md_hw_info
 	unsigned long md_ccif_base;
 	unsigned int sram_size;
 
-	// HW info - Interrutpt ID
+	/* HW info - Interrutpt ID */
 	unsigned int cldma_irq_id;
 	unsigned int ap_ccif_irq_id;
 	unsigned int md_wdt_irq_id;
 	unsigned int ap2md_bus_timeout_irq_id;
 
-	// HW info - Interrupt flags
+	/* HW info - Interrupt flags */
 	unsigned long cldma_irq_flags;
 	unsigned long ap_ccif_irq_flags;
 	unsigned long md_wdt_irq_flags;
@@ -74,6 +73,7 @@ int md_cd_power_on(struct ccci_modem *md);
 int md_cd_power_off(struct ccci_modem *md, unsigned int timeout);
 int md_cd_let_md_go(struct ccci_modem *md);
 void md_cd_lock_cldma_clock_src(int locked);
+void md_cd_lock_modem_clock_src(int locked);
 int md_cd_bootup_cleanup(struct ccci_modem *md, int success);
 int md_cd_low_power_notify(struct ccci_modem *md, LOW_POEWR_NOTIFY_TYPE type, int level);
 void cldma_dump_register(struct ccci_modem *md);
@@ -81,5 +81,9 @@ int md_cd_get_modem_hw_info(struct platform_device *dev_ptr, struct ccci_dev_cfg
 int md_cd_io_remap_md_side_register(struct ccci_modem *md);
 void md_cd_dump_debug_register(struct ccci_modem *md);
 void md_cd_check_emi_state(struct ccci_modem *md, int polling);
+void md_cd_check_md_DCM(struct ccci_modem *md);
 
-#endif //__CLDMA_PLATFORM_H__
+extern unsigned long infra_ao_base;
+extern void ccci_mem_dump(int md_id, void *start_addr, int len);
+
+#endif				/* __CLDMA_PLATFORM_H__ */

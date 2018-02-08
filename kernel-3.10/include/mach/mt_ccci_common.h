@@ -1,5 +1,3 @@
-#define OLD_DRIVER_CCCI
-
 #ifndef __MT_CCCI_COMMON_H__
 #define __MT_CCCI_COMMON_H__
 #include <asm/io.h>
@@ -33,20 +31,6 @@ typedef enum {
 #define MD_TG_FLAG  (MD_TDD_FLAG|MD_2G_FLAG)
 #define MD_LWG_FLAG (MD_LTE_FLAG|MD_FDD_FLAG|MD_2G_FLAG)
 #define MD_LTG_FLAG (MD_LTE_FLAG|MD_TDD_FLAG|MD_2G_FLAG)
-
-#ifdef OLD_DRIVER_CCCI
-#define CCCI_SMEM_DUMP_SIZE      4096// smem size we dump when EE
-#define CCCI_SMEM_SIZE_EXCEPTION 0x200000//exception smem total size 
-#define CCCI_SMEM_OFFSET_EXREC 2048// where the exception record begain in smem
-#define CCCC_SMEM_CCIF_SRAM_SIZE 16
-#define CCCI_SMEM_OFFSET_CCIF_SRAM (CCCI_SMEM_OFFSET_EXREC+1024-CCCC_SMEM_CCIF_SRAM_SIZE)
-#define CCCI_SMEM_OFFSET_EPON 0xC64
-#define CCCI_SMEM_OFFSET_SEQERR 0x34
-#define CCCI_SMEM_OFFSET_CCCI_DEBUG 0 // where the MD CCCI debug info begain in smem
-#define CCCI_SMEM_CCCI_DEBUG_SIZE 2048 // MD CCCI debug info size
-#define CCCI_SMEM_OFFSET_MDSS_DEBUG 2048 // where the MD SS debug info begain in smem
-#define CCCI_SMEM_MDSS_DEBUG_SIZE 2048 // MD SS debug info size
-#endif
 
 
 /* MD type defination */
@@ -91,7 +75,6 @@ typedef enum {
 #define RELEASE_STR		"Release"
 #define INVALID_STR		"INVALID"
 
-#ifndef OLD_DRIVER_CCCI
 struct ccci_header {
 	u32 data[2]; /* do NOT assump data[1] is data length in Rx */
 /* #ifdef FEATURE_SEQ_CHECK_EN */
@@ -103,7 +86,6 @@ struct ccci_header {
 /* #endif */
 	u32 reserved;
 } __packed; /* not necessary, but it's a good gesture, :) */
-#endif
 
 /*do not modify this c2k structure, because we assume its total size is 32bit,
    and used as ccci_header's 'reserved' member*/
@@ -775,7 +757,6 @@ enum {
 #define NORMAL_BOOT_ID 0
 #define META_BOOT_ID 1
 
-#ifndef OLD_DRIVER_CCCI
 typedef enum {
 	INVALID = 0, /* no traffic */
 	GATED, /* broadcast by modem driver, no traffic */
@@ -789,7 +770,6 @@ typedef enum {
 	TX_FULL, /* broadcast by modem driver, illegal for md->md_state, only for network! */
 	BOOT_FAIL, /* broadcast by port_kernel, illegal for md->md_state */
 } MD_STATE; /* for CCCI internal */
-#endif
 
 /* ================================================================================= */
 /* Image type and header defination part */
