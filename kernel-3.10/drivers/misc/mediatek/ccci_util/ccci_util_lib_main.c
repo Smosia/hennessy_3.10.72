@@ -19,19 +19,13 @@
 #include <linux/of_fdt.h>
 #endif
 #include <asm/setup.h>
-#include <asm/atomic.h>
-#include <mach/mt_typedefs.h>
-#include <mach/mt_boot_common.h>
+#include <linux/atomic.h>
 
-#include <mach/mt_ccci_common.h>
+#include "ccci_util_lib_main.h"
 
-extern int ccci_common_sysfs_init(void);
-extern void ccci_log_init(void);
-extern int ccci_util_fo_init(void);
-
-//===================================================
-// Dummy function part
-//===================================================
+/*=================================================== */
+/* Dummy function part */
+/*=================================================== */
 int ccci_parse_meta_md_setting(unsigned char args[])
 {
 	return 0;
@@ -39,9 +33,11 @@ int ccci_parse_meta_md_setting(unsigned char args[])
 
 static int __init ccci_util_init(void)
 {
-	ccci_util_fo_init();
 	ccci_log_init();
+	ccci_util_fo_init();
 	ccci_common_sysfs_init();
+	ccci_timer_for_md_init();
+
 	return 0;
 }
 

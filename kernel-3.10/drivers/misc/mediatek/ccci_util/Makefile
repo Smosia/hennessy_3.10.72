@@ -1,5 +1,5 @@
 #FPGA project no need build-in
-ifndef CONFIG_MTK_FPGA 
+ifndef CONFIG_MTK_FPGA
 
 # ccci_util is build after eccci or later
 ifdef CONFIG_MTK_ECCCI_DRIVER
@@ -12,9 +12,10 @@ ccci_util_lib-y := ccci_util_lib_fo.o
 ccci_util_lib-y += ccci_util_lib_load_img.o
 ccci_util_lib-y += ccci_util_lib_sys.o
 ccci_util_lib-y += ccci_private_log.o
+ccci_util_lib-y += ccci_util_lib_time.o
 ccci_util_lib-y += ccci_util_lib_main.o
 
-endif 
+endif
 
 ifeq ($(CONFIG_MTK_SECURITY_SW_SUPPORT), y)
 ccflags-y  += -DENABLE_MD_IMG_SECURITY_FEATURE

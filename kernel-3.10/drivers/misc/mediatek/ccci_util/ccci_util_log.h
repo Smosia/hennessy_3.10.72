@@ -1,37 +1,27 @@
 #ifndef __CCCI_UTIL_LOG_H__
 #define __CCCI_UTIL_LOG_H__
 
-// No MD id message part
-#define CCCI_UTIL_DBG_MSG(fmt, args...) \
-do { \
-	printk(KERN_DEBUG "[ccci0/util]" fmt, ##args); \
-} while(0)
+/* No MD id message part */
+#define CCCI_UTIL_DBG_MSG(fmt, args...)\
+do {} while (0)/*	pr_debug("[ccci0/util]" fmt, ##args) */
 
-#define CCCI_UTIL_INF_MSG(fmt, args...) \
-do { \
-	printk(KERN_NOTICE "[ccci0/util]" fmt, ##args); \
-} while(0)
+#define CCCI_UTIL_INF_MSG(fmt, args...)\
+do {} while (0)/*	pr_debug("[ccci0/util]" fmt, ##args) */
 
-#define CCCI_UTIL_ERR_MSG(fmt, args...) \
-do { \
-	printk(KERN_ERR "[ccci0/util]" fmt, ##args); \
-} while(0)
+#define CCCI_UTIL_ERR_MSG(fmt, args...)\
+	pr_err("[ccci0/util]" fmt, ##args)
 
-// With MD id message part
-#define CCCI_UTIL_DBG_MSG_WITH_ID(id, fmt, args...) \
-do { \
-	printk(KERN_DEBUG "[ccci%d/util]" fmt, (id+1), ##args); \
-} while(0)
+/* With MD id message part */
+#define CCCI_UTIL_DBG_MSG_WITH_ID(id, fmt, args...)\
+do {} while (0)/*	pr_debug("[ccci%d/util]" fmt, (id+1), ##args) */
 
-#define CCCI_UTIL_INF_MSG_WITH_ID(id, fmt, args...) \
-do { \
-	printk(KERN_NOTICE "[ccci%d/util]" fmt, (id+1), ##args); \
-} while(0)
+#define CCCI_UTIL_INF_MSG_WITH_ID(id, fmt, args...)\
+do {} while (0)/*	pr_debug("[ccci%d/util]" fmt, (id+1), ##args) */
 
-#define CCCI_UTIL_ERR_MSG_WITH_ID(id, fmt, args...) \
-do { \
-	printk(KERN_ERR "[ccci%d/util]" fmt, (id+1), ##args); \
-} while(0)
+#define CCCI_UTIL_NOTICE_MSG_WITH_ID(id, fmt, args...) \
+	pr_notice("[ccci%d/util]" fmt, (id+1), ##args)
 
+#define CCCI_UTIL_ERR_MSG_WITH_ID(id, fmt, args...)\
+	pr_err("[ccci%d/util]" fmt, (id+1), ##args)
 
-#endif //__CCCI_UTIL_LOG_H__
+#endif /*__CCCI_UTIL_LOG_H__ */
