@@ -1,0 +1,58 @@
+#
+#Fingerprint
+#
+
+config MTK_FINGERPRINT
+	bool "CONFIG_MTK_FINGERPRINT"
+	default n
+
+config FINGERPRINT_FPC1020
+	tristate "Fingerprint FPC1020"
+	default n
+	---help---
+	Fingerprint mtk driver enable/disable in the kernel.
+	Say Y here if you want to use mediatek fingerprint driver,
+	fingerprint driver will support fingerprint function in REE,
+	it supports FPC's 102x/104x device.
+
+config MTK_GF318
+	tristate "Fingerprint GF318"
+	default n
+	---help---
+	Fingerprint mtk driver enable/disable in the kernel.
+	Say Y here if you want to use mediatek fingerprint driver,
+	fingerprint driver will support fingerprint function in REE,
+	it supports GF318 device.
+
+config MTK_GF516
+	tristate "Fingerprint GF516"
+	default n
+	---help---
+	Fingerprint mtk driver enable/disable in the kernel.
+	Say Y here if you want to use mediatek fingerprint driver,
+	fingerprint driver will support fingerprint function in REE,
+	it supports GF516 device.
+
+config FINGERPRINT_GOODIX_GF_TEE
+	tristate "Fingerprint Goodix GF TEE"
+	default n
+	---help---
+	Fingerprint mtk TEE driver enable/disable in the kernel.
+	Say Y here if you want to use mediatek fingerprint TEE driver,
+	fingerprint driver will support fingerprint function in REE,
+	it supports Goodix GF devices.
+
+config FINGERPRINT_FPC_TEE
+     default n
+     tristate "FPC 1020 family fingerprint sensor support"	
+     depends on SPI_MASTER
+
+config CONFIG_FINGERPRINT_FPC_FULL_FUNCTION
+	tristate "Fingerprint FPC full function"
+	default n
+	---help---
+	Fingerprint mtk driver enable/disable in the kernel.
+	Say Y here if you want to use mediatek fingerprint driver,
+	fingerprint driver will support fingerprint function in REE,
+	it supports FPC's 102x/104x device.
+

@@ -9,4 +9,12 @@ endif
 ifeq ($(CONFIG_FINGERPRINT_GOODIX_GF_TEE),y)
 obj-y	+=  gf/
 endif
-
+ifeq ($(CONFIG_FINGERPRINT_FPC1020),y)
+obj-y	+=  fpc1020/
+endif
+ifeq ($(CONFIG_FINGERPRINT_FPC_TEE),y)
+obj-y	+=  fpc_tee/
+endif
+ifeq ($(CONFIG_FINGERPRINT_FPC_FULL_FUNCTION),y)
+obj-y	+=  fpc_full/
+endif
