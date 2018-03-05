@@ -849,6 +849,13 @@
 			reg = <0x1100A000 0x1000>;
 			interrupts = <0 118 0x8>;
 			cell-index = <0>;
+
+			fpcspi{
+                compatible = "fpc,fpc1020";
+                status = "okay";
+                reg = <0>;
+                spi-max-frequency = <5000000>;
+        	};
 		};
 
 		THERM_CTRL@0x1100B000 {
@@ -1612,6 +1619,21 @@
 		interrupts = <0 248 0x1>;
 	};
 
+	fpc_interrupt: fpc_interrupt {
+                compatible = "fpc,fpc_irq";
+                interrupt-parent = <&eintc>;
+                interrupts = <3 1>;
+                debounce = <3 0>;
+                input-device-name = "fpc_irq";
+                /* EV_MSC, MSC_SCAN */
+                fpc,event-type = <4>;
+                fpc,event-code = <4>;
+                pinctrl-names = "default";
+                fpc,gpio_irq    = <3>;
+                fpc,gpio_reset  = <115>;
+                fpc,use_fpc2050 = <1>;
+                status = "okay";
+	};
 /* sensor part */
 		hwmsensor@0 {
 			compatible = "mediatek,hwmsensor";

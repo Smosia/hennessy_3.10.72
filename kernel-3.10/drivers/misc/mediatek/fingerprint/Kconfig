@@ -15,6 +15,15 @@ config FINGERPRINT_FPC1020
 	fingerprint driver will support fingerprint function in REE,
 	it supports FPC's 102x/104x device.
 
+config FINGERPRINT_FPC1020_TEE
+	tristate "Fingerprint FPC1020_TEE"
+	default n
+	---help---
+	Fingerprint mtk driver enable/disable in the kernel. For 6 android
+	Say Y here if you want to use mediatek fingerprint driver,
+	fingerprint driver will support fingerprint function in REE,
+	it supports FPC's 102x/104x device.
+
 config MTK_GF318
 	tristate "Fingerprint GF318"
 	default n

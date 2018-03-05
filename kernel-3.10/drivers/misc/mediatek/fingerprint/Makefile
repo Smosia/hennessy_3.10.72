@@ -12,6 +12,9 @@ endif
 ifeq ($(CONFIG_FINGERPRINT_FPC1020),y)
 obj-y	+=  fpc1020/
 endif
+ifeq ($(CONFIG_FINGERPRINT_FPC1020_TEE),y)
+obj-y	+=  fpc1020_tee/
+endif
 ifeq ($(CONFIG_FINGERPRINT_FPC_TEE),y)
 obj-y	+=  fpc_tee/
 endif

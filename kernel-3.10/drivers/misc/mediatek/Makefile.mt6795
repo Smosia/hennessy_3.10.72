@@ -164,4 +164,6 @@ obj-$(CONFIG_MD32_SUPPORT)   += md32/
 obj-$(CONFIG_MTK_SECURITY_SW_SUPPORT) +=masp/
 obj-$(CONFIG_MTK_USB2JTAG_SUPPORT) += usb2jtag/
 
+obj-$(CONFIG_MTK_FINGERPRINT)   += fingerprint/
+
 endif		# end of CONFIG_ARM64

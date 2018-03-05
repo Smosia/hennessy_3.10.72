@@ -154,10 +154,7 @@ ifeq (,$(filter $(CONFIG_MTK_PLATFORM), "mt6735"))
 obj-y	+=  flashlight/src/
 endif
 
-ifeq ($(CONFIG_MTK_FINGERPRINT),y)
-obj-y   += fingerprint/
-endif
-
+obj-$(CONFIG_MTK_FINGERPRINT)   += fingerprint/
 obj-$(CONFIG_MTK_SYNC)	+= sync/
 
 #rtc must compile before power, because they are both in fs_initcall, rtc need initial first for PMIC alarm call back
@@ -264,7 +261,7 @@ obj-$(CONFIG_MTK_IN_HOUSE_TEE_SUPPORT) += trustzone/
 #power-loss-test
 obj-$(CONFIG_PWR_LOSS_MTK_TEST) += power-loss-test/
 
-endif           # end of CONFIG_ARCH_MT6735
+endif       # end of CONFIG_ARCH_MT6735
 endif		# end of CONFIG_ARCH_MT6795
 endif       # end of CONFIG_ARCH_MT6580
 
