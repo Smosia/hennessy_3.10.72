@@ -50,7 +50,7 @@
 *1 rad = PI*degree/180, about 3.1416*degree/180
 *1 degree = rad*180/PI, about rad*180/3.1416
 */
-#define DEGREE_TO_RAD				938
+#define DEGREE_TO_RAD				57
 
 /* -----------------  BMI160 gyro macros  ---------------- */
 #define SW_CALIBRATION

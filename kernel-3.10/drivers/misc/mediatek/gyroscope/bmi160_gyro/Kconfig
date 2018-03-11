@@ -7,4 +7,3 @@ config MTK_BMI160_GYRO
         If this option is set,
 	  	it will support
          BMI160 gyroscope.
-
