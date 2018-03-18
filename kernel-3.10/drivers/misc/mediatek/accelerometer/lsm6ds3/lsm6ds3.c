@@ -225,7 +225,7 @@ static struct i2c_driver lsm6ds3_i2c_driver = {
 #ifdef LSM6DS3_NEW_ARCH
 static int lsm6ds3_local_init(void);
 static int lsm6ds3_local_uninit(void);
-static int lsm6ds3_acc_init_flag = -1;
+extern int lsm6ds3_acc_init_flag;
 static unsigned long lsm6ds3_init_flag_test = 0; //initial state
 static DEFINE_MUTEX(lsm6ds3_init_mutex);
 typedef enum {
@@ -434,6 +434,7 @@ static int LSM6DS3_CheckDeviceID(struct i2c_client *client)
 }
 
 #ifdef LSM6DS3_TILT_FUNC //tilt detector
+#if 0
 static int LSM6DS3_enable_tilt(struct i2c_client *client, bool enable)
 {
 	int res = 0;
@@ -494,8 +495,10 @@ static int LSM6DS3_enable_tilt(struct i2c_client *client, bool enable)
 	return LSM6DS3_SUCCESS;
 }
 #endif
+#endif //LSM6DS3_TILT_FUNC
 
 #ifdef LSM6DS3_STEP_COUNTER //step counter
+#if 0
 static int LSM6DS3_enable_pedo(struct i2c_client *client, bool enable)
 {
 //	u8 databuf[2] = {0};    
@@ -561,7 +564,8 @@ static int LSM6DS3_enable_pedo(struct i2c_client *client, bool enable)
 	}
 	return LSM6DS3_SUCCESS;
 }
-#endif
+#endif 
+#endif //LSM6DS3_STEP_COUNTER
 
 static int LSM6DS3_acc_SetPowerMode(struct i2c_client *client, bool enable)
 {
@@ -730,6 +734,7 @@ static int LSM6DS3_acc_SetSampleRate(struct i2c_client *client, u8 sample_rate)
 }
 
 #ifdef LSM6DS3_TILT_FUNC //tilt detector
+#if 0
 static int LSM6DS3_Enable_Tilt_Func(struct i2c_client *client, bool enable)
 {
 	u8 databuf[2] = {0}; 
@@ -767,10 +772,12 @@ static int LSM6DS3_Enable_Tilt_Func(struct i2c_client *client, bool enable)
 	}
 
 	return LSM6DS3_SUCCESS; 
-}
+} 
 #endif
+#endif // LSM6DS3_TILT_FUNC
 
 #ifdef LSM6DS3_SIGNIFICANT_MOTION
+#if 0
 static int LSM6DS3_Enable_SigMotion_Func_On_Int(struct i2c_client *client, bool enable)
 {
 	u8 databuf[2] = {0}; 
@@ -848,6 +855,8 @@ static int LSM6DS3_Enable_SigMotion_Func_On_Int(struct i2c_client *client, bool 
 	return LSM6DS3_SUCCESS; 
 }
 #endif
+#endif //LSM6DS3_SIGNIFICANT_MOTION
+
 static int LSM6DS3_Int_Ctrl(struct i2c_client *client, LSM6DS3_ACC_GYRO_INT_ACTIVE_t int_act, LSM6DS3_ACC_GYRO_INT_LATCH_CTL_t int_latch)
 {
 	u8 databuf[2] = {0}; 
@@ -906,6 +915,7 @@ static int LSM6DS3_Int_Ctrl(struct i2c_client *client, LSM6DS3_ACC_GYRO_INT_ACTI
 }
 
 #ifdef LSM6DS3_TILT_FUNC //tilt detector
+#if 0
 static int LSM6DS3_Enable_Tilt_Func_On_Int(struct i2c_client *client, LSM6DS3_ACC_GYRO_ROUNT_INT_t tilt_int, bool enable)
 {
 	u8 databuf[2] = {0}; 
@@ -961,8 +971,10 @@ static int LSM6DS3_Enable_Tilt_Func_On_Int(struct i2c_client *client, LSM6DS3_AC
 	return LSM6DS3_SUCCESS; 
 }
 #endif
+#endif //LSM6DS3_TILT_FUNC
 
 #ifdef LSM6DS3_STEP_COUNTER //step counter
+#if 0
 static int LSM6DS3_acc_Enable_Pedometer_Func(struct i2c_client *client, bool enable)
 {
 	u8 databuf[2] = {0}; 
@@ -1001,8 +1013,10 @@ static int LSM6DS3_acc_Enable_Pedometer_Func(struct i2c_client *client, bool ena
 
 	return LSM6DS3_SUCCESS;    
 }
+#endif
 
 #ifdef LSM6DS3_SIGNIFICANT_MOTION
+#if 0
 static int LSM6DS3_Set_SigMotion_Threshold(struct i2c_client *client, u8 SigMotion_Threshold)
 {
 	u8 databuf[2] = {0}; 
@@ -1079,7 +1093,9 @@ static int LSM6DS3_Enable_SigMotion_Func(struct i2c_client *client, LSM6DS3_ACC_
 	return LSM6DS3_SUCCESS;    
 }
 #endif
-#endif
+#endif //LSM6DS3_SIGNIFICANT_MOTION
+#endif //LSM6DS3_STEP_COUNTER
+
 static int LSM6DS3_acc_Enable_Func(struct i2c_client *client, LSM6DS3_ACC_GYRO_FUNC_EN_t newValue)
 {
 	u8 databuf[2] = {0}; 
@@ -1111,6 +1127,7 @@ static int LSM6DS3_acc_Enable_Func(struct i2c_client *client, LSM6DS3_ACC_GYRO_F
 }
 
 #ifdef LSM6DS3_STEP_COUNTER //step counter
+#if 0
 static int LSM6DS3_W_Open_RAM_Page(struct i2c_client *client, LSM6DS3_ACC_GYRO_RAM_PAGE_t newValue)
 {
 	u8 databuf[2] = {0}; 
@@ -1236,6 +1253,7 @@ static int LSM6DS3_Get_Pedo_DataReg(struct i2c_client *client, u16 *Value)
 	return LSM6DS3_SUCCESS;
 }
 #endif
+#endif //LSM6DS3_STEP_COUNTER
 /*----------------------------------------------------------------------------*/
 static int LSM6DS3_ReadAccData(struct i2c_client *client, char *buf, int bufsize)
 {
@@ -1547,6 +1565,105 @@ static ssize_t store_layout_value(struct device_driver *ddri, const char *buf, s
 	return count;
 }
 
+#if 0
+static int LSM6DS3_ReadAccRawDataWithCalib(struct i2c_client *client, char *buf, int bufsize)
+{
+	struct bmi160_acc_i2c_data *obj = obj_i2c_data;
+	//u8 databuf[20];
+	int acc[LSM6DS3_ACC_AXES_NUM];
+	int res = 0;
+	s16 databuf[LSM6DS3_ACC_AXES_NUM];
+	//memset(databuf, 0, sizeof(u8)*10);
+
+	if(NULL == buf)
+	{
+		return -1;
+	}
+	if(NULL == client)
+	{
+		*buf = 0;
+		return -2;
+	}
+
+	if(!sensor_power == false)
+	{
+		res = LSM6DS3_ACC_SetPowerMode(client, true);
+		if(res)
+		{
+			GSE_ERR("Power on lsm6ds3 error %d!\n", res);
+		}
+	}
+
+	res = BMI160_ACC_ReadData(client, databuf);
+	if(res)
+	{
+		GSE_ERR("I2C error: ret value=%d", res);
+		return -3;
+	}
+	else
+	{
+		/* Add compensated value performed by MTK calibration process*/
+		databuf[LSM6DS3_AXIS_X] += obj->cali_sw[LSM6DS3_AXIS_X];
+		databuf[LSM6DS3_AXIS_Y] += obj->cali_sw[LSM6DS3_AXIS_Y];
+		databuf[LSM6DS3_AXIS_Z] += obj->cali_sw[LSM6DS3_AXIS_Z];
+
+		/*remap coordinate*/
+		acc[obj->cvt.map[LSM6DS3_AXIS_X]] = obj->cvt.sign[LSM6DS3_AXIS_X]*databuf[LSM6DS3_AXIS_X];
+		acc[obj->cvt.map[LSM6DS3_AXIS_Y]] = obj->cvt.sign[LSM6DS3_AXIS_Y]*databuf[LSM6DS3_AXIS_Y];
+		acc[obj->cvt.map[LSM6DS3_AXIS_Z]] = obj->cvt.sign[LSM6DS3_AXIS_Z]*databuf[LSM6DS3_AXIS_Z];
+		//GSE_LOG("cvt x=%d, y=%d, z=%d \n",obj->cvt.sign[BMI160_ACC_AXIS_X],obj->cvt.sign[BMI160_ACC_AXIS_Y],obj->cvt.sign[BMI160_ACC_AXIS_Z]);
+
+		//GSE_LOG("Mapped gsensor data: %d, %d, %d!\n", acc[BMI160_ACC_AXIS_X], acc[BMI160_ACC_AXIS_Y], acc[BMI160_ACC_AXIS_Z]);
+
+		sprintf(buf, "%d %d %d", (s16)acc[LSM6DS3_AXIS_X], (s16)acc[LSM6DS3_AXIS_Y], (s16)acc[LSM6DS3_AXIS_Z]);
+		if(atomic_read(&obj->trace) & BMA_TRC_IOCTL)
+		{
+			GSE_LOG("gsensor data for compass: %s!\n", buf);
+		}
+	}
+
+	return 0;
+}
+
+
+/*----------------------------------------------------------------------------*/
+/*
+g sensor data for compass tilt compensation
+*/
+static ssize_t show_cpsdata_value(struct device_driver *ddri, char *buf)
+{
+	struct i2c_client *client = lsm6ds3_i2c_client;
+	char strbuf[LSM6DS3_BUFSIZE];
+
+	if(NULL == client)
+	{
+		GSE_ERR("i2c client is null!!\n");
+		return 0;
+	}
+	//BMI160_ACC_CompassReadData(client, strbuf, BMI160_BUFSIZE);
+	LSM6DS3_ReadAccRawDataWithCalib(client, strbuf, 0);
+	return snprintf(buf, PAGE_SIZE, "%s\n", strbuf);
+
+
+
+
+	struct i2c_client *client = lsm6ds3_i2c_client;
+	s16 data[LSM6DS3_ACC_AXES_NUM] = {0};
+	
+	if(NULL == client)
+	{
+		GSE_ERR("i2c client is null!!\n");
+		return 0;
+	}
+	
+	LSM6DS3_ReadAccRawDataWithCalib(client, strbuf, 0);
+	LSM6DS3_ReadAccRawData(client, data);
+	return snprintf(buf, PAGE_SIZE, "%x,%x,%x\n", data[0],data[1],data[2]); 
+
+
+}
+#endif
+
 /*----------------------------------------------------------------------------*/
 
 static DRIVER_ATTR(chipinfo,             S_IRUGO, show_chipinfo_value,      NULL);
@@ -1556,6 +1673,12 @@ static DRIVER_ATTR(trace,      S_IWUGO | S_IRUGO, show_trace_value,         stor
 static DRIVER_ATTR(chipinit,      S_IWUGO | S_IRUGO, show_chipinit_value,         store_chipinit_value);
 static DRIVER_ATTR(status,               S_IRUGO, show_status_value,        NULL);
 static DRIVER_ATTR(layout,      S_IRUGO | S_IWUSR, show_layout_value, store_layout_value);
+//static DRIVER_ATTR(cpsdata,     S_IWUGO | S_IRUGO, show_cpsdata_value,        NULL);
+//static DRIVER_ATTR(cpsopmode,      S_IRUGO | S_IWUSR, NULL, store_cpsopmode_value);
+//static DRIVER_ATTR(cpsrange,      S_IRUGO | S_IWUSR, NULL, store_cpsrange_value);
+//static DRIVER_ATTR(cpsbandwidth,      S_IRUGO | S_IWUSR, NULL, store_cpsbandwidth_value);
+//static DRIVER_ATTR(cpsdatadebug,     S_IWUGO | S_IRUGO, show_cpsdatadebug_value,        NULL);
+
 
 /*----------------------------------------------------------------------------*/
 static struct driver_attribute *LSM6DS3_attr_list[] = {
@@ -1566,6 +1689,11 @@ static struct driver_attribute *LSM6DS3_attr_list[] = {
 	&driver_attr_status,  
 	&driver_attr_chipinit,
 	&driver_attr_layout,
+//	&driver_attr_cpsdata,
+//	&driver_attr_cpsopmode,
+//	&driver_attr_cpsrange,
+//	&driver_attr_cpsbandwidth,
+//	&driver_attr_cpsdatadebug,
 };
 /*----------------------------------------------------------------------------*/
 static int lsm6ds3_create_attr(struct device_driver *driver) 
@@ -1604,6 +1732,7 @@ static int lsm6ds3_delete_attr(struct device_driver *driver)
 	}
 	return err;
 }
+//ok
 static int LSM6DS3_Set_RegInc(struct i2c_client *client, bool inc)
 {
 	u8 databuf[2] = {0};    
@@ -1637,7 +1766,46 @@ static int LSM6DS3_Set_RegInc(struct i2c_client *client, bool inc)
 	return LSM6DS3_SUCCESS;    
 }
 
+//reversed
+static int LSM6dS3_WRITE_WITH_MASK(struct i2c_client *client, u8 value, u8 reg, u8 mask)
+{
+	u8 databuf[2] = {0}; 
+	int res = 0;
+	GSE_FUN();    
+
+	if(hwmsen_read_byte(client, reg, databuf))
+	{
+		GSE_ERR("%s read addr %x register err!\n", __FUNCTION__, reg);
+		return LSM6DS3_ERR_I2C;
+	}
+	else
+	{
+		GSE_LOG("read acc register: %x, value 0x%x\n", reg, databuf[0]);
+	}
+
+	databuf[0] &= ~mask;
+	databuf[0] |= value;
+
+	databuf[1] = databuf[0];
+	databuf[0] = reg;
+
+	// mask = databuf[0] & ~mask;
+	// mask = value | mask;
+	// databuf[1] = mask;
+
+		
+	res = i2c_master_send(client, databuf, 0x2);
+	if(res <= 0)
+	{
+		GSE_ERR("%s write mask register err!\n", __FUNCTION__);
+		return LSM6DS3_ERR_I2C;
+	}
+
+	return LSM6DS3_SUCCESS;    
+}
+
 /*----------------------------------------------------------------------------*/
+//reversed
 static int LSM6DS3_init_client(struct i2c_client *client, bool enable)
 {
 	struct lsm6ds3_i2c_data *obj = i2c_get_clientdata(client);
@@ -1677,6 +1845,10 @@ static int LSM6DS3_init_client(struct i2c_client *client, bool enable)
 
 	GSE_LOG("LSM6DS3_init_client OK!\n");
 	//acc setting
+
+	LSM6dS3_WRITE_WITH_MASK(client, 0x08, LSM6DS3_MASTER_CONFIG, 0x80); 	// 0x08 0x1a 0x80
+	LSM6dS3_WRITE_WITH_MASK(client, 0x08, LSM6DS3_SLV0_ADD, 0x80);			// 0x08 0x02 0x80
+	LSM6dS3_WRITE_WITH_MASK(client, 0x02, LSM6DS3_CTRL4_C, 0x02);		// 0x02 0x13 0x02
 		
 #ifdef CONFIG_LSM6DS3_LOWPASS
 	memset(&obj->fir, 0x00, sizeof(obj->fir));  
@@ -1686,6 +1858,7 @@ static int LSM6DS3_init_client(struct i2c_client *client, bool enable)
 }
 /*----------------------------------------------------------------------------*/
 #ifdef LSM6DS3_NEW_ARCH
+//ok
 static int lsm6ds3_open_report_data(int open)
 {
     //should queuq work to report event if  is_report_input_direct=true
@@ -1694,7 +1867,7 @@ static int lsm6ds3_open_report_data(int open)
 }
 
 // if use  this typ of enable , Gsensor only enabled but not report inputEvent to HAL
-
+//ok
 static int lsm6ds3_enable_nodata(int en)
 {
 	int value = en;
@@ -1731,6 +1904,7 @@ static int lsm6ds3_enable_nodata(int en)
     return err;
 }
 
+//ok
 static int lsm6ds3_set_delay(u64 ns)
 {
     int value =0;
@@ -1782,6 +1956,7 @@ static int lsm6ds3_set_delay(u64 ns)
     return 0;
 }
 
+//ok
 static int lsm6ds3_get_data(int* x ,int* y,int* z, int* status)
 {
     char buff[LSM6DS3_BUFSIZE];
@@ -1804,7 +1979,9 @@ static int lsm6ds3_get_data(int* x ,int* y,int* z, int* status)
 
     return 0;
 }
+
 #ifdef LSM6DS3_TILT_FUNC
+#if 0
 static int lsm6ds3_tilt_open_report_data(int open)
 {
 	int res = 0;
@@ -1832,8 +2009,10 @@ static int lsm6ds3_tilt_open_report_data(int open)
 	return res;
 }
 #endif
+#endif //LSM6DS3_TILT_FUNC
 
 #ifdef LSM6DS3_SIGNIFICANT_MOTION
+#if 0
 static int lsm6ds3_step_c_enable_significant(int en)
 {
 	int res =0;
@@ -1890,8 +2069,10 @@ static int lsm6ds3_step_c_enable_significant(int en)
 	return res;
 }
 #endif
+#endif //LSM6DS3_SIGNIFICANT_MOTION
 
 #ifdef LSM6DS3_STEP_COUNTER //step counter
+#if 0
 static int lsm6ds3_step_c_open_report_data(int open)
 {
 	
@@ -1966,7 +2147,10 @@ static int lsm6ds3_step_c_get_data_significant(u64 *value, int *status)
 	return 0;
 }
 #endif
-#else
+#endif //LSM6DS3_STEP_COUNTER
+
+#else // LSM6DS3_NEW_ARCH
+#if 0
 static int LSM6DS3_acc_operate(void* self, uint32_t command, void* buff_in, int size_in,
 		void* buff_out, int size_out, int* actualout)
 {
@@ -2083,10 +2267,12 @@ static int LSM6DS3_acc_operate(void* self, uint32_t command, void* buff_in, int 
 	return err;
 }
 #endif
+#endif // LSM6DS3_NEW_ARCH
 
 /****************************************************************************** 
  * Function Configuration
 ******************************************************************************/
+//ok
 static int lsm6ds3_open(struct inode *inode, struct file *file)
 {
 	file->private_data = lsm6ds3_i2c_client;
@@ -2099,12 +2285,14 @@ static int lsm6ds3_open(struct inode *inode, struct file *file)
 	return nonseekable_open(inode, file);
 }
 /*----------------------------------------------------------------------------*/
+//ok
 static int lsm6ds3_release(struct inode *inode, struct file *file)
 {
 	file->private_data = NULL;
 	return 0;
 }
 /*----------------------------------------------------------------------------*/
+//prob ok
 static long lsm6ds3_acc_unlocked_ioctl(struct file *file, unsigned int cmd,
        unsigned long arg)
 {
@@ -2281,7 +2469,9 @@ static long lsm6ds3_acc_unlocked_ioctl(struct file *file, unsigned int cmd,
 
 	return err;
 }
+
 #ifdef CONFIG_COMPAT
+// prob ok
 static long lsm6ds3_acc_compat_ioctl(struct file *file, unsigned int cmd,
        unsigned long arg)
 {
@@ -2359,7 +2549,7 @@ static long lsm6ds3_acc_compat_ioctl(struct file *file, unsigned int cmd,
 
     return err;
 }
-#endif
+#endif //CONFIG_COMPAT
 
 /*----------------------------------------------------------------------------*/
 static struct file_operations lsm6ds3_acc_fops = {
@@ -2380,6 +2570,7 @@ static struct miscdevice lsm6ds3_acc_device = {
 /*----------------------------------------------------------------------------*/
 #ifndef CONFIG_HAS_EARLYSUSPEND
 /*----------------------------------------------------------------------------*/
+#if 0
 static int lsm6ds3_acc_suspend(struct i2c_client *client, pm_message_t msg) 
 {
 	struct lsm6ds3_i2c_data *obj = i2c_get_clientdata(client);    
@@ -2442,6 +2633,7 @@ static int lsm6ds3_acc_resume(struct i2c_client *client)
 
 	return 0;
 }
+#endif
 /*----------------------------------------------------------------------------*/
 #else /*CONFIG_HAS_EARLY_SUSPEND is defined*/
 /*----------------------------------------------------------------------------*/
@@ -2506,6 +2698,7 @@ static void lsm6ds3_late_resume(struct early_suspend *h)
 #endif /*CONFIG_HAS_EARLYSUSPEND*/
 
 #ifdef LSM6DS3_TILT_FUNC
+#if 0
 static void lsm6ds3_eint_work(struct work_struct *work)
 {
 	u8 databuf[2] = {0}; 
@@ -2555,9 +2748,12 @@ lsm6ds3_eint_work_exit:
 	mt_eint_unmask(CUST_EINT_LSM6DS3_NUM);
 }
 #endif
+#endif //LSM6DS3_TILT_FUNC
+
 /*----------------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------------*/
+//probably ok _mutex_init
 static int lsm6ds3_i2c_probe(struct i2c_client *client, const struct i2c_device_id *id)
 {
 	struct i2c_client *new_client;
@@ -2669,6 +2865,7 @@ exit:
 }
 
 /*----------------------------------------------------------------------------*/
+//ok
 static int lsm6ds3_i2c_remove(struct i2c_client *client)
 {
 	int err = 0;	
@@ -2698,8 +2895,10 @@ static int lsm6ds3_i2c_remove(struct i2c_client *client)
 	kfree(i2c_get_clientdata(client));
 	return 0;
 }
+
 /*----------------------------------------------------------------------------*/
 #ifdef LSM6DS3_NEW_ARCH
+//ok
 static int lsm6ds3_local_init_common(void)
 {
 	struct acc_hw *accel_hw = get_cust_acc_hw();
@@ -2715,6 +2914,7 @@ static int lsm6ds3_local_init_common(void)
 
 	return 0;
 }
+//ok
 static int lsm6ds3_local_init(void)
 {
 	int res = 0;
@@ -2736,7 +2936,6 @@ static int lsm6ds3_local_init(void)
 		}
 		
 	}
-
 
 	if(lsm6ds3_acc_init_flag == -1)
 	{
@@ -2790,6 +2989,7 @@ lsm6ds3_local_init_failed:
 	return res;
 
 }
+//ok
 static int lsm6ds3_local_uninit(void)
 {
 	struct acc_hw *accel_hw = get_cust_acc_hw();
@@ -2800,6 +3000,8 @@ static int lsm6ds3_local_uninit(void)
     i2c_del_driver(&lsm6ds3_i2c_driver);
     return 0;
 }
+
+#if 0
 #ifdef LSM6DS3_TILT_FUNC
 static int lsm6ds3_tilt_get_data(u16 *value, int *status)
 {
@@ -2879,8 +3081,10 @@ static int lsm6ds3_tilt_local_uninit(void)
 	clear_bit(LSM6DS3_TILT, &lsm6ds3_init_flag_test);
     return 0;
 }
+#endif //LSM6DS3_TILT_FUNC
 #endif
 
+#if 0
 #ifdef LSM6DS3_STEP_COUNTER
 static int lsm6ds3_step_c_local_init(void)
 {
@@ -2955,8 +3159,11 @@ static int lsm6ds3_step_c_local_uninit(void)
 	clear_bit(LSM6DS3_STEP_C, &lsm6ds3_init_flag_test);
     return 0;
 }
+#endif //LSM6DS3_STEP_COUNTER
 #endif
-#else
+
+#else //LSM6DS3_NEW_ARCH
+#if 0
 static int lsm6ds3_probe(struct platform_device *pdev) 
 {
 	struct acc_hw *accel_hw = get_cust_acc_hw();
@@ -3001,8 +3208,8 @@ static struct platform_driver lsm6ds3_driver = {
 	#endif
 	}
 };
-
 #endif
+#endif //LSM6DS3_NEW_ARCH
 /*----------------------------------------------------------------------------*/
 static int __init lsm6ds3_init(void)
 {

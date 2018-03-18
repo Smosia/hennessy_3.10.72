@@ -46,7 +46,7 @@
 #include <cust_acc.h>
 #include "bmi160_acc.h"
 /*----------------------------------------------------------------------------*/
-#define DEBUG 0
+#define DEBUG 1
 #define MISC_FOR_DAEMON
 /*----------------------------------------------------------------------------*/
 //#define CONFIG_BMI160_ACC_LOWPASS   /*apply low pass filter on output*/
@@ -292,7 +292,7 @@ static struct bmi160_acc_i2c_data *obj_i2c_data = NULL;
 static bool sensor_power = true;
 static GSENSOR_VECTOR3D gsensor_gain;
 
-int bmi160_acc_init_flag =-1; // 0<==>OK -1 <==> fail
+extern int bmi160_acc_init_flag; // 0<==>OK -1 <==> fail
 
 #if 0
 #define COMPATIABLE_NAME "mediatek,bmi160_acc"
@@ -3026,6 +3026,9 @@ static long bmi160_acc_unlocked_ioctl(struct file *file, unsigned int cmd, unsig
 				GSE_ERR("copy_from_user failed.");
 				return -EFAULT;
 			}
+			int i;
+			for (i=0; i<CALIBRATION_DATA_SIZE; i++)
+				printk("Smosia ecompas: %i\n", value[i]);
 			ECS_SaveData(value);
 			break;
 
@@ -3890,7 +3893,8 @@ int bsx_algo_m_get_data(int* x ,int* y,int* z, int* status)
 	*status = sensor_data[7];
 
 	mutex_unlock(&sensor_data_mutex);
-
+	printk("Smosia: magnetometer_m %i, %i, %i, %i", sensor_data[4],sensor_data[5],sensor_data[6],sensor_data[7]);
+	
 	return 0;
 }
 
@@ -3942,7 +3946,8 @@ int bsx_algo_o_get_data(int* x ,int* y,int* z, int* status)
 	*status = sensor_data[11];
 
 	mutex_unlock(&sensor_data_mutex);
-
+	printk("Smosia: magnetometer_o %i, %i, %i, %i", sensor_data[4],sensor_data[5],sensor_data[6],sensor_data[7]);
+	
 	return 0;
 }
 
@@ -4008,113 +4013,6 @@ int bsx_algo_gyro_get_data(int* x ,int* y,int* z, int* status)
         return 0;
 }
 #endif
-
-int bmi160_m_enable(int en)
-{
-	if(en == 1) {
-		atomic_set(&m_flag, 1);
-	} else {
-		atomic_set(&m_flag, 0);
-	}
-
-	/* set the flag */
-	mutex_lock(&uplink_event_flag_mutex);
-	uplink_event_flag |= BMMDRV_ULEVT_FLAG_M_ACTIVE;
-	mutex_unlock(&uplink_event_flag_mutex);
-	/* wake up the wait queue */
-	wake_up(&uplink_event_flag_wq);
-
-	return 0;
-}
-
-int bmi160_m_set_delay(u64 ns)
-{
-	int value = (int)ns/1000/1000;
-
-	bmm050d_delay = value;
-	/* set the flag */
-	mutex_lock(&uplink_event_flag_mutex);
-	uplink_event_flag |= BMMDRV_ULEVT_FLAG_M_DELAY;
-	mutex_unlock(&uplink_event_flag_mutex);
-	/* wake up the wait queue */
-	wake_up(&uplink_event_flag_wq);
-
-	return 0;
-}
-
-int bmi160_m_open_report_data(int open)
-{
-	return 0;
-}
-
-int bmi160_m_get_data(int* x ,int* y,int* z, int* status)
-{
-	mutex_lock(&sensor_data_mutex);
-
-	*x = sensor_data[4];
-	*y = sensor_data[5];
-	*z = sensor_data[6];
-	*status = sensor_data[7];
-
-	mutex_unlock(&sensor_data_mutex);
-	printk("Smosia: magnetometer %i, %i, %i, %i", sensor_data[4],sensor_data[5],sensor_data[6],sensor_data[7]);
-	return 0;
-}
-
-int bmi160_o_enable(int en)
-{
-	if(en == 1) {
-		atomic_set(&o_flag, 1);
-	} else {
-		atomic_set(&o_flag, 0);
-	}
-
-	/* set the flag */
-	mutex_lock(&uplink_event_flag_mutex);
-	uplink_event_flag |= BMMDRV_ULEVT_FLAG_O_ACTIVE;
-	mutex_unlock(&uplink_event_flag_mutex);
-	/* wake up the wait queue */
-	wake_up(&uplink_event_flag_wq);
-
-	return 0;
-}
-
-//ok
-int bmi160_o_set_delay(u64 ns)
-{
-	int value = (int)ns/1000/1000;
-
-	bmm050d_delay = value;
-	/* set the flag */
-	mutex_lock(&uplink_event_flag_mutex);
-	uplink_event_flag |= BMMDRV_ULEVT_FLAG_O_DELAY;
-	mutex_unlock(&uplink_event_flag_mutex);
-	/* wake up the wait queue */
-	wake_up(&uplink_event_flag_wq);
-
-	return 0;
-}
-
-//ok
-int bmi160_o_open_report_data(int open)
-{
-	return 0;
-}
-
-//ok
-int bmi160_o_get_data(int* x ,int* y,int* z, int* status)
-{
-	mutex_lock(&sensor_data_mutex);
-
-	*x = sensor_data[8];
-	*y = sensor_data[9];
-	*z = sensor_data[10];
-	*status = sensor_data[11];
-
-	mutex_unlock(&sensor_data_mutex);
-
-	return 0;
-}
 
 /*----------------------------------------------------------------------------*/
 static int bmi160_acc_i2c_probe(struct i2c_client *client, const struct i2c_device_id *id)
