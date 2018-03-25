@@ -484,10 +484,6 @@ static struct platform_driver gsensor_driver = {
 		   }
 };
 
-//add for accel_sensor compatible begin 20180312
- int bmi160_acc_init_flag = -1; // 0<==>OK -1 <==> fail;
- int lsm6ds3_acc_init_flag = -1; // 0<==>OK -1 <==> fail;
-//add for accel_sensor compatible end 20180312
 static int acc_real_driver_init(void)
 {
 	int i = 0;
@@ -498,9 +494,7 @@ static int acc_real_driver_init(void)
 		if (0 != gsensor_init_list[i]) {
 			ACC_LOG(" acc try to init driver %s\n", gsensor_init_list[i]->name);
 			err = gsensor_init_list[i]->init();
-			if (((0 == err) && (0 == bmi160_acc_init_flag))
-	        	|| ((0 == err) && (0 == lsm6ds3_acc_init_flag)))
-	        {
+			if (0 == err) {
 				ACC_LOG(" acc real driver %s probe ok\n",
 					gsensor_init_list[i]->name);
 				break;
