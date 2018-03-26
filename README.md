@@ -39,7 +39,6 @@ Works in rom(CM13): http://4pda.ru/forum/index.php?showtopic=716960&view=findpos
 =========================================================================
 * Don't work:
 	* IR Blaster
-	* Alsps and proximity sensor (STK)
 	* HALL sensor (ah1903_probe: GPIO11)
 	* Fingerprint:
 		* GF516M (reset=115, irq=3, pwr_gpio=94, gf516m_probe: 94,167,115,166,168,169, gf516m_debug_store:166,167,168,169,115,3)
@@ -50,6 +49,7 @@ Works in rom(CM13): http://4pda.ru/forum/index.php?showtopic=716960&view=findpos
 	* battery_meter.c: correct current mesurements in amperka apk
 	* fix problems with camera
 	* make flashlight brighter
+	* fix battery percentage
 
 =========================================================================
 # BUILD
