@@ -79,7 +79,7 @@
 #define CUST_EINT_LSM6DS3_TYPE CUST_EINT_ALS_TYPE	//eint trigger type
 #endif
 /*---------------------------------------------------------------------------*/
-#define DEBUG 1
+#define DEBUG 0
 /*----------------------------------------------------------------------------*/
 #define CONFIG_LSM6DS3_LOWPASS   /*apply low pass filter on output*/       
 /*----------------------------------------------------------------------------*/
@@ -128,11 +128,7 @@ static int LSM6DS3_Enable_SigMotion_Func(struct i2c_client *client, LSM6DS3_ACC_
 
 static int LSM6DS3_Enable_Tilt_Func(struct i2c_client *client, bool enable);
 static int LSM6DS3_Enable_Tilt_Func_On_Int(struct i2c_client *client, LSM6DS3_ACC_GYRO_ROUNT_INT_t tilt_int, bool enable);
-
-
 #endif
-
-
 
 /*----------------------------------------------------------------------------*/
 typedef enum {
@@ -1556,6 +1552,11 @@ static DRIVER_ATTR(trace,      S_IWUGO | S_IRUGO, show_trace_value,         stor
 static DRIVER_ATTR(chipinit,      S_IWUGO | S_IRUGO, show_chipinit_value,         store_chipinit_value);
 static DRIVER_ATTR(status,               S_IRUGO, show_status_value,        NULL);
 static DRIVER_ATTR(layout,      S_IRUGO | S_IWUSR, show_layout_value, store_layout_value);
+//static DRIVER_ATTR(cpsdata,     S_IWUGO | S_IRUGO, show_cpsdata_value,        NULL);
+//static DRIVER_ATTR(cpsopmode,      S_IRUGO | S_IWUSR, NULL, store_cpsopmode_value);
+//static DRIVER_ATTR(cpsrange,      S_IRUGO | S_IWUSR, NULL, store_cpsrange_value);
+//static DRIVER_ATTR(cpsbandwidth,      S_IRUGO | S_IWUSR, NULL, store_cpsbandwidth_value);
+//static DRIVER_ATTR(cpsdatadebug,     S_IWUGO | S_IRUGO, show_cpsdatadebug_value,        NULL);
 
 /*----------------------------------------------------------------------------*/
 static struct driver_attribute *LSM6DS3_attr_list[] = {
@@ -1566,6 +1567,11 @@ static struct driver_attribute *LSM6DS3_attr_list[] = {
 	&driver_attr_status,  
 	&driver_attr_chipinit,
 	&driver_attr_layout,
+	//	&driver_attr_cpsdata,
+	//	&driver_attr_cpsopmode,
+	//	&driver_attr_cpsrange,
+	//	&driver_attr_cpsbandwidth,
+	//	&driver_attr_cpsdatadebug,
 };
 /*----------------------------------------------------------------------------*/
 static int lsm6ds3_create_attr(struct device_driver *driver) 
@@ -1637,6 +1643,44 @@ static int LSM6DS3_Set_RegInc(struct i2c_client *client, bool inc)
 	return LSM6DS3_SUCCESS;    
 }
 
+//reversed
+static int LSM6dS3_WRITE_WITH_MASK(struct i2c_client *client, u8 value, u8 reg, u8 mask)
+{
+	u8 databuf[2] = {0}; 
+	int res = 0;
+	GSE_FUN();    
+
+	if(hwmsen_read_byte(client, reg, databuf))
+	{
+		GSE_ERR("%s read addr %x register err!\n", __FUNCTION__, reg);
+		return LSM6DS3_ERR_I2C;
+	}
+	else
+	{
+		GSE_LOG("read acc register: %x, value 0x%x\n", reg, databuf[0]);
+	}
+
+	databuf[0] &= ~mask;
+	databuf[0] |= value;
+
+	databuf[1] = databuf[0];
+	databuf[0] = reg;
+
+	// mask = databuf[0] & ~mask;
+	// mask = value | mask;
+	// databuf[1] = mask;
+
+		
+	res = i2c_master_send(client, databuf, 0x2);
+	if(res <= 0)
+	{
+		GSE_ERR("%s write mask register err!\n", __FUNCTION__);
+		return LSM6DS3_ERR_I2C;
+	}
+
+	return LSM6DS3_SUCCESS;    
+}
+
 /*----------------------------------------------------------------------------*/
 static int LSM6DS3_init_client(struct i2c_client *client, bool enable)
 {
@@ -1677,6 +1721,11 @@ static int LSM6DS3_init_client(struct i2c_client *client, bool enable)
 
 	GSE_LOG("LSM6DS3_init_client OK!\n");
 	//acc setting
+
+	LSM6dS3_WRITE_WITH_MASK(client, 0x08, LSM6DS3_MASTER_CONFIG, 0x80); 	// 0x08 0x1a 0x80
+	LSM6dS3_WRITE_WITH_MASK(client, 0x08, LSM6DS3_SLV0_ADD, 0x80);			// 0x08 0x02 0x80
+	LSM6dS3_WRITE_WITH_MASK(client, 0x02, LSM6DS3_CTRL4_C, 0x02);		// 0x02 0x13 0x02
+
 		
 #ifdef CONFIG_LSM6DS3_LOWPASS
 	memset(&obj->fir, 0x00, sizeof(obj->fir));  
