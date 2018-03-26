@@ -9,7 +9,7 @@ Works in rom(CM13): http://4pda.ru/forum/index.php?showtopic=716960&view=findpos
 	* Rill
 	* LCM (NT35596_TIANMA, NT35532_BOE, NT35532_BOE_S, R63315_SHARP)
 	* Touch (ATMEL, FT5206)
-	* BQ24296 (small bug with charging)
+	* BQ24296
 	* CW2015
 	* Wi-fi
 	* BT
@@ -18,8 +18,8 @@ Works in rom(CM13): http://4pda.ru/forum/index.php?showtopic=716960&view=findpos
 	* Button-backlight
 	* Brightness 
 	* Leds indication
-	* Alsps (LT559 and STK)
-	* Accel (BMI160_ACC LSM6DS3_ACCEL)
+	* Alsps and proximity sensor (LT559)
+	* Accel (BMI160_ACC)
 	* Giro
 	* Vibrator
 	* Battery 4000mah
@@ -28,26 +28,26 @@ Works in rom(CM13): http://4pda.ru/forum/index.php?showtopic=716960&view=findpos
 	* Sound(Speaker, Headphones)
 	* OTG
 	* Flashlight
-	* Fixed graphics bug
+	* MAGNETOMETER (YAS537)
 
 =========================================================================
-* Disabled drivers:
-    * MAGNETOMETER             (AKM09911_NEW)
+* Don't tested:
+    * MAGNETOMETER (AKM09911_NEW)
+    * Accel (LSM6DS3_ACCEL)
+    * Alsps and proximity sensor (STK)
 
 =========================================================================
 * Don't work:
 	* IR Blaster
+	* Alsps and proximity sensor (STK)
 	* HALL sensor (ah1903_probe: GPIO11)
 	* Fingerprint:
 		* GF516M (reset=115, irq=3, pwr_gpio=94, gf516m_probe: 94,167,115,166,168,169, gf516m_debug_store:166,167,168,169,115,3)
 		* FPC1020 (reset=115, irq=3)
-    * MAGNETOMETER             (YAS537)
 
 =========================================================================
 * TODO:
 	* battery_meter.c: correct current mesurements in amperka apk
-	* fix charging bug
-	* fix problems with LSM6DS3_ACCEL
 	* fix problems with camera
 	* make flashlight brighter
 
