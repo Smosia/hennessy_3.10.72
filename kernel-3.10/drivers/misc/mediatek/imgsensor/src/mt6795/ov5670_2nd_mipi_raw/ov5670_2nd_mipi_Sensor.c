@@ -203,10 +203,10 @@ int rg_ratio;
 int bg_ratio;
 };
 
-int RG_Ratio_Typical;
-int BG_Ratio_Typical;	
+static int RG_Ratio_Typical;
+static int BG_Ratio_Typical;	
 
-void OV5670_OTP_read_begin(void)
+static void OV5670_OTP_read_begin(void)
 {
 	// set reg 0x5002[3] to '0'
 	int temp1;
@@ -214,7 +214,7 @@ void OV5670_OTP_read_begin(void)
 	write_cmos_sensor(0x5002, (temp1 &(~0x08)));
 }
 
-void OV5670_OTP_read_end(void)
+static void OV5670_OTP_read_end(void)
 {
 	// set reg 0x5002[3] to '1'
 	int temp1;
@@ -290,7 +290,6 @@ static int check_otp_info(int index)
 	int address_start = 0x7010;
 	int address_end = 0x7010;
 
-	printk("pxs_ov5670_flt_otp ++++++++++++++++  %s \n");
 	OV5670_OTP_read_begin();
 	// read otp into buffer
 	write_cmos_sensor(0x3d84, 0xc0); // program disable, manual mode
@@ -344,49 +343,46 @@ static int check_otp_info(int index)
 //2nd
 static int read_otp_info(int index, struct otp_struct *otp_ptr)
 {
-	printk("pxs_ov5670_2ND_otp ++++++++++++++++  %s \n", __func__); //pei_add	
 
-		int i;
-		int start_addr, end_addr;
-		//set 0x5002[3] to 0
-		OV5670_OTP_read_begin();
-		if (index == 1) {
-			start_addr = 0x7011;
-			end_addr = 0x7015;
-		}
-		else if (index == 2) {
-			start_addr = 0x7016;
-			end_addr = 0x701a;
-		}
-		else if (index == 3) {
-			start_addr = 0x701b;
-			end_addr = 0x701f;
-		}
-		write_cmos_sensor(0x3d84, 0xC0);
-		//partial mode OTP write start address
-		write_cmos_sensor(0x3d88, (start_addr >> 8) & 0xff);
-		write_cmos_sensor(0x3d89, start_addr & 0xff);
-		// partial mode OTP write end address
-		write_cmos_sensor(0x3d8A, (end_addr >> 8) & 0xff);
-		write_cmos_sensor(0x3d8B, end_addr & 0xff);
-		// read otp into buffer
-		write_cmos_sensor(0x3d81, 0x01);
-		mDELAY(10);
-
-		(*otp_ptr).module_integrator_id = read_cmos_sensor(start_addr);
-		(*otp_ptr).lens_id = read_cmos_sensor(start_addr + 1);
-		(*otp_ptr).production_year = read_cmos_sensor(start_addr + 2);
-		(*otp_ptr).production_month = read_cmos_sensor(start_addr + 3);
-		(*otp_ptr).production_day = read_cmos_sensor(start_addr + 4);
-		
-		// clear otp buffer
-		for (i=start_addr; i<=end_addr; i++) {
-			write_cmos_sensor(i, 0x00);
-		}
-		//set 0x5002[3] to 1
-		OV5670_OTP_read_end();
-
-		return 0;
+	int i;
+	int start_addr, end_addr;
+	//set 0x5002[3] to 0
+	OV5670_OTP_read_begin();
+	if (index == 1) {
+		start_addr = 0x7011;
+		end_addr = 0x7015;
+	}
+	else if (index == 2) {
+		start_addr = 0x7016;
+		end_addr = 0x701a;
+	}
+	else if (index == 3) {
+		start_addr = 0x701b;
+		end_addr = 0x701f;
+	}
+	write_cmos_sensor(0x3d84, 0xC0);
+	//partial mode OTP write start address
+	write_cmos_sensor(0x3d88, (start_addr >> 8) & 0xff);
+	write_cmos_sensor(0x3d89, start_addr & 0xff);
+	// partial mode OTP write end address
+	write_cmos_sensor(0x3d8A, (end_addr >> 8) & 0xff);
+	write_cmos_sensor(0x3d8B, end_addr & 0xff);
+	// read otp into buffer
+	write_cmos_sensor(0x3d81, 0x01);
+	mDELAY(10);
+	(*otp_ptr).module_integrator_id = read_cmos_sensor(start_addr);
+	(*otp_ptr).lens_id = read_cmos_sensor(start_addr + 1);
+	(*otp_ptr).production_year = read_cmos_sensor(start_addr + 2);
+	(*otp_ptr).production_month = read_cmos_sensor(start_addr + 3);
+	(*otp_ptr).production_day = read_cmos_sensor(start_addr + 4);
+	
+	// clear otp buffer
+	for (i=start_addr; i<=end_addr; i++) {
+		write_cmos_sensor(i, 0x00);
+	}
+	//set 0x5002[3] to 1
+	OV5670_OTP_read_end();
+	return 0;
 }
 
 
@@ -399,49 +395,45 @@ static int read_otp_wb(int index, struct otp_struct *otp_ptr)
 {
 	printk("pxs_ov5670_2ND_otp ++++++++++++++++  %s \n", __func__); //pei_add	
 
-		int i;
-		int temp;
-		int start_addr, end_addr;
-		//set 0x5002[3] to 0
-		OV5670_OTP_read_begin();
-		if (index == 1) {
-			start_addr = 0x7021;
-			end_addr = 0x7023;
-		}
-		else if (index == 2) {
-			start_addr = 0x7024;
-			end_addr = 0x7026;
-		}
-		else if (index == 3) {
-			start_addr = 0x7027;
-			end_addr = 0x7029;
-		}
-		write_cmos_sensor(0x3d84, 0xC0);
-		//partial mode OTP write start address
-		write_cmos_sensor(0x3d88, (start_addr >> 8) & 0xff);
-		write_cmos_sensor(0x3d89, start_addr & 0xff);
-		// partial mode OTP write end address
-		write_cmos_sensor(0x3d8A, (end_addr >> 8) & 0xff);
-		write_cmos_sensor(0x3d8B, end_addr & 0xff);
-		// read otp into buffer
-		write_cmos_sensor(0x3d81, 0x01);
-		mDELAY(10);
-
-		temp = read_cmos_sensor(start_addr + 2);
-
-		(*otp_ptr).rg_ratio = (read_cmos_sensor(start_addr)<<2) + (temp>>6);
-		(*otp_ptr).bg_ratio = (read_cmos_sensor(start_addr + 1)<<2) + ((temp>>4) & 0x03);
-		
-		// clear otp buffer
-		for (i=start_addr; i<=end_addr; i++) {
-			write_cmos_sensor(i, 0x00);
-		}
-		//set 0x5002[3] to 1
-		OV5670_OTP_read_end();
-
-		printk("pxs_ov5670_2ND_otp rg_ratio =%x,bg_ratio=%x, %s \n",(*otp_ptr).rg_ratio ,(*otp_ptr).bg_ratio, __func__); //pei_add		
-
-		return 0;
+	int i;
+	int temp;
+	int start_addr, end_addr;
+	//set 0x5002[3] to 0
+	OV5670_OTP_read_begin();
+	if (index == 1) {
+		start_addr = 0x7021;
+		end_addr = 0x7023;
+	}
+	else if (index == 2) {
+		start_addr = 0x7024;
+		end_addr = 0x7026;
+	}
+	else if (index == 3) {
+		start_addr = 0x7027;
+		end_addr = 0x7029;
+	}
+	write_cmos_sensor(0x3d84, 0xC0);
+	//partial mode OTP write start address
+	write_cmos_sensor(0x3d88, (start_addr >> 8) & 0xff);
+	write_cmos_sensor(0x3d89, start_addr & 0xff);
+	// partial mode OTP write end address
+	write_cmos_sensor(0x3d8A, (end_addr >> 8) & 0xff);
+	write_cmos_sensor(0x3d8B, end_addr & 0xff);
+	// read otp into buffer
+	write_cmos_sensor(0x3d81, 0x01);
+	mDELAY(10);
+	temp = read_cmos_sensor(start_addr + 2);
+	(*otp_ptr).rg_ratio = (read_cmos_sensor(start_addr)<<2) + (temp>>6);
+	(*otp_ptr).bg_ratio = (read_cmos_sensor(start_addr + 1)<<2) + ((temp>>4) & 0x03);
+	
+	// clear otp buffer
+	for (i=start_addr; i<=end_addr; i++) {
+		write_cmos_sensor(i, 0x00);
+	}
+	//set 0x5002[3] to 1
+	OV5670_OTP_read_end();
+	printk("pxs_ov5670_2ND_otp rg_ratio =%x,bg_ratio=%x, %s \n",(*otp_ptr).rg_ratio ,(*otp_ptr).bg_ratio, __func__); //pei_add		
+	return 0;
 }
 
 
@@ -1811,7 +1803,7 @@ static kal_uint32 get_info(MSDK_SCENARIO_ID_ENUM scenario_id,
     sensor_info->SettleDelayMode = imgsensor_info.mipi_settle_delay_mode;
 
 	sensor_info->SensorOutputDataFormat = imgsensor_info.sensor_output_dataformat; //1!!!
-	sensor_info->CaptureDelayFrame = imgsensor_info.cap_delay_frame
+	sensor_info->CaptureDelayFrame = imgsensor_info.cap_delay_frame;
 	sensor_info->PreviewDelayFrame = imgsensor_info.pre_delay_frame;
 	sensor_info->VideoDelayFrame = imgsensor_info.video_delay_frame;
 	sensor_info->HighSpeedVideoDelayFrame = imgsensor_info.hs_video_delay_frame;
