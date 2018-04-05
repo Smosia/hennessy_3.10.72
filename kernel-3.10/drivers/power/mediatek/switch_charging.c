@@ -604,7 +604,7 @@ void select_charging_curret(void)
 			}
 #else
 			{
-				g_temp_input_CC_value = CHARGE_CURRENT_1050_00_MA;
+				g_temp_input_CC_value = USB_CHARGER_CURRENT;
 				g_temp_CC_value = USB_CHARGER_CURRENT;
 			}
 #endif
