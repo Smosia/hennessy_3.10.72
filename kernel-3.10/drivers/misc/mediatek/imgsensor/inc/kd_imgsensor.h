@@ -104,6 +104,7 @@
 /* XRN 2 CAMERAS start*/ 
 #define OV5670MIPI_SENSOR_ID                    0x5670
 #define OV5670MIPI_2ND_SENSOR_ID				0x5671
+#define OV5670MIPI_FLT_2ND_SENSOR_ID            0x5673
 #define S5K3M2_SENSOR_ID                        0x30D2
 #define S5K3M2_2ND_SENSOR_ID                    0x30D3
 /* XRN 2 CAMERAS end*/ 
