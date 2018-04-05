@@ -2,8 +2,6 @@
 # Kernel version 3.10.72
 # Vendor Vanzo (ALPS-MP-M0.MP11-V1_VZ6795_LWT_M)
 
-Works in rom(CM13): http://4pda.ru/forum/index.php?showtopic=716960&view=findpost&p=55392848
-
 =========================================================================
 * Works:
 	* Rill
@@ -18,13 +16,13 @@ Works in rom(CM13): http://4pda.ru/forum/index.php?showtopic=716960&view=findpos
 	* Button-backlight
 	* Brightness 
 	* Leds indication
-	* Alsps and proximity sensor (LT559)
+	* Alsps and proximity sensor (LT559, STK)
 	* Accel (BMI160_ACC)
 	* Giro
 	* Vibrator
 	* Battery 4000mah
 	* Camera (s5k3m2, OV5670)
-	* Lens
+	* Lens (DW9761BAF, BU6429AF)
 	* Sound(Speaker, Headphones)
 	* OTG
 	* Flashlight
@@ -32,20 +30,20 @@ Works in rom(CM13): http://4pda.ru/forum/index.php?showtopic=716960&view=findpos
 
 =========================================================================
 * Don't tested:
-    * MAGNETOMETER (AKM09911_NEW)
     * Accel (LSM6DS3_ACCEL)
-    * Alsps and proximity sensor (STK)
 
 =========================================================================
 * Don't work:
 	* IR Blaster
 	* HALL sensor (ah1903_probe: GPIO11)
+	* MAGNETOMETER (AKM09911_NEW)
 	* Fingerprint:
 		* GF516M (reset=115, irq=3, pwr_gpio=94, gf516m_probe: 94,167,115,166,168,169, gf516m_debug_store:166,167,168,169,115,3)
 		* FPC1020 (reset=115, irq=3)
 
 =========================================================================
 * TODO:
+	* Fix 5 point FT5206 touch
 	* battery_meter.c: correct current mesurements in amperka apk
 	* fix problems with camera
 	* make flashlight brighter
