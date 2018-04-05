@@ -605,11 +605,10 @@ static kal_uint32 charging_get_charger_type(void *data)
    		*(CHARGER_TYPE*)(data) = hw_charging_get_charger_type();
 	}
 
+	charging_type_det_done = KAL_TRUE;
+	bq24296_charging_type = *(CHARGER_TYPE*)(data);
 	printk("[bq24296][%s]bq24296_charging_type=%d\n",__func__,bq24296_charging_type);
- 	charging_type_det_done = KAL_TRUE;
 
- 	bq24296_charging_type = *(CHARGER_TYPE*)(data);
-	
 	return status;
 }
 
