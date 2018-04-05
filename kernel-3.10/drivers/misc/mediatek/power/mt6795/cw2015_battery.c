@@ -124,7 +124,7 @@ struct cw_bat_platform_data {
     u32 chg_mode_sel_pin;
     u32 chg_mode_sel_level;
 };
-
+/*
 static struct cw_bat_platform_data cw_bat_platdata = {    
     .bat_low_pin    = 0,
     .bat_low_level  = 0,   
@@ -134,7 +134,7 @@ static struct cw_bat_platform_data cw_bat_platdata = {
     .is_usb_charge = 0,    
     .cw_bat_config_info = config_info,
 };
-
+*/
 struct cw_battery {
     struct i2c_client *client;
     struct workqueue_struct *battery_workqueue;
@@ -346,7 +346,6 @@ static int cw_check_ic(struct cw_battery *cw_bat)
     u8 reg_val = 0;
 
     ret = cw_read(cw_bat->client, REG_MODE/*REG_VERSION*/, &reg_val);
-
     if (ret < 0)
         return ret;
 
@@ -869,6 +868,7 @@ static void cw_bat_work(struct work_struct *work)
 static int cw2015_i2c_probe(struct i2c_client *client, const struct i2c_device_id *id)
 {
     struct cw_battery *cw_bat;
+    struct cw_bat_platform_data *pdata = client->dev.platform_data;
     int ret;
     int loop = 0;
 
@@ -878,34 +878,59 @@ static int cw2015_i2c_probe(struct i2c_client *client, const struct i2c_device_i
     mt_set_gpio_mode(GPIO_I2C4_SCA_PIN, GPIO_I2C4_SCA_PIN_M_SCL);
     
     cw_bat = kzalloc(sizeof(struct cw_battery), GFP_KERNEL);
+
     if (!cw_bat) 
     {
         printk("[CW2015] fail to allocate memory\n");
         return -ENOMEM;
     }
+    memset(cw_bat, 0, sizeof(*cw_bat));
+
+    // if (client->dev.of_node) {
+        pdata = devm_kzalloc(&client->dev, sizeof(struct cw_bat_platform_data), GFP_KERNEL);
+        if (!pdata) {
+            dev_err(&client->dev, "GTP Failed to allocate memory for pdata\n");
+            return -ENOMEM;
+        }
+    // } else {
+    //     pdata = client->dev.platform_data;
+    // }
+
+    if (!pdata) {
+        dev_err(&client->dev, "Invalid pdata\n");
+        return -EINVAL;
+    }
+
+ //       
+    cw_bat->client = client;
+    i2c_set_clientdata(client, cw_bat);
+    
+    cw_bat->plat_data = pdata;
+ //   cw_bat->plat_data = &cw_bat_platdata;
+
+    cw_bat->plat_data->bat_low_pin    = 0,
+    cw_bat->plat_data->bat_low_level  = 0,   
+    cw_bat->plat_data->chg_ok_pin   = 0,
+    cw_bat->plat_data->chg_ok_level = 0,
+    
+    cw_bat->plat_data->is_usb_charge = 0,    
 
     cw_get_battery_version();
     switch (battery_type_id)
     {
         case 1:
-            cw_bat_platdata.cw_bat_config_info = config_info;
+            cw_bat->plat_data->cw_bat_config_info = config_info;
             break;
         case 2:
-            cw_bat_platdata.cw_bat_config_info = config_info_sun;
+            cw_bat->plat_data->cw_bat_config_info = config_info_sun;
             break;
         case 3:
-            cw_bat_platdata.cw_bat_config_info = config_info_scud;
+            cw_bat->plat_data->cw_bat_config_info = config_info_scud;
             break;
         default:
             printk("[CW2015] Battery type ID not match\n");
-            cw_bat_platdata.cw_bat_config_info = config_info;
+            cw_bat->plat_data->cw_bat_config_info = config_info;
     }
-
-    memset(cw_bat, 0, sizeof(*cw_bat));    
-
-    i2c_set_clientdata(client, cw_bat);
-    cw_bat->client = client;
-    cw_bat->plat_data = &cw_bat_platdata;
 
     ret = cw_check_ic(cw_bat);
 
