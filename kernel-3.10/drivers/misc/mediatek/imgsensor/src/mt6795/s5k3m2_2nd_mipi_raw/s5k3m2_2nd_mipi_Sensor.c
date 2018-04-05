@@ -322,9 +322,7 @@ struct S5K3m2_MIPI_otp_struct {
 	int VCM_dir;
 };
 
-
-
-kal_uint16 read_3m2_eeprom_reg(kal_uint32 addr)
+static kal_uint16 read_3m2_eeprom_reg(kal_uint32 addr)
 {
     kal_uint16 get_byte=0;
     char pusendcmd[2] = {(char)(addr >> 8) , (char)(addr & 0xFF) };
@@ -3921,7 +3919,7 @@ static SENSOR_FUNCTION_STRUCT sensor_func = {
 	close
 };
 
-UINT32 S5K3M2_MIPI_RAW_SensorInit(PSENSOR_FUNCTION_STRUCT *pfFunc)
+UINT32 S5K3M2_2ND_MIPI_RAW_SensorInit(PSENSOR_FUNCTION_STRUCT *pfFunc)
 {
 	/* To Do : Check Sensor status here */
 	if (pfFunc!=NULL)
