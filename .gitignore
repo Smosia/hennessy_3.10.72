@@ -1,4 +1,6 @@
-KERNEL_OBJ/
+KERNEL_OBJ
 *.DS_Store
-logs/
+logs
 *.log
+build.sh
+kernel-3.10/tools/dct/DCT.log
