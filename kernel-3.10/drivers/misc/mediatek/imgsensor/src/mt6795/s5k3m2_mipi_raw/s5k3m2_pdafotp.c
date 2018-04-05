@@ -43,12 +43,14 @@ static int last_offset = 0;
 static bool selective_read_eeprom(kal_uint16 addr, BYTE* data)
 {
 	char pu_send_cmd[2] = {(char)(addr >> 8) , (char)(addr & 0xFF) };
+    
     if(addr > S5K3M2_MAX_OFFSET)
         return false;
+	
 	kdSetI2CSpeed(S5K3M2_I2C_SPEED);
-
 	if(iReadRegI2C(pu_send_cmd, 2, (u8*)data, 1, S5K3M2_EEPROM_READ_ID)<0)
 		return false;
+    
     return true;
 }
 
@@ -70,8 +72,8 @@ static bool _read_3m2_eeprom(kal_uint16 addr, BYTE* data, kal_uint32 size ){
 
 bool read_3m2_eeprom( kal_uint16 addr, BYTE* data, kal_uint32 size){
 	int i;
-	addr = 0x0B9B;
-//	size = 16;
+	addr = 0x0763;
+	size = 1404;
 	
 	LOG_INF("read 3m2 eeprom, size = %d\n", size);
 	
@@ -84,33 +86,33 @@ bool read_3m2_eeprom( kal_uint16 addr, BYTE* data, kal_uint32 size){
 		}
 	}
 
-	if((s5k3m2_eeprom_data[0] != 1) || (s5k3m2_eeprom_data[498] != 1) || (s5k3m2_eeprom_data[1306] != 1))
-	{
-		LOG_INF("3M2 PDAF eeprom data invalid\n");
-		return false;
-	}
+	// if((s5k3m2_eeprom_data[0] != 1) || (s5k3m2_eeprom_data[498] != 1) || (s5k3m2_eeprom_data[1306] != 1))
+	// {
+	// 	LOG_INF("3M2 PDAF eeprom data invalid\n");
+	// 	return false;
+	// }
 	
-	for(i = 0; i < 496; i++)   // proc1 data
-	{
-		data[i] = s5k3m2_eeprom_data[i+1];
-	}
+	// for(i = 0; i < 496; i++)   // proc1 data
+	// {
+	// 	data[i] = s5k3m2_eeprom_data[i+1];
+	// }
 
-	for(i = 496; i < 1302; i++)  // proc2 data
-	{
-		data[i] = s5k3m2_eeprom_data[i+3];
-	}
+	// for(i = 496; i < 1302; i++)  // proc2 data
+	// {
+	// 	data[i] = s5k3m2_eeprom_data[i+3];
+	// }
 
-	for(i = 1302; i < 1404; i++)  // proc3 data
-	{
-		data[i] = s5k3m2_eeprom_data[i+5];
-	}	
+	// for(i = 1302; i < 1404; i++)  // proc3 data
+	// {
+	// 	data[i] = s5k3m2_eeprom_data[i+5];
+	// }	
 
-	for(i = 0; i < 1404; i++)
-	{
-		LOG_INF("data[%d] = %d\n", i, data[i]);
-	}
+	// for(i = 0; i < 1404; i++)
+	// {
+	// 	LOG_INF("data[%d] = %d\n", i, data[i]);
+	// }
 	
-//	memcpy(data, s5k3m2_eeprom_data, size);
+	memcpy(data, s5k3m2_eeprom_data, size);
     return true;
 }
 
