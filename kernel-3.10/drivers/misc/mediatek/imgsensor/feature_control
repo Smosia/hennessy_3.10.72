@@ -1,0 +1,33 @@
+feature_control imgsensor_info 0xd854
+https://github.com/Mysteryagr/android_kernel_doogee_y6/blob/312d24658e381794f0f983b181e6c7eac0cfbfaa/drivers/misc/mediatek/imgsensor/src/mt6755/s5k3l2_mipi_raw/s5k3l2mipiraw_Sensor.c#L55
+.checksum_value = 0x752cfcc1,
+
+struct 							sensor_id	checksum_value	sensor_func			open				sensor_init			get_info
+imgsensor_info_FFFFFFC000A6AE60 0xd853 		0xbde6b5f8
+imgsensor_info_FFFFFFC000A6BA38 0x5670 		0x523c51f6 		0xFFFFFFC000E92940 	0xFFFFFFC0004410D4	0xFFFFFFC00043EEB4	0xFFFFFFC00043E9D8
+imgsensor_info_FFFFFFC000A6C290 0x5671
+imgsensor_info_FFFFFFC000A6CAE8 0x5673
+imgsensor_info_FFFFFFC000A6D240 0x5e80
+
+										ov5670_raw 																		S5K3M2_MIPI_RAW_SensorInit
+imgsensor_info		0xFFFFFFC000A6AE60	0xFFFFFFC000A6BA38	0xFFFFFFC000A6C290	0xFFFFFFC000A6CAE8	0xFFFFFFC000A6D240	
+sensor_id			0xd853				0x5670				0x5671				0x5673				0x5e80
+checksum_value		0xbde6b5f8			0x523c51f6 																		0x752cfcc1
+sensor_func								0xFFFFFFC000E92940 																0xFFFFFFC000E92060
+open									0xFFFFFFC0004410D4 																0xFFFFFFC00042BB24
+sensor_init								0xFFFFFFC00043EEB4
+get_info								0xFFFFFFC00043E9D8																0xFFFFFFC00042885C
+get_resolution							0xFFFFFFC00043E964 																0xFFFFFFC0004287C0
+feature_control 						0xFFFFFFC0004404CC																0xFFFFFFC000429EC0
+control 								0xFFFFFFC0004414CC																0xFFFFFFC00042AC78
+imgsensor								0xFFFFFFC000E92860
+set_gain 								0xFFFFFFC00043EC40
+preview 																												0xFFFFFFC00042ABF4
+preview_setting																											0xFFFFFFC000429858
+
+
+
+
+
+
+

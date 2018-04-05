@@ -4,8 +4,6 @@
 /* #include "../camera/kd_camera_hw.h" */
 #include "kd_camera_feature.h"
 
-#define SENSOR_CLOCK_POLARITY_HIGH     0
-#define SENSOR_CLOCK_POLARITY_LOW      1
 /* #define CONFIG_COMPAT */
 #ifdef CONFIG_COMPAT
 /* 64 bit */
@@ -185,6 +183,7 @@ typedef enum {
 	SENSOR_FEATURE_SET_AWB_GAIN,
 	SENSOR_FEATURE_SET_MIN_MAX_FPS,
 	SENSOR_FEATURE_GET_PDAF_INFO,
+	SENSOR_FEATURE_GET_SENSOR_PDAF_EEPROM_DATASIZE,
 	SENSOR_FEATURE_GET_PDAF_DATA,
 	SENSOR_FEATURE_GET_SENSOR_PDAF_CAPACITY,
 	SENSOR_FEATURE_DEBUG_IMGSENSOR,
@@ -349,61 +348,61 @@ typedef struct {
 
 
 typedef struct {
-	MUINT16 SensorPreviewResolutionX;
-	MUINT16 SensorPreviewResolutionY;
-	MUINT16 SensorFullResolutionX;
-	MUINT16 SensorFullResolutionY;
-	MUINT8 SensorClockFreq; /* MHz */
-	MUINT8 SensorCameraPreviewFrameRate;
-	MUINT8 SensorVideoFrameRate;
-	MUINT8 SensorStillCaptureFrameRate;
-	MUINT8 SensorWebCamCaptureFrameRate;
-	MUINT8 SensorClockPolarity; /* SENSOR_CLOCK_POLARITY_HIGH/SENSOR_CLOCK_POLARITY_Low */
-	MUINT8 SensorClockFallingPolarity;
-	MUINT8 SensorClockRisingCount;  /* 0..15 */
-	MUINT8 SensorClockFallingCount; /* 0..15 */
-	MUINT8 SensorClockDividCount;   /* 0..15 */
-	MUINT8 SensorPixelClockCount;   /* 0..15 */
-	MUINT8 SensorDataLatchCount;    /* 0..15 */
-	MUINT8 SensorHsyncPolarity;
-	MUINT8 SensorVsyncPolarity;
-	MUINT8 SensorInterruptDelayLines;
-	MINT32 SensorResetActiveHigh;
-	MUINT32 SensorResetDelayCount;
-	ACDK_SENSOR_INTERFACE_TYPE_ENUM SensroInterfaceType;
-	ACDK_SENSOR_OUTPUT_DATA_FORMAT_ENUM SensorOutputDataFormat;
-	ACDK_SENSOR_MIPI_LANE_NUMBER_ENUM SensorMIPILaneNumber;
-	MUINT32 CaptureDelayFrame;
-	MUINT32 PreviewDelayFrame;
-	MUINT32 VideoDelayFrame;
-	MUINT32 HighSpeedVideoDelayFrame;
-	MUINT32 SlimVideoDelayFrame;
-	MUINT32 YUVAwbDelayFrame;
-	MUINT32 YUVEffectDelayFrame;
-	MUINT32 Custom1DelayFrame;
-	MUINT32 Custom2DelayFrame;
-	MUINT32 Custom3DelayFrame;
-	MUINT32 Custom4DelayFrame;
-	MUINT32 Custom5DelayFrame;
-	MUINT16 SensorGrabStartX;
-	MUINT16 SensorGrabStartY;
-	MUINT16 SensorDrivingCurrent;
-	MUINT8 SensorMasterClockSwitch;
-	MUINT8 AEShutDelayFrame;    /* The frame of setting shutter default 0 for TG int */
-	MUINT8 AESensorGainDelayFrame;  /* The frame of setting sensor gain */
-	MUINT8 AEISPGainDelayFrame;
-	MUINT8 MIPIDataLowPwr2HighSpeedTermDelayCount;
-	MUINT8 MIPIDataLowPwr2HighSpeedSettleDelayCount;
-	MUINT8 MIPICLKLowPwr2HighSpeedTermDelayCount;
-	MUINT8 SensorWidthSampling;
-	MUINT8 SensorHightSampling;
-	MUINT8 SensorPacketECCOrder;
-	SENSOR_MIPI_TYPE_ENUM MIPIsensorType;
-	MUINT8 SensorCaptureOutputJPEG; /* JPEG file or not? */
-	MUINT8 SensorModeNum;
-	MUINT8 IHDR_Support;
-	MUINT16 IHDR_LE_FirstLine;
-	SENSOR_SETTLEDELAY_MODE_ENUM SettleDelayMode;
+	MUINT16 SensorPreviewResolutionX; //0x0
+	MUINT16 SensorPreviewResolutionY; //0x02
+	MUINT16 SensorFullResolutionX; //0x04
+	MUINT16 SensorFullResolutionY; //0x06
+	MUINT8 SensorClockFreq; /* MHz */ //0x08
+	MUINT8 SensorCameraPreviewFrameRate; //0x09
+	MUINT8 SensorVideoFrameRate; //0x0a
+	MUINT8 SensorStillCaptureFrameRate; //0x0b
+	MUINT8 SensorWebCamCaptureFrameRate; //0x0c
+	MUINT8 SensorClockPolarity;  //0x0d /* SENSOR_CLOCK_POLARITY_HIGH/SENSOR_CLOCK_POLARITY_Low */
+	MUINT8 SensorClockFallingPolarity; //0x02e
+	MUINT8 SensorClockRisingCount;   //0x0f /* 0..15 */
+	MUINT8 SensorClockFallingCount;  //0x10 /* 0..15 */
+	MUINT8 SensorClockDividCount; //0x011   /* 0..15 */
+	MUINT8 SensorPixelClockCount; //0x12   /* 0..15 */
+	MUINT8 SensorDataLatchCount;  //0x13   /* 0..15 */
+	MUINT8 SensorHsyncPolarity; //0x14
+	MUINT8 SensorVsyncPolarity; //0x15
+	MUINT8 SensorInterruptDelayLines; //0x16
+	MINT32 SensorResetActiveHigh; //0x18
+	MUINT32 SensorResetDelayCount; //0x1c
+	ACDK_SENSOR_INTERFACE_TYPE_ENUM SensroInterfaceType; //0x20
+	ACDK_SENSOR_OUTPUT_DATA_FORMAT_ENUM SensorOutputDataFormat; //0x24
+	ACDK_SENSOR_MIPI_LANE_NUMBER_ENUM SensorMIPILaneNumber; //0x28
+	MUINT32 CaptureDelayFrame; //0x2c
+	MUINT32 PreviewDelayFrame; //0x30
+	MUINT32 VideoDelayFrame; //0x34
+	MUINT32 HighSpeedVideoDelayFrame; //0x38
+	MUINT32 SlimVideoDelayFrame; //0x3c
+	MUINT32 YUVAwbDelayFrame; //0x40
+	MUINT32 YUVEffectDelayFrame; //0x44
+	MUINT32 Custom1DelayFrame;  //0x48
+	MUINT32 Custom2DelayFrame;  //0x4c
+	MUINT32 Custom3DelayFrame;  //0x50
+	MUINT32 Custom4DelayFrame; //0x54
+	MUINT32 Custom5DelayFrame;  //0x58
+	MUINT16 SensorGrabStartX;  //0x5c
+	MUINT16 SensorGrabStartY;  //0x5e
+	MUINT16 SensorDrivingCurrent;  //0x60
+	MUINT8 SensorMasterClockSwitch;  //0x62
+	MUINT8 AEShutDelayFrame;  //0x63   /* The frame of setting shutter default 0 for TG int */
+	MUINT8 AESensorGainDelayFrame; //0x64 /* The frame of setting sensor gain */
+	MUINT8 AEISPGainDelayFrame; //0x65
+	MUINT8 MIPIDataLowPwr2HighSpeedTermDelayCount; //0x66
+	MUINT8 MIPIDataLowPwr2HighSpeedSettleDelayCount; //0x67
+	MUINT8 MIPICLKLowPwr2HighSpeedTermDelayCount; //0x68
+	MUINT8 SensorWidthSampling; //0x69
+	MUINT8 SensorHightSampling; //0x6a
+	MUINT8 SensorPacketECCOrder; //0x6b //
+	SENSOR_MIPI_TYPE_ENUM MIPIsensorType; //0x6c //6d?
+	MUINT8 SensorCaptureOutputJPEG; //0x70 /* JPEG file or not? */
+	MUINT8 SensorModeNum; //0x71
+	MUINT8 IHDR_Support; //0x72
+	MUINT16 IHDR_LE_FirstLine; //0x73
+	SENSOR_SETTLEDELAY_MODE_ENUM SettleDelayMode; //0x75
 	MUINT8 PDAF_Support;
 	MUINT8 DPCM_INFO;
 	MUINT8 PerFrameCTL_Support;
