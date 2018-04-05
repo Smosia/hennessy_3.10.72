@@ -250,15 +250,15 @@ static int check_otp_wb(int index)
 	flag = read_cmos_sensor(0x7020);
 	if (index == 1)
 	{ 
-		flag =(flag>>6) &0x03;			
+		flag = (flag>>6);			
 	}
 	else if (index == 2)
 	{ 
-		flag =(flag>>4) &0x03;				
+		flag = (flag>>4) & 0x03;				
 	}
 	else if (index == 3)
 	{ 
-		flag =(flag>>2) &0x03;	
+		flag = (flag>>2) & 0x03;	
 	}
 
 	// clear otp buffer
@@ -525,9 +525,7 @@ static int update_otp_wb()
 	}
 	printk("pxs_ov5670_otp	otp_index=%d, otp_info_index=%d %s \n", otp_index, info_index, __func__); //pei_add	
 
-	rg = current_otp.rg_ratio ;  // 259
-	bg = current_otp.bg_ratio;	 //324
-	read_otp_info(otp_index, &current_otp);
+	read_otp_info(info_index, &current_otp);
 	if (current_otp.module_integrator_id == 1) {
 		RG_Ratio_Typical = 290;  // 259
 		BG_Ratio_Typical = 320;	 //324
@@ -1282,10 +1280,8 @@ static void capture_setting(kal_uint16 currefps)
 		
 		write_cmos_sensor(0x3501, 0x5f); //long exposure
 		write_cmos_sensor(0x3502, 0xd0);  //long exposure
-		
 		write_cmos_sensor(0x3508, 0x03);  //gain
 		write_cmos_sensor(0x3509, 0x00);  //gain
-
 		write_cmos_sensor(0x366e, 0x10); 
 		write_cmos_sensor(0x3623, 0x00);  //gain
 		write_cmos_sensor(0x370b, 0x1b); 
@@ -1297,7 +1293,6 @@ static void capture_setting(kal_uint16 currefps)
 		write_cmos_sensor(0x380d, (imgsensor_info.cap.linelength & 0xFF)); 	   // hts 8c
 		write_cmos_sensor(0x380e, ((imgsensor_info.cap.framelength >> 8) & 0xFF));  // vts 7
 		write_cmos_sensor(0x380f, (imgsensor_info.cap.framelength & 0xFF));		 // vts fd
-
 		write_cmos_sensor(0x3814, 0x01); 
 		write_cmos_sensor(0x3820, 0x80); 
 		write_cmos_sensor(0x3821, 0x46); 
