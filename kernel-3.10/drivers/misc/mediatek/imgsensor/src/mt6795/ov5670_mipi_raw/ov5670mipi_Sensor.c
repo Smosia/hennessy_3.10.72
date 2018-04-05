@@ -206,7 +206,7 @@ int bg_ratio;
 int RG_Ratio_Typical;
 int BG_Ratio_Typical;	
 
-void OV5670_OTP_read_begin(void)
+static void OV5670_OTP_read_begin(void)
 {
 	// set reg 0x5002[3] to '0'
 	int temp1;
@@ -214,7 +214,7 @@ void OV5670_OTP_read_begin(void)
 	write_cmos_sensor(0x5002, (temp1 &(~0x08)));
 }
 
-void OV5670_OTP_read_end(void)
+static void OV5670_OTP_read_end(void)
 {
 	// set reg 0x5002[3] to '1'
 	int temp1;
