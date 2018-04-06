@@ -102,13 +102,13 @@
  * add new camera
  */
 /* XRN 2 CAMERAS start*/ 
-#define OV5670_MIPI_SENSOR_ID                   0x5670
-#define OV5670_2ND_MIPI_SENSOR_ID				0x5671
-#define OV5670_FLT_2ND_MIPI_SENSOR_ID           0x5673
+#define OV5670_SENSOR_ID                        0x5670
+#define OV5670_2ND_SENSOR_ID                    0x5671
+#define OV5670_FLT_2ND_SENSOR_ID                0x5673
 #define S5K3M2_SENSOR_ID                        0x30D2
 #define S5K3M2_2ND_SENSOR_ID                    0x30D3
 #define S5K5E8YX_SENSOR_ID                      0x5E80
-#define OV13853_MIPI_SENSOR_ID                  0xD853
+#define OV13853_SENSOR_ID                       0xD853
 /* XRN 2 CAMERAS end*/ 
 #define IMX230_SENSOR_ID                        0x0230
 //End of vanzo:wuzhiyong
