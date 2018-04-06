@@ -265,10 +265,13 @@
  * add new camera
  */
 /* XRN 2 CAMERAS start*/ 
-#define SENSOR_DRVNAME_OV5670_MIPI_RAW         		"ov5670mipi"
+#define SENSOR_DRVNAME_OV5670_MIPI_RAW              "ov5670mipi"
 #define SENSOR_DRVNAME_OV5670_2ND_MIPI_RAW          "ov5670_2nd_mipi"
-#define SENSOR_DRVNAME_S5K3M2_MIPI_RAW          	"s5k3m2mipiraw"
-#define SENSOR_DRVNAME_S5K3M2_2ND_MIPI_RAW      	"s5k3m2_2nd_mipiraw"
+#define SENSOR_DRVNAME_OV5670_FLT_2ND_MIPI_RAW      "ov5670_flt_2nd_mipi"
+#define SENSOR_DRVNAME_S5K3M2_MIPI_RAW              "s5k3m2mipiraw"
+#define SENSOR_DRVNAME_S5K3M2_2ND_MIPI_RAW          "s5k3m2_2ndmipiraw"
+#define SENSOR_DRVNAME_S5K5E8YX_MIPI_RAW            "s5k5e8yxmipiraw"
+#define SENSOR_DRVNAME_OV13853_MIPI_RAW             "ov13853mipiraw"
 /* XRN 2 CAMERAS end*/ 
 #define SENSOR_DRVNAME_IMX230_MIPI_RAW          "imx230mipiraw"
 //End of vanzo:wuzhiyong
