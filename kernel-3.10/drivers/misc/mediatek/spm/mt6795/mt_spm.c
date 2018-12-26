@@ -27,6 +27,7 @@ void __iomem *spm_i2c0_base;
 void __iomem *spm_i2c1_base;
 void __iomem *spm_i2c2_base;
 void __iomem *spm_i2c3_base;
+void __iomem *spm_i2c4_base;
 void __iomem *spm_mcucfg;
 void __iomem *spm_md32_base;
 
@@ -276,6 +277,14 @@ static void spm_register_init(void)
     spm_i2c3_base = of_iomap(node, 0);
     if (!spm_i2c3_base)
         spm_err("base i2c3_base failed\n");
+
+    node = of_find_compatible_node(NULL, NULL, "mediatek,I2C4");
+    if (!node) {
+        spm_err("find I2C4 node failed\n");
+    }
+    spm_i2c4_base = of_iomap(node, 0);
+    if (!spm_i2c4_base)
+        spm_err("base i2c4_base failed\n");
     //mcucfg        
     node = of_find_compatible_node(NULL, NULL, "mediatek,MCUCFG");
     if (!node) {
@@ -293,7 +302,7 @@ static void spm_register_init(void)
     if (!spm_md32_base)
         spm_err("[MD32] Unable to ioremap mregisters\n");
 
-    spm_err("spm_base = %p, i2c0_base = %p, i2c1_base = %p, i2c2_base = %p, i2c3_base = %p\n", spm_base, spm_i2c0_base, spm_i2c1_base, spm_i2c2_base, spm_i2c3_base);
+    spm_err("spm_base = %p, i2c0_base = %p, i2c1_base = %p, i2c2_base = %p, i2c3_base = %p, i2c4_base = %p\n", spm_base, spm_i2c0_base, spm_i2c1_base, spm_i2c2_base, spm_i2c3_base, spm_i2c4_base);
     spm_err("spm_irq_0 = %d, spm_irq_1 = %d, spm_irq_2 = %d, spm_irq_3 = %d\n", spm_irq_0, spm_irq_1, spm_irq_2, spm_irq_3);
     spm_err("spm_irq_4 = %d, spm_irq_5 = %d, spm_irq_6 = %d, spm_irq_7 = %d\n", spm_irq_4, spm_irq_5, spm_irq_6, spm_irq_7);
     spm_err("spm_mcucfg = %p, spm_md32_base = %p\n", spm_mcucfg, spm_md32_base);

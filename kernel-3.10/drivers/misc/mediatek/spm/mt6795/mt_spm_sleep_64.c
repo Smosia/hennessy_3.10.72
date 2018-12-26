@@ -363,13 +363,14 @@ static void spm_i2c_control(u32 channel, bool onoff)
 #endif
             i2c_clk = MT_CG_PERI_I2C3;
 	          break;
-//FIXME: I2C4 is defined in 6595 dts but not in 6795 dts. 
-#if 0 
         case 4:
+#ifdef CONFIG_OF
+            base = SPM_I2C4_BASE;
+#else
             base = I2C4_BASE;
+#endif
             i2c_clk = MT_CG_PERI_I2C4;
 	          break;
-#endif
         default:
             break;
     }

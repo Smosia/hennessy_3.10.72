@@ -11,6 +11,7 @@ extern void __iomem *spm_i2c0_base;
 extern void __iomem *spm_i2c1_base;
 extern void __iomem *spm_i2c2_base;
 extern void __iomem *spm_i2c3_base;
+extern void __iomem *spm_i2c4_base;
 #ifdef CONFIG_ARM64
 extern void __iomem *spm_cksys_base;
 extern void __iomem *spm_ddrphy0_base;
@@ -48,11 +49,13 @@ extern u32 spm_irq_7;
 #undef SPM_I2C1_BASE
 #undef SPM_I2C2_BASE
 #undef SPM_I2C3_BASE
+#undef SPM_I2C4_BASE
 
 #define SPM_I2C0_BASE	spm_i2c0_base
 #define SPM_I2C1_BASE	spm_i2c1_base
 #define SPM_I2C2_BASE	spm_i2c2_base
 #define SPM_I2C3_BASE	spm_i2c3_base
+#define SPM_I2C4_BASE	spm_i2c4_base
 
 #define SPM_IRQ0_ID		spm_irq_0
 #define SPM_IRQ1_ID		spm_irq_1
@@ -70,6 +73,8 @@ extern u32 spm_irq_7;
 #define SPM_I2C1_BASE   0x11008000	//I2C1_BASE
 #define SPM_I2C2_BASE   0x11009000	//I2C2_BASE
 #define SPM_I2C3_BASE   0x11010000	//I2C3_BASE
+#define SPM_I2C4_BASE   0x11011000	//I2C4_BASE
+
 #define SPM_IRQ0_ID     187		// SLEEP_IRQ_BIT0_ID
 #define SPM_IRQ1_ID     188		// SLEEP_IRQ_BIT1_ID
 #define SPM_IRQ2_ID     189		// SLEEP_IRQ_BIT2_ID
