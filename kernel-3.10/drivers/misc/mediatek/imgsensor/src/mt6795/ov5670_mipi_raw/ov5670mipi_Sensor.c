@@ -194,17 +194,20 @@ static void write_cmos_sensor(kal_uint32 addr, kal_uint32 para)
 #ifdef OV5670_OTP
 
 struct otp_struct {
-int module_integrator_id;
-int lens_id;
-int production_year;
-int production_month;
-int production_day;
-int rg_ratio;
-int bg_ratio;
+	int module_integrator_id;
+	int lens_id;
+	int production_year;
+	int production_month;
+	int production_day;
+	int rg_ratio;
+	int bg_ratio;
 };
 
-int RG_Ratio_Typical;
-int BG_Ratio_Typical;	
+static int RG_Ratio_Typical;
+static int BG_Ratio_Typical;
+
+#define OV5670_LENS_ID 	0
+static int lens_id = -1;
 
 static void OV5670_OTP_read_begin(void)
 {
@@ -507,7 +510,7 @@ static int update_otp_wb()
 	}
 	if (i>3) {
 		// no valid wb OTP data
-		printk("pxs_ov5670_otp	no valid wb OTP data  %s \n", __func__); //pei_add
+		printk("pxs_ov5670_otp  no valid wb OTP data  %s \n", __func__); //pei_add
 		return 1;
 	}
 
@@ -526,26 +529,32 @@ static int update_otp_wb()
 	printk("pxs_ov5670_otp	otp_index=%d, otp_info_index=%d %s \n", otp_index, info_index, __func__); //pei_add	
 
 	read_otp_info(info_index, &current_otp);
-	if (current_otp.module_integrator_id == 1) {
-		RG_Ratio_Typical = 290;  // 259
-		BG_Ratio_Typical = 320;	 //324
-	} 
-	if (current_otp.module_integrator_id == 7) {
-		RG_Ratio_Typical = 272;  // 259
-		BG_Ratio_Typical = 355;	 //324
+	if (current_otp.lens_id == 0) {
+		lens_id = current_otp.lens_id;
+		if (current_otp.module_integrator_id == 1) {
+			RG_Ratio_Typical = 290;
+			BG_Ratio_Typical = 320;
+		}
+		if (current_otp.module_integrator_id == 7) {
+			RG_Ratio_Typical = 272;
+			BG_Ratio_Typical = 355;
+		}
+	} else {
+		printk("pxs_ov5670_otp current_otp.lens_id != 0: %d %s \n", current_otp.lens_id, __func__);
+		return 2;
 	}
 
 	read_otp_wb(otp_index, &current_otp);
-	rg = current_otp.rg_ratio ;  // 259
-	bg = current_otp.bg_ratio;	 //324
+	rg = current_otp.rg_ratio;
+	bg = current_otp.bg_ratio;
 	
 	//calculate G gain
 	int nR_G_gain, nB_G_gain, nG_G_gain;
-	int R_gain,	B_gain,	G_gain ;          //pei_add
+	int R_gain,	B_gain,	G_gain ;
 	int nBase_gain;
 
-	nR_G_gain = (RG_Ratio_Typical*1000) / rg;  //1019 = x*1000 / 259 x=0x108
-	nB_G_gain = (BG_Ratio_Typical*1000) / bg;	//929 = x*1000 / 324 x=0x12d
+	nR_G_gain = (RG_Ratio_Typical*1000) / rg;
+	nB_G_gain = (BG_Ratio_Typical*1000) / bg;
 	nG_G_gain = 1000;
 	
 	printk("pxs_ov5670_otp	rg=%x,bg=%x,  %s \n",rg,bg, __func__); //pei_add
@@ -887,8 +896,8 @@ static void set_mirror_flip(kal_uint8 image_mirror)
 			write_cmos_sensor(0x450b,0x20);
 			break;
 		case IMAGE_HV_MIRROR:
-			write_cmos_sensor(0x3820,((read_cmos_sensor(0x3820) & 0xF9) | 0x06));
-			write_cmos_sensor(0x3821,((read_cmos_sensor(0x3821) & 0xF9) | 0x06));
+			write_cmos_sensor(0x3820,((read_cmos_sensor(0x3820) & 0xFF) | 0x06));
+			write_cmos_sensor(0x3821,((read_cmos_sensor(0x3821) & 0xF9) | 0x00));
 			write_cmos_sensor(0x450b,0x20);
 			break;
 		default:
@@ -1518,10 +1527,16 @@ static kal_uint32 get_imgsensor_id(UINT32 *sensor_id)
 		do {
 			*sensor_id = ((read_cmos_sensor(0x300B) << 8) | read_cmos_sensor(0x300C));
 			if (*sensor_id == imgsensor_info.sensor_id) {				
-				LOG_INF("i2c write id: 0x%x, sensor id: 0x%x\n", imgsensor.i2c_write_id,*sensor_id);	  
-				return ERROR_NONE;
+				sensor_init();
+				if (lens_id == OV5670_LENS_ID) {
+					LOG_INF("i2c write id: 0x%x, sensor id: 0x%x\n", imgsensor.i2c_write_id, *sensor_id);
+					return ERROR_NONE;
+				} else {
+					*sensor_id = 0xFFFFFFFF;
+					return ERROR_SENSOR_CONNECT_FAIL;
+				}
 			}	
-			LOG_INF("Read sensor id fail, id: 0x%x\n", imgsensor.i2c_write_id,*sensor_id);
+			LOG_INF("Read sensor id fail, id: 0x%x\n", imgsensor.i2c_write_id, *sensor_id);
 			retry--;
 		} while(retry > 0);
 		i++;
@@ -1584,6 +1599,9 @@ static kal_uint32 open(void)
 	
 	/* initail sequence write in  */
 	sensor_init();
+
+	if (lens_id != OV5670_LENS_ID)
+		return ERROR_SENSOR_CONNECT_FAIL;
 
 	spin_lock(&imgsensor_drv_lock);
 
@@ -2155,7 +2173,7 @@ static kal_uint32 feature_control(MSDK_SENSOR_FEATURE_ENUM feature_id,
             set_max_framerate_by_scenario((MSDK_SCENARIO_ID_ENUM)*feature_data, *(feature_data+1));
 			break;
 		case SENSOR_FEATURE_GET_DEFAULT_FRAME_RATE_BY_SCENARIO:
-            get_default_framerate_by_scenario((MSDK_SCENARIO_ID_ENUM)*(feature_data), (MUINT32 *)(uintptr_t)(*(feature_data+1)));
+            get_default_framerate_by_scenario((MSDK_SCENARIO_ID_ENUM)*feature_data, (MUINT32 *)(feature_data+1));
 			break;
 		case SENSOR_FEATURE_SET_TEST_PATTERN:
             set_test_pattern_mode((BOOL)*feature_data);
