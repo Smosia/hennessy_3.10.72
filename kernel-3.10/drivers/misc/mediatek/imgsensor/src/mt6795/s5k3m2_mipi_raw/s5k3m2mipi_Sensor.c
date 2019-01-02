@@ -64,7 +64,7 @@ static imgsensor_info_struct imgsensor_info = {
 		.max_framerate = 300,
 	},
 	.cap = {
-		.pclk = 336000000,
+		.pclk = 440000000,
 		.linelength = 4592,
 		.framelength = 3188,
 		.startx = 0,
@@ -83,7 +83,7 @@ static imgsensor_info_struct imgsensor_info = {
 		.grabwindow_width = 4192,
 		.grabwindow_height = 3104,
 		.mipi_data_lp2hs_settle_dc = 85,//unit , ns
-		.max_framerate = 300,
+		.max_framerate = 240,
 	},
 	.normal_video = {
 		.pclk = 440000000,
