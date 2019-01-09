@@ -27,77 +27,38 @@
 //#define LOG_2 LOG_INF("preview 2096*1552@30fps,640Mbps/lane; video 4192*3104@30fps,1.2Gbps/lane; capture 13M@30fps,1.2Gbps/lane\n")
 /****************************   Modify end    *******************************************/
 
-//#define LOG_INF(format, args...)    xlog_printk(ANDROID_LOG_INFO   , PFX, "[%s] " format, __FUNCTION__, ##args)
-#define LOG_INF printk
-
-//#include "ov13853_otp.h"
-struct otp_pdaf_struct {
-unsigned char pdaf_flag; //bit[7]--0:empty; 1:Valid
-unsigned char data1[496];//output data1
-unsigned char data2[806];//output data2
-unsigned char data3[102];//output data3
-unsigned char pdaf_checksum;//checksum of pd, SUM(0x0801~0x0D7C)%255+1
-
-};
-
-
-
+#define LOG_INF(format, args...)    xlog_printk(ANDROID_LOG_INFO, PFX, "[%s] " format, __FUNCTION__, ##args)
 
 extern int iReadRegI2C(u8 *a_pSendData , u16 a_sizeSendData, u8 * a_pRecvData, u16 a_sizeRecvData, u16 i2cId);
 extern int iWriteRegI2C(u8 *a_pSendData , u16 a_sizeSendData, u16 i2cId);
 extern void kdSetI2CSpeed(u16 i2cSpeed);
-#define EEPROM_READ_ID  0xA0
-#define EEPROM_WRITE_ID   0xA1
-#define I2C_SPEED        400  //CAT24C512 can support 1Mhz
 
-#define START_OFFSET     0x800
+#define EEPROM_READ_ID		0xA0
+#define EEPROM_WRITE_ID		0xA1
+#define I2C_SPEED			400  //CAT24C512 can support 1Mhz
 
 #define Delay(ms)  mdelay(ms)
-//static unsigned char OV13853MIPI_WRITE_ID = (0xA0 >> 1);
-//#define EEPROM_READ_ID  0xA3
-//#define EEPROM_WRITE_ID   0xA2
-#define MAX_OFFSET       0xd7b
-#define DATA_SIZE 4096
-//BYTE eeprom_data[DATA_SIZE]= {0};
+
+#define MAX_OFFSET			0xd7b
+
 static bool get_done = false;
 static int last_size = 0;
 static int last_offset = 0;
-/*
-kal_uint16 OV13853_R2A_read_i2c(kal_uint32 addr)
+
+static BYTE OV13853_selective_read_eeprom_VCM_ID(kal_uint16 addr)
 {
-    kal_uint16 get_byte=0;
-    iReadReg((u16) addr ,(u8*)&get_byte,EEPROM_READ_ID);
-    return get_byte;
-}
+	LOG_INF("enter");
+    BYTE data = 0;
+    char pu_send_cmd[2] = {(char)(addr >> 8) , (char)(addr & 0xFF) };
 
-
-
-kal_uint16 OV13853_R2A_write_i2c(addr, para)
-{
-		iWriteReg((u16) addr , (u32) para , 1, EEPROM_WRITE_ID);
-		return 1;
-}
-
-
-
-
-//read pdaf data
-int read_otp_pdaf_data(kal_uint16 addr, BYTE* data, kal_uint32 size)
-{
-	int i = 0;
-	LOG_INF("addr :%x, size:%d, \n", addr, size);
-	addr = 0x800;
-	for (i=0; i<1404;i++)
-	{
-		data[i] = OV13853_R2A_read_i2c(addr);
-		addr++;
-		LOG_INF("data[%d] :%x, addr:%x, \n", i, data[i], addr);
+    if(addr <= MAX_OFFSET)
+    {
+        kdSetI2CSpeed(I2C_SPEED);
+        iReadRegI2C(pu_send_cmd, 2, &data, 1, EEPROM_READ_ID);
     }
-	return 0;
+    LOG_INF("end");
+    return data;
 }
-*/
-
-////
 
 static bool OV13853_selective_read_eeprom(kal_uint16 addr, BYTE* data)
 {
@@ -111,18 +72,18 @@ static bool OV13853_selective_read_eeprom(kal_uint16 addr, BYTE* data)
     return true;
 }
 
-
-static bool OV13853_read_eeprom(kal_uint16 addr, BYTE* data, kal_uint32 size ){
+static bool OV13853_read_eeprom(kal_uint16 addr, BYTE* data, kal_uint32 size )
+{
 	int i = 0;
-	//int offset = addr;
-	int offset = 0x0802;
-	//for(i = 0; i < 1404; i++) {
-	for(i = 0; i < 1372; i++) {
-		if(!OV13853_selective_read_eeprom(offset, &data[i])){
-			LOG_INF("read_eeprom 0x%0x %d fail \n",offset, data[i]);
+	int offset = 0x079B;
+	for(i = 0; i < 1253; i++) 
+	{
+		if(!OV13853_selective_read_eeprom(offset, &data[i]))
+		{
+			LOG_INF("read_eeprom 0x%0x %d fail \n", offset, data[i]);
 			return false;
 		}
-		LOG_INF("read_eeprom 0x%0x 0x%x\n",offset, data[i]);
+		LOG_INF("read_eeprom 0x%0x 0x%x\n", offset, data[i]);
 		offset++;
 	}
 	get_done = true;
@@ -131,12 +92,13 @@ static bool OV13853_read_eeprom(kal_uint16 addr, BYTE* data, kal_uint32 size ){
     return true;
 }
 
-bool read_otp_pdaf_data( kal_uint16 addr, BYTE* data, kal_uint32 size){
-	
-	LOG_INF("read_otp_pdaf_data enter");
-	if(!get_done || last_size != size || last_offset != addr) {
-		//if(!_read_eeprom(addr, eeprom_data, size)){
-		if(!OV13853_read_eeprom(addr, data, size)){
+bool read_otp_pdaf_data( kal_uint16 addr, BYTE* data, kal_uint32 size)
+{	
+	LOG_INF("enter");
+	if(!get_done || last_size != size || last_offset != addr)
+	{
+		if(!OV13853_read_eeprom(addr, data, size))
+		{
 			get_done = 0;
             last_size = 0;
             last_offset = 0;
@@ -144,8 +106,7 @@ bool read_otp_pdaf_data( kal_uint16 addr, BYTE* data, kal_uint32 size){
 			return false;
 		}
 	}
-	//memcpy(data, eeprom_data, size);
-	LOG_INF("read_otp_pdaf_data end");
+	LOG_INF("end");
     return true;
 }
 
