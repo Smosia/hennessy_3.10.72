@@ -1,0 +1,4 @@
+
+config MTK_CM36283
+	bool "CM36283 for MediaTek package"
+	default n

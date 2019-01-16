@@ -40,7 +40,7 @@
 #ifdef GPIO_ANT_SEL0
 #define IRTX_GPIO GPIO_ANT_SEL0
 #else
-#define IRTX_GPIO GPIO129
+#define IRTX_GPIO GPIO19
 #endif
 #endif
 
@@ -75,7 +75,7 @@ pr_warn("[IRTX] open GPIO_IRTX_OUT_PIN defined\n");
 	#ifdef GPIO_ANT_SEL0
 		pr_warn("[IRTX] open GPIO_ANT_SEL0 defined\n");
 	#else
-		pr_warn("[IRTX] open GPIO129 defined\n");
+		pr_warn("[IRTX] open GPIO19 defined\n");
 	#endif
 #endif
 
@@ -90,7 +90,7 @@ pr_warn("[IRTX] open GPIO_IRTX_OUT_PIN defined\n");
 				, clk_en_ret, mt_irtx_dev.clk_irtx_main);
 	}
 #else /* !defined(CONFIG_MTK_LEGACY) */
-	//enable_clock(MT_CG_PERI_IRTX, "IRTX");
+	enable_clock(MT_CG_PERI_IRTX, "IRTX");
 #endif /* !defined(CONFIG_MTK_LEGACY) */
 
 	pr_warn("[IRTX] open by %s\n", current->comm);
@@ -109,7 +109,7 @@ static int dev_char_close(struct inode *inode, struct file *file)
 	pr_notice("[IRTX][CCF]disable clk_irtx_main:%p\n", mt_irtx_dev.clk_irtx_main);
 	clk_disable_unprepare(mt_irtx_dev.clk_irtx_main);
 #else /* !defined(CONFIG_MTK_LEGACY) */
-	//disable_clock(MT_CG_PERI_IRTX, "IRTX");
+	disable_clock(MT_CG_PERI_IRTX, "IRTX");
 #endif /* !defined(CONFIG_MTK_LEGACY) */
 
 	return 0;

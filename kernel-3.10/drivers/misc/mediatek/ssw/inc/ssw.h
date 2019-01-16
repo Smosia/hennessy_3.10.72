@@ -17,20 +17,16 @@
 #include <asm/io.h>
 
 #include <mach/mt_typedefs.h>
-//#include <mach/mtk_ccci_helper.h>
+/*#include <mach/mtk_ccci_helper.h>*/
 #include <mach/mt_reg_base.h>
+#if defined(CONFIG_MTK_LEGACY)
 #include <mach/mt_gpio.h>
+#endif
 
 
 /*-------------------------debug log define--------------------------------*/
-static int dbg_en = 1;
-#define SSW_DBG(format, args...) do{ \
-	if(dbg_en) \
-	{\
-		printk(KERN_ERR "[ccci\\ssw] "format,##args);\
-	}\
-}while(0)
-
+#define pr_fmt(fmt)  "[ccci/ssw]" fmt
+#define SSW_DBG(format, args...)    pr_debug(format, ##args)
 
 /*-------------------------variable define----------------------------------*/
 #if 0
@@ -44,7 +40,7 @@ static int dbg_en = 1;
 #endif
 
 /*------------------------Error Code---------------------------------------*/
-#define SSW_SUCCESS 			(0)
+#define SSW_SUCCESS (0)
 #define SSW_INVALID_PARA		(-1)
 
 enum {
@@ -54,7 +50,7 @@ enum {
 	SSW_EXT_SINGLE_COMMON = 2,
 	SSW_EXT_DUAL_1X2 = 3,
 	SSW_EXT_SINGLE_2X2 = 4,
-	
+
 	SSW_RESTORE = 0x5AA5,
 };
 

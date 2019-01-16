@@ -24,6 +24,13 @@ SECCFG_U                            seccfg;
 bool bMsg                           = FALSE;
 bool bSECROInit                     = FALSE;
 
+unsigned int g_rom_info_sbc_attr;
+unsigned int g_rom_info_sdl_attr;
+unsigned int g_hw_sbcen;
+unsigned int g_lock_state;
+unsigned int g_random_id[NUM_RID];
+unsigned char g_crypto_seed[NUM_CRYPTO_SEED];
+unsigned int g_sbc_pubk_hash[NUM_SBC_PUBK_HASH];
 
 /******************************************************************************
  * CHECK IF SECURITY CHIP IS ENABLED
@@ -261,7 +268,7 @@ int masp_boot_init (void)
         ret = ERR_ROM_INFO_MTD_NOT_FOUND;
         goto _error;
     }    
-
+#if 0
     /* ----------------------------------- */
     /* read secro                          */
     /* ----------------------------------- */
@@ -269,29 +276,11 @@ int masp_boot_init (void)
     {
         if(FALSE == bSECROInit)
         {    
-#if 0        
-            if(TRUE == sec_secro_ac())
-            {
-                if(SEC_OK != (ret = sec_dev_read_secroimg()))
-                {
-                    goto _error;
-                }
-            }
-            else
-            {
-                /* only for non-security platform */
-                if(SEC_OK != (ret = sec_fs_read_secroimg(FS_SECRO_PATH,(uchar*)&secroimg)))
-                {
-                    goto _error;
-                }                
-            }
-#else
+
             if(SEC_OK != (ret = sec_dev_read_secroimg()))
             {
                 goto _error;
             }
-
-#endif
             bSECROInit = TRUE;
         }
     }
@@ -304,7 +293,7 @@ int masp_boot_init (void)
     {
         goto _error;        
     }
-
+#endif
     return ret;
 
 _error:

@@ -1443,7 +1443,7 @@ static inline void mt_i2c_init_hw(mt_i2c *i2c)
 {
 
 	/* power on */
-	//mt_i2c_power_ctl(i2c->id, 1);
+	mt_i2c_power_ctl(i2c->id, 1);
 	/*  */
 	i2c_writel(i2c, OFFSET_SOFTRESET, 0x0001);
 	i2c_writel(i2c, OFFSET_DCM_EN, 0x0);
@@ -1534,7 +1534,8 @@ static S32 mt_i2c_probe(struct platform_device *pdev)
 		i2c->pdn = MT_CG_PERI_I2C3;
 		break;
 	case 4:
-		i2c->pdn = MT_CG_PERI_I2C4;
+		/* ROME lay out no i2c4 */
+		/* i2c->pdn = MT_CG_PERI_I2C4; */
 		break;
 	default:
 		dev_err(&pdev->dev, "Error id %d\n", i2c->id);
@@ -1632,7 +1633,7 @@ static S32 mt_i2c_suspend(struct platform_device *pdev, pm_message_t state)
 {
 	mt_i2c *i2c = platform_get_drvdata(pdev);
 
-	//mt_i2c_power_ctl(0, 0);
+	mt_i2c_power_ctl(0, 0);
 	/* I2CLOG("i2c:ROME suspend ok\n"); */
 	I2CLOG("[I2C %d] Suspend!\n", i2c->id);
 
@@ -1643,7 +1644,7 @@ static S32 mt_i2c_resume(struct platform_device *pdev)
 {
 	mt_i2c *i2c = platform_get_drvdata(pdev);
 
-	//mt_i2c_power_ctl(0, 1);
+	mt_i2c_power_ctl(0, 1);
 	/* I2CLOG("i2c:ROME resume ok\n"); */
 	I2CLOG("[I2C %d] Resume!\n", i2c->id);
 	return 0;
@@ -1657,7 +1658,6 @@ static const struct of_device_id mt_i2c_of_match[] = {
 	{.compatible = "mediatek,I2C1",},
 	{.compatible = "mediatek,I2C2",},
 	{.compatible = "mediatek,I2C3",},
-	{.compatible = "mediatek,I2C4",},
 	{ /* sentinel */ },
 };
 

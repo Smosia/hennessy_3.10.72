@@ -15,5 +15,17 @@ config MTK_AUTO_DETECT_ALSPS
 	  project and be auto detected by setting this option to yes,
           usually only one ALSPS driver can be probed.
 
+source "drivers/misc/mediatek/alsps/APDS9930/Kconfig"
+source "drivers/misc/mediatek/alsps/APDS9930-new/Kconfig"
+source "drivers/misc/mediatek/alsps/apm_16d/Kconfig"
+source "drivers/misc/mediatek/alsps/cm3232-new/Kconfig"
+source "drivers/misc/mediatek/alsps/cm36283/Kconfig"
+source "drivers/misc/mediatek/alsps/cm36283-new/Kconfig"
+source "drivers/misc/mediatek/alsps/cm36652-new/Kconfig"
+source "drivers/misc/mediatek/alsps/epl2182/Kconfig"
+source "drivers/misc/mediatek/alsps/EPL2182-new/Kconfig"
+source "drivers/misc/mediatek/alsps/rpr410/Kconfig"
 source "drivers/misc/mediatek/alsps/stk3x1x/Kconfig"
-source "drivers/misc/mediatek/alsps/ltr559/Kconfig"
+source "drivers/misc/mediatek/alsps/stk3x1x-new/Kconfig"
+source "drivers/misc/mediatek/alsps/tmd2771/Kconfig"
+source "drivers/misc/mediatek/alsps/tmd2771_auto/Kconfig"

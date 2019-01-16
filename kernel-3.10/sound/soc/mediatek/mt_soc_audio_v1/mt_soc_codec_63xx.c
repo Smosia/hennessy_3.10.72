@@ -158,28 +158,6 @@ static int reg_AFE_VOW_CFG3 = 0x8767;   //VOW alpha/beta value
 static int reg_AFE_VOW_CFG4 = 0x000c;   //VOW ADC test config
 static int reg_AFE_VOW_CFG5 = 0x0000;   //N min value
 
-#define GAP (2) //unit: us
-#define AW8736_MODE5 /*REVERS*/ \
-do { \
-    mt_set_gpio_out(GPIO_EXT_SPKAMP_EN_PIN,GPIO_OUT_ONE); \
-    udelay(GAP); \
-    mt_set_gpio_out(GPIO_EXT_SPKAMP_EN_PIN,GPIO_OUT_ZERO); \
-    udelay(GAP); \
-    mt_set_gpio_out(GPIO_EXT_SPKAMP_EN_PIN,GPIO_OUT_ONE); \
-    udelay(GAP); \
-    mt_set_gpio_out(GPIO_EXT_SPKAMP_EN_PIN,GPIO_OUT_ZERO); \
-    udelay(GAP); \
-    mt_set_gpio_out(GPIO_EXT_SPKAMP_EN_PIN,GPIO_OUT_ONE); \
-    udelay(GAP); \
-    mt_set_gpio_out(GPIO_EXT_SPKAMP_EN_PIN,GPIO_OUT_ZERO); \
-    udelay(GAP); \
-    mt_set_gpio_out(GPIO_EXT_SPKAMP_EN_PIN,GPIO_OUT_ONE); \
-    udelay(GAP); \
-    mt_set_gpio_out(GPIO_EXT_SPKAMP_EN_PIN,GPIO_OUT_ZERO); \
-    udelay(GAP); \
-    mt_set_gpio_out(GPIO_EXT_SPKAMP_EN_PIN,GPIO_OUT_ONE); \
-} while (0)
-
 static void  SavePowerState(void)
 {
     int i = 0;
@@ -1791,12 +1769,6 @@ static void Speaker_Amp_Change(bool enable)
             TurnOnDacPower();
         }
         printk("turn on Speaker_Amp_Change \n");
-        mt_set_gpio_dir(GPIO_EXT_SPKAMP_EN_PIN, GPIO_DIR_OUT); // output
-        mt_set_gpio_out(GPIO_EXT_SPKAMP_EN_PIN, GPIO_OUT_ZERO); // low disable
-        msleep(10);
-        
-        AW8736_MODE5;
-        
         // here pmic analog control
         //Ana_Set_Reg(AUDNVREGGLB_CFG0  , 0x0000 , 0xffffffff);
         OpenClassAB();
@@ -1828,14 +1800,11 @@ static void Speaker_Amp_Change(bool enable)
             Speaker_ReveiverMode_Open();
         }
 #endif
-        //Apply_Speaker_Gain();
-        msleep(100);
+        Apply_Speaker_Gain();
     }
     else
     {
         printk("turn off Speaker_Amp_Change \n");
-        mt_set_gpio_dir(GPIO_EXT_SPKAMP_EN_PIN, GPIO_DIR_OUT); // output
-        mt_set_gpio_out(GPIO_EXT_SPKAMP_EN_PIN, GPIO_OUT_ZERO); // low disable
 #ifdef CONFIG_MTK_SPEAKER
         if (Speaker_mode == AUDIO_SPEAKER_MODE_D)
         {
@@ -1901,13 +1870,6 @@ static void Headset_Speaker_Amp_Change(bool enable)
         printk("turn on Speaker_Amp_Change \n");
         // here pmic analog control
         //Ana_Set_Reg(AUDNVREGGLB_CFG0  , 0x0000 , 0xffffffff);
-       
-        mt_set_gpio_dir(GPIO_EXT_SPKAMP_EN_PIN, GPIO_DIR_OUT); // output
-        mt_set_gpio_out(GPIO_EXT_SPKAMP_EN_PIN, GPIO_OUT_ZERO); // low disable
-        msleep(10);
-       
-        AW8736_MODE5;
-       
         OpenClassAB();
 
         Ana_Set_Reg(AUDLDO_NVREG_CFG0 , 0x0028 , 0xffffffff); //Enable cap-less LDOs (1.6V)
@@ -1992,8 +1954,6 @@ static void Headset_Speaker_Amp_Change(bool enable)
         Ana_Set_Reg(AUDLDO_NVREG_CFG0  , 0x0000 , 0xffff); // Disable cap-less LDOs (1.6V)
 
         printk("turn off Speaker_Amp_Change \n");
-        mt_set_gpio_dir(GPIO_EXT_SPKAMP_EN_PIN, GPIO_DIR_OUT); // output
-        mt_set_gpio_out(GPIO_EXT_SPKAMP_EN_PIN, GPIO_OUT_ZERO); // low disable
         if (GetDLStatus() == false)
         {
             Ana_Set_Reg(AFE_DL_SRC2_CON0_L , 0x1800 , 0xffff);
@@ -2021,9 +1981,6 @@ static int Headset_Speaker_Amp_Set(struct snd_kcontrol *kcontrol, struct snd_ctl
     //struct snd_soc_codec *codec = snd_kcontrol_chip(kcontrol);
 
     printk("%s() gain = %lu \n ", __func__, ucontrol->value.integer.value[0]);
-
-    AW8736_MODE5;
-
     if ((ucontrol->value.integer.value[0]  == true) && (mCodec_data->mAudio_Ana_DevicePower[AUDIO_ANALOG_VOLUME_SPEAKER_HEADSET_R]  == false))
     {
         Headset_Speaker_Amp_Change(true);

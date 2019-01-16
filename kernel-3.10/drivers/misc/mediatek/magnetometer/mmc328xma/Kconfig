@@ -1,0 +1,4 @@
+
+config MTK_MMC328XMA
+	bool "MMC328XMA for MediaTek package"
+	default n

@@ -53,9 +53,6 @@
 #define AKM09911_RETRY_COUNT	10
 #define AKM09911_DEFAULT_DELAY	100
 
-//PIN 12
-#define MAG_PIN            GPIO_MSE_EINT_PIN
-
 #define POWER_NONE_MACRO MT65XX_POWER_NONE
 
 /**************************
@@ -75,16 +72,6 @@
         #define MAGN_ERR(fmt, args...)    do {} while (0)
         #define MAGN_LOG(fmt, args...)    do {} while (0)
     #endif
-
-
-extern int bmi160_m_enable(int en);
-extern int bmi160_m_set_delay(u64 ns);
-extern int bmi160_m_open_report_data(int open);
-extern int bmi160_m_get_data(int* x ,int* y,int* z, int* status);
-extern int bmi160_o_enable(int en);
-extern int bmi160_o_set_delay(u64 ns);
-extern int bmi160_o_get_data(int* x ,int* y,int* z, int* status);
-extern int bmi160_o_open_report_data(int open);
 
 
 /* Addresses to scan -- protected by sense_data_mutex */
@@ -128,6 +115,8 @@ static int akm09911_i2c_detect(struct i2c_client *client, struct i2c_board_info 
 #ifndef	CONFIG_HAS_EARLYSUSPEND
 static int akm_probe(struct platform_device *pdev);
 static int akm_remove(struct platform_device *pdev);
+static int akm09911_suspend(struct i2c_client *client, pm_message_t msg);
+static int akm09911_resume(struct i2c_client *client);
 #endif
 static int akm09911_local_init(void);
 static int akm09911_remove(void);
@@ -161,9 +150,18 @@ struct akm09911_i2c_data {
 #endif 
 };
 /*----------------------------------------------------------------------------*/
+#ifdef CONFIG_OF
+static const struct of_device_id mag_of_match[] = {
+        {.compatible = "mediatek,MSENSOR"},
+        {},
+};
+#endif
 static struct i2c_driver akm09911_i2c_driver = {
     .driver = {
         .name  = AKM09911_DEV_NAME,
+#ifdef CONFIG_OF
+        .of_match_table = mag_of_match,
+#endif
     },
 	.probe      = akm09911_i2c_probe,
 	.remove     = akm09911_i2c_remove,
@@ -2774,9 +2772,8 @@ int akm09911_linear_accelration_operate(void* self, uint32_t command, void* buff
 static int akm09911_suspend(struct i2c_client *client, pm_message_t msg) 
 {
 	int err;
-	struct akm09911_i2c_data *obj = i2c_get_clientdata(client)
+	struct akm09911_i2c_data *obj = i2c_get_clientdata(client);
 	    
-
 	if(msg.event == PM_EVENT_SUSPEND)
 	{
 		akm09911_power(obj->hw, 0);
@@ -2787,12 +2784,10 @@ static int akm09911_suspend(struct i2c_client *client, pm_message_t msg)
 static int akm09911_resume(struct i2c_client *client)
 {
 	int err;
-	struct akm09911_i2c_data *obj = i2c_get_clientdata(client)
-
+	struct akm09911_i2c_data *obj = i2c_get_clientdata(client);
 
 	akm09911_power(obj->hw, 1);
 	
-
 	return 0;
 }
 /*----------------------------------------------------------------------------*/
@@ -2901,7 +2896,7 @@ static int akm09911_m_get_data(int* x ,int* y,int* z, int* status)
 	*x = sensor_data[5] * CONVERT_M;
 	*y = sensor_data[6] * CONVERT_M;
 	*z = sensor_data[7] * CONVERT_M;
-	*status = sensor_data[4];
+	*status = sensor_data[8];
 		
 	mutex_unlock(&sensor_data_mutex);		
 	return 0;
@@ -2986,15 +2981,7 @@ static int akm09911_i2c_probe(struct i2c_client *client, const struct i2c_device
 		goto exit;
 	}
 
-        mt_set_gpio_mode(MAG_PIN, 0);
-        mt_set_gpio_dir(MAG_PIN, 1);
-        mt_set_gpio_out(MAG_PIN, 0);
-        msleep(5);
-        mt_set_gpio_out(MAG_PIN, 0);
-        msleep(5);
-
-	data->hw = get_cust_mag_hw();
-
+	data->hw = hw;		
 	atomic_set(&data->layout, data->hw->direction);
 	atomic_set(&data->trace, 0);	
 	mutex_init(&sense_data_mutex);
@@ -3029,12 +3016,12 @@ static int akm09911_i2c_probe(struct i2c_client *client, const struct i2c_device
 	}    
 
 	ctl.is_use_common_factory = false;
-	ctl.m_enable = bmi160_m_enable;//akm09911_m_enable;
-	ctl.m_set_delay  = bmi160_m_set_delay;//akm09911_m_set_delay;
-	ctl.m_open_report_data = bmi160_m_open_report_data;//akm09911_m_open_report_data;
-	ctl.o_enable = bmi160_o_enable;//akm09911_o_enable;
-	ctl.o_set_delay  = bmi160_o_set_delay;//akm09911_o_set_delay;
-	ctl.o_open_report_data = bmi160_o_open_report_data;//akm09911_o_open_report_data;
+	ctl.m_enable = akm09911_m_enable;
+	ctl.m_set_delay  = akm09911_m_set_delay;
+	ctl.m_open_report_data = akm09911_m_open_report_data;
+	ctl.o_enable = akm09911_o_enable;
+	ctl.o_set_delay  = akm09911_o_set_delay;
+	ctl.o_open_report_data = akm09911_o_open_report_data;
 	ctl.is_report_input_direct = false;
 	ctl.is_support_batch = data->hw->is_batch_supported;
 	
@@ -3047,8 +3034,8 @@ static int akm09911_i2c_probe(struct i2c_client *client, const struct i2c_device
 
 	mag_data.div_m = CONVERT_M_DIV;
 	mag_data.div_o = CONVERT_O_DIV;
-	mag_data.get_data_o = bmi160_o_get_data;//akm09911_o_get_data;
-	mag_data.get_data_m = bmi160_m_get_data;//akm09911_m_get_data;
+	mag_data.get_data_o = akm09911_o_get_data;
+	mag_data.get_data_m = akm09911_m_get_data;
 
 	err = mag_register_data_path(&mag_data);
 	if(err)
@@ -3121,24 +3108,18 @@ static int	akm09911_local_init(void)
 	return 0;
 }
 
-struct i2c_board_info i2c_akm09911={ I2C_BOARD_INFO("akm09911", 0xC)};
-
 /*----------------------------------------------------------------------------*/
 static int __init akm09911_init(void)
 {
     const char *name = "mediatek,AKM09911";
-//    hw =	get_mag_dts_func(name, hw);
-//	if (!hw)
+    hw =	get_mag_dts_func(name, hw);
+	if (!hw)
 		hw = get_cust_mag_hw();
-        mt_set_gpio_mode(MAG_PIN, 0);
-        mt_set_gpio_dir(MAG_PIN, 1);
-        mt_set_gpio_out(MAG_PIN, 0);
-        msleep(5);
-        mt_set_gpio_out(MAG_PIN, 0);
-        msleep(5);
-
-	MAGN_LOG("[%s]: i2c_number=%d,i2c_addr=0x%x\n",__func__,hw->i2c_num,hw->i2c_addr[0]);
+#ifdef CONFIG_MTK_LEGACY
+	struct i2c_board_info i2c_akm09911={ I2C_BOARD_INFO("akm09911", hw->i2c_addr[0])};
+	MAGN_LOG("[%s]: i2c_number=%d,i2c_addr=0x%x\n",__func__,hw->i2c_num,hw->i2c_addr[0]); 
 	i2c_register_board_info(hw->i2c_num, &i2c_akm09911, 1);
+#endif
 	mag_driver_add(&akm09911_init_info);
 	return 0; 
 }

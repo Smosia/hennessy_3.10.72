@@ -593,8 +593,8 @@ config MTK_TOUCHPANEL
 	  Say Y here if you have MediaTek MT6516 touch panel.
 	  If unsure, say N.
 
-config MTK_FT5206
-         bool "FT5206 for Mediatek package"
+config MTK_S7020
+         bool "S7020 for Mediatek package"
         default n
 
 # USB # TODO Check Choice
@@ -1053,10 +1053,6 @@ config MTK_LENS_DUMMYLENS_SUPPORT
 	bool "Dummy Lens Driver"
 	default n
 
-config MTK_LENS_DW9761BAF_SUPPORT
-	bool "DW9761BAF Lens Driver"
-	default n
-
 config MTK_LENS_AD5820AF_SUPPORT
 	bool "AD5820AF Lens Driver"
 	default n
@@ -1162,9 +1158,3 @@ config SW_SYNC64
 	  A sync object driver that uses a 64bit counter to coordinate
 	  syncrhronization.  Useful when there is no hardware primitive backing
 	  the synchronization.
-#--------------------------RGK driver cfg add (start)------------------------------	  
-config RGK_DRIVER_FG_CW2015
-        bool "RGK for cw2015 charger ic"
-        default n
-#--------------------------RGK driver cfg add (end)------------------------------
-

@@ -1,0 +1,4 @@
+
+config MTK_AKM8975
+	bool "AKM8975 for MediaTek package"
+	default n

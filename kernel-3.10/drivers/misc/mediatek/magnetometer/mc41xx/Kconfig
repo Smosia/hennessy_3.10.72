@@ -1,0 +1,4 @@
+
+config MTK_MC41XX
+	bool "MC41XX for MediaTek package"
+	default n

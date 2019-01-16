@@ -1,0 +1,4 @@
+
+config MTK_MPU6050GY_NEW
+	bool "MPU6050GY for MediaTek package"
+	default n

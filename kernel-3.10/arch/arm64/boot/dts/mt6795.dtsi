@@ -320,11 +320,11 @@
 		};
 
 		eintc: EINTC@0x1000B000 {
-                 		compatible = "mtk,mt-eic";
+                        compatible = "mtk,mt-eic";
                         reg = <0x1000B000 0x1000>;
                         interrupts = <0 153 0x4>;
-						max_deint_cnt = <4>;
-                        deint_possible_irq = <189 190 191 192 0 0 0 0>;
+			max_deint_cnt = <4>;
+                        deint_possible_irq = <189 190 191 192>;
 
                         #interrupt-cells = <2>;
                         interrupt-controller;
@@ -528,7 +528,7 @@
 			reg = <0x10211000 0x1000>;
 		};
 
-		gce@0x10212000 {
+		gce@10212000 {
 			compatible = "mediatek,gce";
 			reg = <0x10212000 0x1000>;
 			interrupts = <0 143 0x8>,
@@ -835,7 +835,8 @@
 			interrupts = <0 87 0x8>;
 			def_speed = <130>;
 		};
-			
+		
+/*	
 		I2C4@0x11011000 {
 			compatible = "mediatek,I2C4";
 			cell-index = <4>;
@@ -843,19 +844,13 @@
 			interrupts = <0 88 0x8>;
 			def_speed = <140>;
 		};
+*/
 
 		SPI1@0x1100A000 {
 			compatible = "mediatek,SPI1";
 			reg = <0x1100A000 0x1000>;
 			interrupts = <0 118 0x8>;
 			cell-index = <0>;
-
-			fpcspi{
-                compatible = "fpc,fpc1020";
-                status = "okay";
-                reg = <0>;
-                spi-max-frequency = <5000000>;
-        	};
 		};
 
 		THERM_CTRL@0x1100B000 {
@@ -1106,61 +1101,61 @@
 			interrupts = <0 203 0x8>;
 		};
 
-		mdp_rdma0@0x14001000 {
+		mdp_rdma0@14001000 {
 			compatible = "mediatek,mdp_rdma0";
 			reg = <0x14001000 0x1000>;
 			interrupts = <0 178 0x8>;
 		};
 
-		mdp_rdma1@0x14002000 {
+		mdp_rdma1@14002000 {
 			compatible = "mediatek,mdp_rdma1";
 			reg = <0x14002000 0x1000>;
 			interrupts = <0 179 0x8>;
 		};
 
-		mdp_rsz0@0x14003000 {
+		mdp_rsz0@14003000 {
 			compatible = "mediatek,mdp_rsz0";
 			reg = <0x14003000 0x1000>;
 			interrupts = <0 180 0x8>;
 		};
 
-		mdp_rsz1@0x14004000 {
+		mdp_rsz1@14004000 {
 			compatible = "mediatek,mdp_rsz1";
 			reg = <0x14004000 0x1000>;
 			interrupts = <0 181 0x8>;
 		};
 
-		mdp_rsz2@0x14005000 {
+		mdp_rsz2@14005000 {
 			compatible = "mediatek,mdp_rsz2";
 			reg = <0x14005000 0x1000>;
 			interrupts = <0 182 0x8>;
 		};
 
-		mdp_wdma@0x14006000 {
+		mdp_wdma@14006000 {
 			compatible = "mediatek,mdp_wdma";
 			reg = <0x14006000 0x1000>;
 			interrupts = <0 185 0x8>;
 		};
 
-		mdp_wrot0@0x14007000 {
+		mdp_wrot0@14007000 {
 			compatible = "mediatek,mdp_wrot0";
 			reg = <0x14007000 0x1000>;
 			interrupts = <0 186 0x8>;
 		};
 
-		mdp_wrot1@0x14008000 {
+		mdp_wrot1@14008000 {
 			compatible = "mediatek,mdp_wrot1";
 			reg = <0x14008000 0x1000>;
 			interrupts = <0 187 0x8>;
 		};
 
-		mdp_tdshp0@0x14009000 {
+		mdp_tdshp0@14009000 {
 			compatible = "mediatek,mdp_tdshp0";
 			reg = <0x14009000 0x1000>;
 			interrupts = <0 183 0x8>;
 		};
 
-		mdp_tdshp1@0x1400A000 {
+		mdp_tdshp1@1400A000 {
 			compatible = "mediatek,mdp_tdshp1";
 			reg = <0x1400A000 0x1000>;
 			interrupts = <0 184 0x8>;
@@ -1615,25 +1610,9 @@
 
 	MOBICORE {
 		compatible = "trustonic,mobicore";
-		//interrupts = <0 280 0x1>; //5.0 android
 		interrupts = <0 248 0x1>;
 	};
 
-	fpc_interrupt: fpc_interrupt {
-                compatible = "fpc,fpc_irq";
-                interrupt-parent = <&eintc>;
-                interrupts = <3 1>;
-                debounce = <3 0>;
-                input-device-name = "fpc_irq";
-                /* EV_MSC, MSC_SCAN */
-                fpc,event-type = <4>;
-                fpc,event-code = <4>;
-                pinctrl-names = "default";
-                fpc,gpio_irq    = <3>;
-                fpc,gpio_reset  = <115>;
-                fpc,use_fpc2050 = <1>;
-                status = "okay";
-	};
 /* sensor part */
 		hwmsensor@0 {
 			compatible = "mediatek,hwmsensor";

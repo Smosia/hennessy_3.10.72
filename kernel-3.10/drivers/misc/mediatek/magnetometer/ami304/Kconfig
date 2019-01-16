@@ -1,0 +1,4 @@
+
+config MTK_AMI304
+	bool "AMI304 for MediaTek package"
+	default n

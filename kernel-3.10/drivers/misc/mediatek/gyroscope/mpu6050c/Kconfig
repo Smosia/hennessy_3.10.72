@@ -1,0 +1,4 @@
+
+config MTK_MPU6050C
+        bool "MPU6050C for MediaTek package"
+        default n

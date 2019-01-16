@@ -129,15 +129,10 @@ unsigned int g_BatteryNotifyCode = 0x0000;
 unsigned int g_BN_TestMode = 0x0000;
 kal_bool g_bat_init_flag = 0;
 unsigned int g_call_state = CALL_IDLE;
-unsigned int g_charging_enable = CALL_ACTIVE;
 kal_bool g_charging_full_reset_bat_meter = KAL_FALSE;
 int g_platform_boot_mode = 0;
 struct timespec g_bat_time_before_sleep;
 int g_smartbook_update = 0;
-
-// [LC] ---------[Begin]
-int FG_charging_status = 0;
-// [LC] ---------[End]
 
 #if defined(CONFIG_MTK_DUAL_INPUT_CHARGER_SUPPORT)
 kal_bool g_vcdt_irq_delay_flag = 0;
@@ -378,7 +373,8 @@ kal_bool upmu_is_chr_det(void)
 	/* return KAL_TRUE; */
 	return get_charger_detect_status();
 #else
-    if (suspend_discharging==1) return KAL_FALSE;
+        if (suspend_discharging==1)
+        return KAL_FALSE;
 
 	tmp32 = get_charger_detect_status();
 
@@ -388,8 +384,6 @@ kal_bool upmu_is_chr_det(void)
 #endif
 
 	if (tmp32 == 0) {
-		battery_log(BAT_LOG_FULL,
-					    "[upmu_is_chr_det] Smosia: get_charger_detect_status return 0\n");
 		return KAL_FALSE;
 	} else {
 		#if !defined(CONFIG_MTK_DUAL_INPUT_CHARGER_SUPPORT)
@@ -1484,26 +1478,6 @@ static ssize_t store_Charging_CallState(struct device *dev, struct device_attrib
 
 static DEVICE_ATTR(Charging_CallState, 0664, show_Charging_CallState, store_Charging_CallState);
 
-///////////////////////////////// 
-
-static ssize_t show_ChargerEnable(struct device *dev, struct device_attribute *attr, char *buf)
-{
-	battery_log(BAT_LOG_CRTI, "ChargerEnable state = %d\n", g_charging_enable);
-	return sprintf(buf, "%u\n", g_charging_enable);
-}
-
-static ssize_t store_ChargerEnable(struct device *dev, struct device_attribute *attr,
-					const char *buf, size_t size)
-{
-	sscanf(buf, "%u", &g_charging_enable);
-	battery_log(BAT_LOG_CRTI, "ChargerEnable state = %d\n", g_charging_enable);
-	return size;
-}
-
-static DEVICE_ATTR(ChargerEnable, 0664, show_ChargerEnable, store_ChargerEnable);
-
-///////////////////////////////////
-
 static ssize_t show_Charger_Type(struct device *dev,struct device_attribute *attr,
 					char *buf)
 {
@@ -2200,8 +2174,6 @@ void mt_battery_GetBatteryData(void)
 	static kal_int32 batteryTempBuffer[BATTERY_AVERAGE_SIZE];
 	static kal_uint8 batteryIndex = 0;
 	static kal_int32 previous_SOC = -1;
-
-        FG_charging_status = upmu_is_chr_det(); // Hermes
 
 	bat_vol = battery_meter_get_battery_voltage(KAL_TRUE);
 	Vsense = battery_meter_get_VSense();
@@ -3737,7 +3709,6 @@ static int battery_probe(struct platform_device *dev)
 		    device_create_file(&(dev->dev), &dev_attr_FG_Battery_CurrentConsumption);
 		ret_device_file = device_create_file(&(dev->dev), &dev_attr_FG_SW_CoulombCounter);
 		ret_device_file = device_create_file(&(dev->dev), &dev_attr_Charging_CallState);
-		ret_device_file = device_create_file(&(dev->dev), &dev_attr_ChargerEnable);
 		ret_device_file = device_create_file(&(dev->dev), &dev_attr_Charger_Type);
 #if defined(CONFIG_MTK_PUMP_EXPRESS_SUPPORT) || defined(CONFIG_MTK_PUMP_EXPRESS_PLUS_SUPPORT)
 		ret_device_file = device_create_file(&(dev->dev), &dev_attr_Pump_Express);

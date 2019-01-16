@@ -164,16 +164,16 @@ static int test_mode_change(struct msdc_host *host)
 
   /*32bit*/
   if (msdc_ettagent_read(host, SDIO_IP_WTMCR, 1, &reg, 1, CMD_52) != 0){
-    printk("[ERR] sdio_func1_rd_cmd52 err\r\n") ;
+	pr_debug("[ERR] sdio_func1_rd_cmd52 err\r\n");
     res = E_RESULT_CMD_CRC;
     goto end;
   }
 
-  printk("SDIO_IP_WTMCR read = 0x%x\r\n", reg);
+	pr_debug("SDIO_IP_WTMCR read = 0x%x\r\n", reg);
   reg &= ~(0x3);
-  printk("SDIO_IP_WTMCR write = 0x%x\r\n", reg);
+	pr_debug("SDIO_IP_WTMCR write = 0x%x\r\n", reg);
   if (msdc_ettagent_write(host, SDIO_IP_WTMCR, 1, &reg, 1, CMD_52) != 0){
-    printk("[ERR] sdio_func1_wr_cmd52 err\r\n");
+	pr_debug("[ERR] sdio_func1_wr_cmd52 err\r\n");
     res = E_RESULT_CMD_CRC;
     goto end;
   }
@@ -766,14 +766,14 @@ static int msdc_ettagent_read(struct msdc_host *host, unsigned int u4Addr, unsig
 
     if((pBuffer==NULL) || (host==NULL))
     {
-        printk("[%s] pBuffer = %p, host = %p\n", __func__, pBuffer, host);
+	pr_debug("[%s] pBuffer = %p, host = %p\n", __func__, pBuffer, host);
         return -1;
     }
         
     if( ((u4Cmd == 53) && (u4Len < 4)) ||
         ((u4Cmd == 52) && (u4Len > 1)) )
     {
-        printk("[%s] u4Cmd = %d, u4Len = %d\n", __func__, u4Cmd, u4Len);
+	pr_debug("[%s] u4Cmd = %d, u4Len = %d\n", __func__, u4Cmd, u4Len);
         return -1;
     }
 
@@ -786,12 +786,12 @@ static int msdc_ettagent_read(struct msdc_host *host, unsigned int u4Addr, unsig
         *value = sdio_readb(sdioFunc, u4Addr, &ret);
     else
     {
-        printk("[%s] Doesn't support u4Cmd = %d\n", __func__, u4Cmd);
+	pr_debug("[%s] Doesn't support u4Cmd = %d\n", __func__, u4Cmd);
         ret = -1;
     }
     //sdio_release_host(sdioFunc);
     
-//    printk("Isaac: host->error = %d\n", host->error);
+	/* pr_debug("Isaac: host->error = %d\n", host->error); */
 
     return ret;
 }
@@ -822,14 +822,14 @@ static int msdc_ettagent_write(struct msdc_host *host, unsigned int u4Addr, unsi
 
     if((pBuffer==NULL) || (host==NULL))
     {
-        printk("[%s] pBuffer = %p, host = %p\n", __func__, pBuffer, host);
+	pr_debug("[%s] pBuffer = %p, host = %p\n", __func__, pBuffer, host);
         return -1;
     }
         
     if( ((u4Cmd == 53) && (u4Len < 4)) ||
         ((u4Cmd == 52) && (u4Len > 1)) )
     {
-        printk("[%s] u4Cmd = %d, u4Len = %d\n", __func__, u4Cmd, u4Len);
+	pr_debug("[%s] u4Cmd = %d, u4Len = %d\n", __func__, u4Cmd, u4Len);
         return -1;
     }
 
@@ -842,7 +842,7 @@ static int msdc_ettagent_write(struct msdc_host *host, unsigned int u4Addr, unsi
         sdio_writeb(sdioFunc, *value, u4Addr, &ret);
     else
     {
-        printk("[%s] Doesn't support u4Cmd = %d\n", __func__, u4Cmd);
+	pr_debug("[%s] Doesn't support u4Cmd = %d\n", __func__, u4Cmd);
         ret = -1;
     }
     //sdio_release_host(sdioFunc);

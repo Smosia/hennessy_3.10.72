@@ -181,7 +181,7 @@ int do_sys_settimeofday(const struct timespec *tv, const struct timezone *tz)
 				warp_clock();
 		}
 
-		//notify_time_update();
+		notify_time_update();
 	}
 	if (tv)
 		return do_settimeofday(tv);

@@ -1009,7 +1009,7 @@ static void pchr_turn_on_charging(void)
 			/* Set CV */
 #if !defined(CONFIG_MTK_JEITA_STANDARD_SUPPORT)
 #ifdef HIGH_BATTERY_VOLTAGE_SUPPORT
-			cv_voltage = BATTERY_VOLT_04_400000_V;
+			cv_voltage = BATTERY_VOLT_04_350000_V;
 #else
 			cv_voltage = BATTERY_VOLT_04_200000_V;
 #endif
@@ -1109,7 +1109,7 @@ PMU_STATUS BAT_TopOffModeAction(void)
 {
 	kal_uint32 charging_enable = KAL_FALSE;
 #ifdef HIGH_BATTERY_VOLTAGE_SUPPORT
-	kal_uint32 cv_voltage = 4400;
+	kal_uint32 cv_voltage = 4350;
 #else
 	kal_uint32 cv_voltage = 4200;
 #endif

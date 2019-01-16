@@ -1,0 +1,4 @@
+
+config MTK_BMM050
+	bool "MTK_BMM050 for MediaTek package"
+	default n

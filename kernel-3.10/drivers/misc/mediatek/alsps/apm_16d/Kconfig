@@ -1,0 +1,4 @@
+
+config MTK_APM_16D
+	bool "APM_16D for MediaTek package"
+	default n

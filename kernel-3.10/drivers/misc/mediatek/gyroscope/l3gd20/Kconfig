@@ -1,0 +1,4 @@
+
+config MTK_L3GD20
+	bool "L3GD20 for MediaTek package"
+	default n

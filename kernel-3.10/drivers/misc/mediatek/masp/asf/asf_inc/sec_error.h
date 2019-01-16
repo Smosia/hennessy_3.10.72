@@ -58,7 +58,7 @@
 #define ERR_SBOOT_HACC_INIT_FAIL                0x6009
 #define ERR_SBOOT_HACC_LOCK_FAIL                0x600A
 #define ERR_HACC_ENABLE_CLK_FAIL                0x600B
-#define ERR_HACC_UNKOWN_USER                    0x600C
+#define ERR_HACC_UNKNOWN_USER                    0x600C
 #define ERR_HACC_OPEN_SECURE_CONNECTION_FAIL    0x6010
 #define ERR_HACC_REQUEST_SECURE_SERVICE_FAIL    0x6011
 #define ERR_HACC_ALLOCATE_BUFFER_FAIL           0x6012

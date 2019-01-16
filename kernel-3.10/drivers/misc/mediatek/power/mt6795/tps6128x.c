@@ -43,7 +43,7 @@
 #ifdef I2C_EXT_VBAT_BOOST_CHANNEL
 #define tps6128x_BUSNUM I2C_EXT_VBAT_BOOST_CHANNEL
 #else
-#define tps6128x_BUSNUM 1//1
+#define tps6128x_BUSNUM 0//1
 #endif
 
 static struct i2c_client *new_client = NULL;
@@ -244,12 +244,12 @@ void tps6128x_hw_init(void)
 
 	ret=tps6128x_read_interface(0x0,&chip_version,0xFF, 0);
 
-//    if(chip_version==0x0)  //tps61280 0x02; tps61280a 0x03,Cause 95+32 Swtich charger,when enable power path, it always happen Vsys slowly rises to 1.5v in 70ms
-	//{	 
-		battery_xlog_printk(BAT_LOG_CRTI,"[tps6128x_hw_init] sw workaround for tps61280 no-A chip,wait for 10ms\n");
+     //if(chip_version==0x02)  //tps61280 0x02; tps61280a 0x03,Cause 95+32 Swtich charger,when enable power path, it always happen Vsys slowly rises to 1.5v in 70ms
+	{
+		battery_log(BAT_LOG_CRTI, "[tps6128x_hw_init] sw workaround for tps61280 no-A chip,wait for 10ms\n");
 		ret=tps6128x_config_interface(0x3, 0x1F, 0x1F, 0); // Output voltage threshold = 4.4v
 		msleep(10);//wait for more than 5ms
-	//}
+	}
 
     tps6128x_config_interface(0x1, 0x1, 0x3, 0); // MODE_CTRL[1:0]=01 ,PFMAuto mode
 
@@ -409,13 +409,13 @@ static int __init tps6128x_init(void)
     return 0;
 }
 
-//static void __exit tps6128x_exit(void)
-//{
-//    i2c_del_driver(&tps6128x_driver);
-//}
+static void __exit tps6128x_exit(void)
+{
+    i2c_del_driver(&tps6128x_driver);
+}
 
 module_init(tps6128x_init);
-//module_exit(tps6128x_exit);
+module_exit(tps6128x_exit);
 
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("I2C tps6128x Driver");

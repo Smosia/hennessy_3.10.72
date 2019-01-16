@@ -13,6 +13,11 @@
 #include <mach/mt_reg_base.h>
 #include <mach/mt_clkmgr.h>
 
+#ifdef CONFIG_ARM64
+extern unsigned long long hacc_base;
+#else
+extern unsigned int hacc_base;
+#endif
 /******************************************************************************
  * MACROS DEFINITIONS                                                         
  ******************************************************************************/
@@ -33,39 +38,39 @@
 #define HACC_CFG_2                    (0x66975412)    /* CHECKME */
 #define HACC_CFG_3                    (0x5a5a3257)    /* CHECKME */
 
-#define HACC_CON                     (HACC_BASE+0x0000)
-#define HACC_ACON                    (HACC_BASE+0x0004)
-#define HACC_ACON2                   (HACC_BASE+0x0008)
-#define HACC_ACONK                   (HACC_BASE+0x000C)
-#define HACC_ASRC0                   (HACC_BASE+0x0010)
-#define HACC_ASRC1                   (HACC_BASE+0x0014)
-#define HACC_ASRC2                   (HACC_BASE+0x0018)
-#define HACC_ASRC3                   (HACC_BASE+0x001C)
-#define HACC_AKEY0                   (HACC_BASE+0x0020)
-#define HACC_AKEY1                   (HACC_BASE+0x0024)
-#define HACC_AKEY2                   (HACC_BASE+0x0028)
-#define HACC_AKEY3                   (HACC_BASE+0x002C)
-#define HACC_AKEY4                   (HACC_BASE+0x0030)
-#define HACC_AKEY5                   (HACC_BASE+0x0034)
-#define HACC_AKEY6                   (HACC_BASE+0x0038)
-#define HACC_AKEY7                   (HACC_BASE+0x003C)
-#define HACC_ACFG0                   (HACC_BASE+0x0040)
-#define HACC_AOUT0                   (HACC_BASE+0x0050)
-#define HACC_AOUT1                   (HACC_BASE+0x0054)
-#define HACC_AOUT2                   (HACC_BASE+0x0058)
-#define HACC_AOUT3                   (HACC_BASE+0x005C)
-#define HACC_SW_OTP0                 (HACC_BASE+0x0060)
-#define HACC_SW_OTP1                 (HACC_BASE+0x0064)
-#define HACC_SW_OTP2                 (HACC_BASE+0x0068)
-#define HACC_SW_OTP3                 (HACC_BASE+0x006c)
-#define HACC_SW_OTP4                 (HACC_BASE+0x0070)
-#define HACC_SW_OTP5                 (HACC_BASE+0x0074)
-#define HACC_SW_OTP6                 (HACC_BASE+0x0078)
-#define HACC_SW_OTP7                 (HACC_BASE+0x007c)
-#define HACC_SECINIT0                (HACC_BASE+0x0080)
-#define HACC_SECINIT1                (HACC_BASE+0x0084)
-#define HACC_SECINIT2                (HACC_BASE+0x0088)
-#define HACC_MKJ                     (HACC_BASE+0x00a0)
+#define HACC_CON                     (hacc_base+0x0000)
+#define HACC_ACON                    (hacc_base+0x0004)
+#define HACC_ACON2                   (hacc_base+0x0008)
+#define HACC_ACONK                   (hacc_base+0x000C)
+#define HACC_ASRC0                   (hacc_base+0x0010)
+#define HACC_ASRC1                   (hacc_base+0x0014)
+#define HACC_ASRC2                   (hacc_base+0x0018)
+#define HACC_ASRC3                   (hacc_base+0x001C)
+#define HACC_AKEY0                   (hacc_base+0x0020)
+#define HACC_AKEY1                   (hacc_base+0x0024)
+#define HACC_AKEY2                   (hacc_base+0x0028)
+#define HACC_AKEY3                   (hacc_base+0x002C)
+#define HACC_AKEY4                   (hacc_base+0x0030)
+#define HACC_AKEY5                   (hacc_base+0x0034)
+#define HACC_AKEY6                   (hacc_base+0x0038)
+#define HACC_AKEY7                   (hacc_base+0x003C)
+#define HACC_ACFG0                   (hacc_base+0x0040)
+#define HACC_AOUT0                   (hacc_base+0x0050)
+#define HACC_AOUT1                   (hacc_base+0x0054)
+#define HACC_AOUT2                   (hacc_base+0x0058)
+#define HACC_AOUT3                   (hacc_base+0x005C)
+#define HACC_SW_OTP0                 (hacc_base+0x0060)
+#define HACC_SW_OTP1                 (hacc_base+0x0064)
+#define HACC_SW_OTP2                 (hacc_base+0x0068)
+#define HACC_SW_OTP3                 (hacc_base+0x006c)
+#define HACC_SW_OTP4                 (hacc_base+0x0070)
+#define HACC_SW_OTP5                 (hacc_base+0x0074)
+#define HACC_SW_OTP6                 (hacc_base+0x0078)
+#define HACC_SW_OTP7                 (hacc_base+0x007c)
+#define HACC_SECINIT0                (hacc_base+0x0080)
+#define HACC_SECINIT1                (hacc_base+0x0084)
+#define HACC_SECINIT2                (hacc_base+0x0088)
+#define HACC_MKJ                     (hacc_base+0x00a0)
 
 /* AES */
 #define HACC_AES_DEC                 0x00000000
@@ -111,46 +116,60 @@
 /******************************************************************************
  * TYPE DEFINITIONS                                                           
  ******************************************************************************/
-typedef enum
-{   
-    AES_ECB_MODE,
-    AES_CBC_MODE
+typedef enum {
+	AES_ECB_MODE,
+	AES_CBC_MODE
 } AES_MODE;
 
-typedef enum
-{   
-    AES_DEC,
-    AES_ENC
+typedef enum {
+	AES_DEC,
+	AES_ENC
 } AES_OPS;
 
-typedef enum
-{
-    AES_KEY_128 = 16,
-    AES_KEY_192 = 24,
-    AES_KEY_256 = 32
+typedef enum {
+	AES_KEY_128 = 16,
+	AES_KEY_192 = 24,
+	AES_KEY_256 = 32
 } AES_KEY;
 
-typedef enum
-{   
-    AES_SW_KEY,
-    AES_HW_KEY,
-    AES_HW_WRAP_KEY
+typedef enum {
+	AES_SW_KEY,
+	AES_HW_KEY,
+	AES_HW_WRAP_KEY
 } AES_KEY_ID;
 
 typedef struct {
-    U8 config[AES_CFG_SZ];
+	unsigned char config[AES_CFG_SZ];
 } AES_CFG;
 
 typedef struct {
-    U32 size;
-    U8  seed[HACC_AES_MAX_KEY_SZ];
+	unsigned int size;
+	unsigned char seed[HACC_AES_MAX_KEY_SZ];
 } AES_KEY_SEED;
 
 struct hacc_context {
-    AES_CFG cfg;
-    U32    blk_sz;
-    U8     sw_key[HACC_AES_MAX_KEY_SZ];
-    U8     hw_key[HACC_AES_MAX_KEY_SZ];
+	AES_CFG cfg;
+	unsigned int blk_sz;
+	unsigned char sw_key[HACC_AES_MAX_KEY_SZ];
+	unsigned char hw_key[HACC_AES_MAX_KEY_SZ];
 };
 
+/******************************************************************************
+ *  EXPORT FUNCTION
+ ******************************************************************************/
+extern unsigned int hacc_set_key(AES_KEY_ID id, AES_KEY key);
+extern unsigned int hacc_do_aes(AES_OPS ops, unsigned char *src, unsigned char *dst,
+				unsigned int size);
+extern unsigned int hacc_init(AES_KEY_SEED *keyseed);
+extern unsigned int hacc_deinit(void);
+extern void HACC_V3_Init(bool encode, const unsigned int g_AC_CFG[]);
+extern void HACC_V3_Run(volatile unsigned int *p_src, unsigned int src_len,
+			volatile unsigned int *p_dst);
+extern void HACC_V3_Terminate(void);
+
+/******************************************************************************
+ * EXTERNAL VARIABLE
+ ******************************************************************************/
+extern bool bHACC_HWWrapKeyInit;
+extern bool bHACC_SWKeyInit;
 #endif

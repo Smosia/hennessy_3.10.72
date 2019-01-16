@@ -8,7 +8,7 @@
 
 #define AKM09911_I2C_NAME "akm09911"
 
-#define AKM09911_I2C_ADDRESS 	0x18
+#define AKM09911_I2C_ADDRESS 	0x18	
 #define AKM09911_BUFSIZE		0x50
 
 #define SENSOR_DATA_SIZE		9	/* Rx buffer size, i.e from ST1 to ST2 */

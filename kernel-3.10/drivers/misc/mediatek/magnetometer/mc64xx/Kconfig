@@ -1,0 +1,4 @@
+
+config MTK_MC64XX
+	bool "MC64XX for MediaTek package"
+	default n

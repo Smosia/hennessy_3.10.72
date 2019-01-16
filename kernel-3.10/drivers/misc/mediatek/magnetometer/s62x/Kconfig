@@ -1,0 +1,4 @@
+
+config MTK_S62X
+	bool "S62X for MediaTek package"
+	default n

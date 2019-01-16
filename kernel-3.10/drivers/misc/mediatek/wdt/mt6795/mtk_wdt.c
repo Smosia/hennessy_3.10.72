@@ -31,7 +31,6 @@
 
 #include <mach/wd_api.h>
 #include <mach/mt_pmic_wrap.h>
-#include <mach/mtk_rtc_hal.h>
 
 
 #ifdef CONFIG_OF
@@ -332,12 +331,14 @@ extern int mt_pwrap_hal_init(void);
 extern int check_pmic_wrap_init(void);
 //S32 pwrap_write_nochk( U32  adr, U32  wdata );
 //S32 pwrap_read_nochk( U32  adr, U32 *rdata );
+extern void hal_rtc_set_register_status(const char *cmd, u16 val);
 
 /*because PMIC driver's API include mutex, so need used noo-mutex API*/
 void wdt_pmic_full_reset(void)
 {
 	unsigned int val;
-    hal_rtc_set_register_status("AUTO", 0);
+
+	hal_rtc_set_register_status("AUTO", 0);
 	pwrap_write(0x0168, 0x3); //reset 6331
 	//pwrap_read(0x0166, &val);
 	//printk("wdt_arch_reset called 0x0166 =0x%x\n",val);
@@ -360,87 +361,82 @@ void wdt_mt6331_upmu_set_rg_rsv_swreg(void)
 #endif
 void wdt_arch_reset(char mode)
 {
-    
+
     unsigned int wdt_mode_val;
-    
-    #ifdef CONFIG_OF
-    struct device_node *np_rgu;
-    #endif
-    
-    printk("wdt_arch_reset called@Kernel mode =%c\n",mode);
-    #ifdef CONFIG_OF
-    np_rgu = of_find_compatible_node(NULL, NULL, rgu_of_match[0].compatible);
-    
-    if(!toprgu_base_t)
-    {	
-        toprgu_base_t = of_iomap(np_rgu, 0);
-        if (!toprgu_base_t) 
-        {
-            printk("RGU iomap failed\n");
-        }
-        printk("RGU base: 0x%p  RGU irq: %d\n", toprgu_base_t, wdt_irq_id);
-    }
-    #endif	
-    spin_lock(&rgu_reg_operation_spinlock);
-    /* Watchdog Rest */
-    DRV_WriteReg32(MTK_WDT_RESTART, MTK_WDT_RESTART_KEY);
-    wdt_mode_val = DRV_Reg32(MTK_WDT_MODE);
-    printk("wdt_arch_reset called MTK_WDT_MODE =%x \n",wdt_mode_val);
-    /* clear autorestart bit: autoretart: 1, bypass power key, 0: not bypass power key */
-    wdt_mode_val &=(~MTK_WDT_MODE_AUTO_RESTART);
-    /* make sure WDT mode is hw reboot mode, can not config isr mode  */
-    wdt_mode_val &=(~(MTK_WDT_MODE_IRQ|MTK_WDT_MODE_ENABLE | MTK_WDT_MODE_DUAL_MODE));
-    
-    if(mode)
-    {
+#ifdef CONFIG_OF
+	struct device_node *np_rgu;
+#endif
+	printk("wdt_arch_reset called@Kernel mode =%c\n",mode);
+#ifdef CONFIG_OF
+	np_rgu = of_find_compatible_node(NULL, NULL, rgu_of_match[0].compatible);
+	
+	if(!toprgu_base_t)
+	{	
+		toprgu_base_t = of_iomap(np_rgu, 0);
+		if (!toprgu_base_t) 
+		{
+			printk("RGU iomap failed\n");
+		}
+		printk("RGU base: 0x%p  RGU irq: %d\n", toprgu_base_t, wdt_irq_id);
+	}
+#endif	
+	spin_lock(&rgu_reg_operation_spinlock);
+	/* Watchdog Rest */
+	DRV_WriteReg32(MTK_WDT_RESTART, MTK_WDT_RESTART_KEY);
+	wdt_mode_val = DRV_Reg32(MTK_WDT_MODE);
+	printk("wdt_arch_reset called MTK_WDT_MODE =%x \n",wdt_mode_val);
+	/* clear autorestart bit: autoretart: 1, bypass power key, 0: not bypass power key */
+	wdt_mode_val &=(~MTK_WDT_MODE_AUTO_RESTART);
+	/* make sure WDT mode is hw reboot mode, can not config isr mode  */
+	wdt_mode_val &=(~(MTK_WDT_MODE_IRQ|MTK_WDT_MODE_ENABLE | MTK_WDT_MODE_DUAL_MODE));
+	if(mode)
+	{
         #ifdef CONFIG_ARM64
-        /*SW workaround for ROME plus
-         * mode 3 for Hotplug call reboot
-         *mode 2 for system call reboot
-         */
+	    /*SW workaround for ROME plus
+              *mode 3 for Hotplug call reboot
+              *mode 2 for system call reboot
+              */
         if(check_pmic_wrap_init()) { /*before PMIC used wrapper should check whether wrapper init done*/
-            mt_pwrap_hal_init();
-            //mt_pwrap_init();
+		     mt_pwrap_hal_init();
+		     //mt_pwrap_init();
         }
-        wdt_mt6331_upmu_set_rg_rsv_swreg();
-        wdt_pmic_full_reset();
-        printk("wdt_arch_reset called@PMIC full reset mode=%d.\n", mode);
+		wdt_mt6331_upmu_set_rg_rsv_swreg();
+		wdt_pmic_full_reset();
+		printk("wdt_arch_reset called@PMIC full reset mode=%d.\n", mode);
         #endif
-        /* mode != 0 means by pass power key reboot, We using auto_restart bit as by pass power key flag */
-        wdt_mode_val = wdt_mode_val | (MTK_WDT_MODE_KEY|MTK_WDT_MODE_EXTEN|MTK_WDT_MODE_AUTO_RESTART);
-        
-    }else
-    {
+		/* mode != 0 means by pass power key reboot, We using auto_restart bit as by pass power key flag */
+		 wdt_mode_val = wdt_mode_val | (MTK_WDT_MODE_KEY|MTK_WDT_MODE_EXTEN|MTK_WDT_MODE_AUTO_RESTART);
+		 
+	}else
+	{
+	  #ifndef CONFIG_MTK_AEE_MRDUMP
         #ifdef CONFIG_ARM64
-        /*SW workaround for ROME plus
-         * mode 3 for Hotplug call reboot
-         *mode 2 for system call reboot
-         */
-        if(check_pmic_wrap_init()) { /*before PMIC used wrapper should check whether wrapper init done*/
+        /*SW workaround for ROME plus*/
+        if(check_pmic_wrap_init()){
             mt_pwrap_hal_init();
-            //mt_pwrap_init();
         }
         wdt_mt6331_upmu_set_rg_rsv_swreg();
         wdt_pmic_full_reset();
         printk("wdt_arch_reset called@PMIC full reset2 mode=%d.\n", mode);
         #endif
-        wdt_mode_val = wdt_mode_val | (MTK_WDT_MODE_KEY|MTK_WDT_MODE_EXTEN);
-        
-    }
-    
-    DRV_WriteReg32(MTK_WDT_MODE,wdt_mode_val);
-    printk("wdt_arch_reset called end  MTK_WDT_MODE =%x \n",wdt_mode_val);
-    mdelay(100);
-    DRV_WriteReg32(MTK_WDT_SWRST, MTK_WDT_SWRST_KEY);
-    printk("wdt_arch_reset: SW_reset happen\n");
-    spin_unlock(&rgu_reg_operation_spinlock);
-    
-    while (1)
-    {
-        wdt_dump_reg();
-        printk("wdt_arch_reset error\n");
-    }
-    
+       #endif
+	       wdt_mode_val = wdt_mode_val | (MTK_WDT_MODE_KEY|MTK_WDT_MODE_EXTEN);
+		 
+	}
+
+	DRV_WriteReg32(MTK_WDT_MODE,wdt_mode_val);
+	printk("wdt_arch_reset called end  MTK_WDT_MODE =%x \n",wdt_mode_val);
+	udelay(100);
+	DRV_WriteReg32(MTK_WDT_SWRST, MTK_WDT_SWRST_KEY);
+        printk("wdt_arch_reset: SW_reset happen\n");
+	spin_unlock(&rgu_reg_operation_spinlock);
+
+	while (1)
+	{
+	    wdt_dump_reg();
+		printk("wdt_arch_reset error\n");
+	}
+	
 }
 
 int mtk_wdt_swsysret_config(int bit,int set_value)

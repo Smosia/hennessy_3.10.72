@@ -58,7 +58,8 @@
 /* AUTOK constant */
 #define AUTOK_TUNING_INACCURACY         (2)
 #define AUTOK_CMD_EDGE_MATRIX_SCAN      (1)
-#define AUTOK_CKGEN_ALLOW_MAX           (0)
+//ccyeh #define AUTOK_CKGEN_ALLOW_MAX           (0)
+#define AUTOK_CKGEN_ALLOW_MAX           (3) //ccyeh@xiaojian for ckgen=3
 
 #define AUTOK_RDAT_FBOUND_TH            (autok_rdat_fbound_th)
 
@@ -538,6 +539,14 @@ unsigned char autok_param_name[E_AUTOK_DLY_PARAM_MAX][25] = {
     {"PAD_DATA_WR_RXDLY"}
 };
 
+
+// Start xiaojian
+#define DYNAMIC_CKGEN_RANGE_SEL_EN  1
+static int g_ckgen_allow_start = 0;
+static int g_ckgen_allow_end = AUTOK_CKGEN_ALLOW_MAX;
+int autok_ckgen_range(int start, int end); //ccyeh
+// End xiaojian
+
 /*****************************************************************************
  *                         Functions Declearation                            *
  *****************************************************************************/
@@ -589,7 +598,7 @@ int autok_start_rw(struct msdc_host *host, u8 *value, unsigned size, unsigned bl
      * if find abnormal, try to reset msdc first
      */
     if (msdc_txfifocnt() || msdc_rxfifocnt()) {
-        pr_debug("[%s][SD%d] register abnormal,please check!\n",__func__, host->id);
+	pr_debug("[%s][SD%d] register abnormal,please check!\n", __func__, host->id);
         msdc_reset_hw(host->id);
     }
     
@@ -627,13 +636,13 @@ int autok_io_rw_extended(struct msdc_host *host, unsigned int u4Addr, unsigned i
     
     if((pBuffer==NULL) || (host==NULL))
     {
-        pr_debug("[%s] [ERR] pBuffer = %p, host = %p\n", __func__, pBuffer, host);
+	pr_debug("[%s] [ERR] pBuffer = %p, host = %p\n", __func__, pBuffer, host);
         return -1;
     }
     
     if( u4Len < 4 )
     {
-        pr_debug("[%s] [ERR] u4Len = %d\n", __func__, u4Len);
+	pr_debug("[%s] [ERR] u4Len = %d\n", __func__, u4Len);
         return -1;
     }
     
@@ -717,13 +726,13 @@ int autok_io_rw_direct(struct msdc_host *host, unsigned int u4Addr, unsigned int
     
     if((pBuffer==NULL) || (host==NULL))
     {
-        pr_debug("[%s] [ERR] pBuffer = %p, host = %p\n", __func__, pBuffer, host);
+	pr_debug("[%s] [ERR] pBuffer = %p, host = %p\n", __func__, pBuffer, host);
         return -1;
     }
     
     if( u4Len > 1 )
     {
-        pr_debug("[%s] [ERR] u4Len = %d\n", __func__, u4Len);
+	pr_debug("[%s] [ERR] u4Len = %d\n", __func__, u4Len);
         return -1;
     }
     
@@ -747,7 +756,7 @@ int autok_io_rw_direct(struct msdc_host *host, unsigned int u4Addr, unsigned int
      * if find abnormal, try to reset msdc first
      */
     if (msdc_txfifocnt() || msdc_rxfifocnt()) {
-        pr_debug("[%s][SD%d] register abnormal,please check!\n",__func__, host->id);
+	pr_debug("[%s][SD%d] register abnormal,please check!\n", __func__, host->id);
         msdc_reset_hw(host->id);
     }
     
@@ -843,14 +852,14 @@ int msdc_autok_read(struct msdc_host *host, unsigned int u4Addr, unsigned int u4
     
     if((pBuffer==NULL) || (host==NULL))
     {
-        pr_debug("[%s] pBuffer = %p, host = %p\n", __func__, pBuffer, host);
+	pr_debug("[%s] pBuffer = %p, host = %p\n", __func__, pBuffer, host);
         return -1;
     }
         
     if( ((u4Cmd == CMD_53) && (u4Len < 4)) ||
         ((u4Cmd == CMD_52) && (u4Len > 1)) )
     {
-        pr_debug("[%s] u4Cmd = %d, u4Len = %d\n", __func__, u4Cmd, u4Len);
+	pr_debug("[%s] u4Cmd = %d, u4Len = %d\n", __func__, u4Cmd, u4Len);
         return -1;
     }
     
@@ -860,7 +869,7 @@ int msdc_autok_read(struct msdc_host *host, unsigned int u4Addr, unsigned int u4
         ret = autok_io_rw_direct(host, u4Addr, u4Func, pBuffer, u4Len, 0);
     else
     {
-        pr_debug("[%s] Doesn't support u4Cmd = %d\n", __func__, u4Cmd);
+	pr_debug("[%s] Doesn't support u4Cmd = %d\n", __func__, u4Cmd);
         ret = -1;
     }
     
@@ -891,14 +900,14 @@ int msdc_autok_write(struct msdc_host *host, unsigned int u4Addr, unsigned int u
     
     if((pBuffer==NULL) || (host==NULL))
     {
-        pr_debug("[%s] pBuffer = %p, host = %p\n", __func__, pBuffer, host);
+	pr_debug("[%s] pBuffer = %p, host = %p\n", __func__, pBuffer, host);
         return -1;
     }
         
     if( ((u4Cmd == CMD_53) && (u4Len < 4)) ||
         ((u4Cmd == CMD_52) && (u4Len > 1)) )
     {
-        pr_debug("[%s] u4Cmd = %d, u4Len = %d\n", __func__, u4Cmd, u4Len);
+	pr_debug("[%s] u4Cmd = %d, u4Len = %d\n", __func__, u4Cmd, u4Len);
         return -1;
     }
 
@@ -908,7 +917,7 @@ int msdc_autok_write(struct msdc_host *host, unsigned int u4Addr, unsigned int u
         ret = autok_io_rw_direct(host, u4Addr, u4Func, pBuffer, u4Len, 1);
     else
     {
-        pr_debug("[%s] Doesn't support u4Cmd = %d\n", __func__, u4Cmd);
+	pr_debug("[%s] Doesn't support u4Cmd = %d\n", __func__, u4Cmd);
         ret = -1;
     }
 
@@ -945,7 +954,7 @@ int msdc_autok_adjust_param(struct msdc_host *host, enum AUTOK_PARAM param, u32 
         case CMD_EDGE:
             if((rw == AUTOK_WRITE) && (*value > 1))
             {
-                pr_debug("[%s] Input value(%d) for CMD_EDGE is out of range, it should be [0~1]\n", __func__, *value);
+		pr_debug("[%s] Input value(%d) for CMD_EDGE is out of range, it should be [0~1]\n", __func__, *value);
                 return -1;
             }
             reg = MSDC_IOCON;
@@ -954,7 +963,7 @@ int msdc_autok_adjust_param(struct msdc_host *host, enum AUTOK_PARAM param, u32 
         case RDATA_EDGE:
             if((rw == AUTOK_WRITE) && (*value > 1))
             {
-                pr_debug("[%s] Input value(%d) for RDATA_EDGE is out of range, it should be [0~1]\n", __func__, *value);
+		pr_debug("[%s] Input value(%d) for RDATA_EDGE is out of range, it should be [0~1]\n", __func__, *value);
                 return -1;
             }
             reg = MSDC_IOCON;
@@ -963,7 +972,7 @@ int msdc_autok_adjust_param(struct msdc_host *host, enum AUTOK_PARAM param, u32 
         case WDATA_EDGE:
             if((rw == AUTOK_WRITE) && (*value > 1))
             {
-                pr_debug("[%s] Input value(%d) for WDATA_EDGE is out of range, it should be [0~1]\n", __func__, *value);
+		pr_debug("[%s] Input value(%d) for WDATA_EDGE is out of range, it should be [0~1]\n", __func__, *value);
                 return -1;
             }
             reg = MSDC_IOCON;
@@ -973,13 +982,13 @@ int msdc_autok_adjust_param(struct msdc_host *host, enum AUTOK_PARAM param, u32 
         case CLK_DRV:
             if((rw == AUTOK_WRITE) && (*value > 7))
             {
-                pr_debug("[%s] Input value(%d) for CLK_DRV is out of range, it should be [0~7]\n", __func__, *value);
+		pr_debug("[%s] Input value(%d) for CLK_DRV is out of range, it should be [0~7]\n", __func__, *value);
                 return -1;
             }
                 
             if(host->id != 2)
             {
-                pr_debug("[%s] MSDC%d doesn't support AUTO K\n", __func__, host->id);
+		pr_debug("[%s] MSDC%d doesn't support AUTO K\n", __func__, host->id);
                 return -1;
             }
 
@@ -989,13 +998,13 @@ int msdc_autok_adjust_param(struct msdc_host *host, enum AUTOK_PARAM param, u32 
         case CMD_DRV:
             if((rw == AUTOK_WRITE) && (*value > 7))
             {
-                pr_debug("[%s] Input value(%d) for CMD_DRV is out of range, it should be [0~7]\n", __func__, *value);
+		pr_debug("[%s] Input value(%d) for CMD_DRV is out of range, it should be [0~7]\n", __func__, *value);
                 return -1;
             }
             
             if(host->id != 2)
             {
-                pr_debug("[%s] MSDC%d doesn't support on AUTO K\n", __func__, host->id);
+		pr_debug("[%s] MSDC%d doesn't support on AUTO K\n", __func__, host->id);
                 return -1;
             }
 
@@ -1005,13 +1014,13 @@ int msdc_autok_adjust_param(struct msdc_host *host, enum AUTOK_PARAM param, u32 
         case DAT_DRV:
             if((rw == AUTOK_WRITE) && (*value > 7))
             {
-                pr_debug("[%s] Input value(%d) for DAT_DRV is out of range, it should be [0~7]\n", __func__, *value);
+		pr_debug("[%s] Input value(%d) for DAT_DRV is out of range, it should be [0~7]\n", __func__, *value);
                 return -1;
             }
             
             if(host->id != 2)
             {
-                pr_debug("[%s] MSDC%d doesn't support on AUTO K\n", __func__, host->id);
+		pr_debug("[%s] MSDC%d doesn't support on AUTO K\n", __func__, host->id);
                 return -1;
             }
 
@@ -1022,7 +1031,7 @@ int msdc_autok_adjust_param(struct msdc_host *host, enum AUTOK_PARAM param, u32 
         case DAT0_RD_DLY:
             if((rw == AUTOK_WRITE) && (*value > 31))
             {
-                pr_debug("[%s] Input value(%d) for DAT0_RD_DLY is out of range, it should be [0~31]\n", __func__, *value);
+		pr_debug("[%s] Input value(%d) for DAT0_RD_DLY is out of range, should be 0~31\n", __func__, *value);
                 return -1;
             }
             
@@ -1032,7 +1041,7 @@ int msdc_autok_adjust_param(struct msdc_host *host, enum AUTOK_PARAM param, u32 
         case DAT1_RD_DLY:
             if((rw == AUTOK_WRITE) && (*value > 31))
             {
-                pr_debug("[%s] Input value(%d) for DAT1_RD_DLY is out of range, it should be [0~31]\n", __func__, *value);
+		pr_debug("[%s] Input value(%d) for DAT1_RD_DLY is out of range, should be 0~31\n", __func__, *value);
                 return -1;
             }
             
@@ -1042,7 +1051,7 @@ int msdc_autok_adjust_param(struct msdc_host *host, enum AUTOK_PARAM param, u32 
         case DAT2_RD_DLY:
             if((rw == AUTOK_WRITE) && (*value > 31))
             {
-                pr_debug("[%s] Input value(%d) for DAT2_RD_DLY is out of range, it should be [0~31]\n", __func__, *value);
+		pr_debug("[%s] Input value(%d) for DAT2_RD_DLY is out of range, should be 0~31\n", __func__, *value);
                 return -1;
             }
             
@@ -1052,7 +1061,7 @@ int msdc_autok_adjust_param(struct msdc_host *host, enum AUTOK_PARAM param, u32 
         case DAT3_RD_DLY:
             if((rw == AUTOK_WRITE) && (*value > 31))
             {
-                pr_debug("[%s] Input value(%d) for DAT3_RD_DLY is out of range, it should be [0~31]\n", __func__, *value);
+		pr_debug("[%s] Input value(%d) for DAT3_RD_DLY is out of range, should be 0~31\n", __func__, *value);
                 return -1;
             }
             
@@ -1062,7 +1071,7 @@ int msdc_autok_adjust_param(struct msdc_host *host, enum AUTOK_PARAM param, u32 
         case DAT_WRD_DLY:
             if((rw == AUTOK_WRITE) && (*value > 31))
             {
-                pr_debug("[%s] Input value(%d) for DAT_WRD_DLY is out of range, it should be [0~31]\n", __func__, *value);
+		pr_debug("[%s] Input value(%d) for DAT_WRD_DLY is out of range, should be 0~31\n", __func__, *value);
                 return -1;
             }
             
@@ -1072,7 +1081,7 @@ int msdc_autok_adjust_param(struct msdc_host *host, enum AUTOK_PARAM param, u32 
         case DAT_RD_DLY:
             if((rw == AUTOK_WRITE) && (*value > 31))
             {
-                pr_debug("[%s] Input value(%d) for DAT_RD_DLY is out of range, it should be [0~31]\n", __func__, *value);
+		pr_debug("[%s] Input value(%d) for DAT_RD_DLY is out of range, should be 0~31\n", __func__, *value);
                 return -1;
             }
             
@@ -1082,7 +1091,7 @@ int msdc_autok_adjust_param(struct msdc_host *host, enum AUTOK_PARAM param, u32 
         case CMD_RESP_RD_DLY:
             if((rw == AUTOK_WRITE) && (*value > 31))
             {
-                pr_debug("[%s] Input value(%d) for CMD_RESP_RD_DLY is out of range, it should be [0~31]\n", __func__, *value);
+		pr_debug("[%s] Input value(%d) for CMD_RESP_RD_DLY out of range, should be 0~31\n", __func__, *value);
                 return -1;
             }
             
@@ -1092,7 +1101,7 @@ int msdc_autok_adjust_param(struct msdc_host *host, enum AUTOK_PARAM param, u32 
         case CMD_RD_DLY:
             if((rw == AUTOK_WRITE) && (*value > 31))
             {
-                pr_debug("[%s] Input value(%d) for CMD_RD_DLY is out of range, it should be [0~31]\n", __func__, *value);
+		pr_debug("[%s] Input value(%d) for CMD_RD_DLY is out of range, should be 0~31\n", __func__, *value);
                 return -1;
             }
             
@@ -1102,7 +1111,7 @@ int msdc_autok_adjust_param(struct msdc_host *host, enum AUTOK_PARAM param, u32 
         case DATA_DLYLINE_SEL:
             if((rw == AUTOK_WRITE) && (*value > 1))
             {
-                pr_debug("[%s] Input value(%d) for DATA_DLYLINE_SEL is out of range, it should be [0~1]\n", __func__, *value);
+		pr_debug("[%s] Input value(%d) for DATA_DLYLINE_SEL out of range, should be 0~1\n", __func__, *value);
                 return -1;
             }
             
@@ -1112,7 +1121,7 @@ int msdc_autok_adjust_param(struct msdc_host *host, enum AUTOK_PARAM param, u32 
         case READ_DATA_SMPL_SEL:
             if((rw == AUTOK_WRITE) && (*value > 1))
             {
-                pr_debug("[%s] Input value(%d) for READ_DATA_SMPL_SEL is out of range, it should be [0~1]\n", __func__, *value);
+		pr_debug("[%s] Input value(%d) for RD_DATA_SMPL_SEL out of range, should be 0~1\n", __func__, *value);
                 return -1;
             }
             
@@ -1122,7 +1131,7 @@ int msdc_autok_adjust_param(struct msdc_host *host, enum AUTOK_PARAM param, u32 
         case WRITE_DATA_SMPL_SEL:
             if((rw == AUTOK_WRITE) && (*value > 1))
             {
-                pr_debug("[%s] Input value(%d) for WRITE_DATA_SMPL_SEL is out of range, it should be [0~1]\n", __func__, *value);
+		pr_debug("[%s] Input value(%d) for WR_DATA_SMPL_SEL out of range, should be 0~1\n", __func__, *value);
                 return -1;
             }
             
@@ -1132,7 +1141,7 @@ int msdc_autok_adjust_param(struct msdc_host *host, enum AUTOK_PARAM param, u32 
         case INT_DAT_LATCH_CK:
             if((rw == AUTOK_WRITE) && (*value > 7))
             {
-                pr_debug("[%s] Input value(%d) for INT_DAT_LATCH_CK is out of range, it should be [0~7]\n", __func__, *value);
+		pr_debug("[%s] Input value(%d) for INT_DAT_LATCH_CK out of range, should be 0~7\n", __func__, *value);
                 return -1;
             }
             
@@ -1142,7 +1151,7 @@ int msdc_autok_adjust_param(struct msdc_host *host, enum AUTOK_PARAM param, u32 
         case CKGEN_MSDC_DLY_SEL:
             if((rw == AUTOK_WRITE) && (*value > 31))
             {
-                pr_debug("[%s] Input value(%d) for CKGEN_MSDC_DLY_SEL is out of range, it should be [0~31]\n", __func__, *value);
+		pr_debug("[%s] Input value(%d) for CKGEN_MSDC_DLY_SEL out of range, shld be 0~31\n", __func__, *value);
                 return -1;
             }
             
@@ -1152,7 +1161,7 @@ int msdc_autok_adjust_param(struct msdc_host *host, enum AUTOK_PARAM param, u32 
         case CMD_RSP_TA_CNTR:
             if((rw == AUTOK_WRITE) && (*value > 7))
             {
-                pr_debug("[%s] Input value(%d) for CMD_RSP_TA_CNTR is out of range, it should be [0~7]\n", __func__, *value);
+		pr_debug("[%s] Input value(%d) for CMD_RSP_TA_CNTR out of range, should be 0~7\n", __func__, *value);
                 return -1;
             }
             
@@ -1162,7 +1171,7 @@ int msdc_autok_adjust_param(struct msdc_host *host, enum AUTOK_PARAM param, u32 
         case WRDAT_CRCS_TA_CNTR:
             if((rw == AUTOK_WRITE) && (*value > 7))
             {
-                pr_debug("[%s] Input value(%d) for WRDAT_CRCS_TA_CNTR is out of range, it should be [0~7]\n", __func__, *value);
+		pr_debug("[%s] Input value(%d) for WRDAT_CRCS_TA_CNTR out of range, shld be 0~7\n", __func__, *value);
                 return -1;
             }
             
@@ -1172,7 +1181,7 @@ int msdc_autok_adjust_param(struct msdc_host *host, enum AUTOK_PARAM param, u32 
         case PAD_CLK_TXDLY:
             if((rw == AUTOK_WRITE) && (*value > 31))
             {
-                pr_debug("[%s] Input value(%d) for PAD_CLK_TXDLY is out of range, it should be [0~31]\n", __func__, *value);
+		pr_debug("[%s] Input value(%d) for PAD_CLK_TXDLY out of range, should be 0~31\n", __func__, *value);
                 return -1;
             }
             
@@ -1180,7 +1189,7 @@ int msdc_autok_adjust_param(struct msdc_host *host, enum AUTOK_PARAM param, u32 
             field = (u32)(MSDC_PAD_TUNE_CLKTXDLY);
             break;
         default:
-            pr_debug("[%s] Value of [enum AUTOK_PARAM param] is wrong\n", __func__);
+		pr_debug("[%s] Value of [enum AUTOK_PARAM param] is wrong\n", __func__);
             return -1;
     }
 
@@ -1199,7 +1208,7 @@ int msdc_autok_adjust_param(struct msdc_host *host, enum AUTOK_PARAM param, u32 
     }
     else
     {
-        pr_debug("[%s] Value of [int rw] is wrong\n", __func__);
+	pr_debug("[%s] Value of [int rw] is wrong\n", __func__);
         return -1;
     }
 
@@ -1333,7 +1342,7 @@ static E_RESULT_TYPE autok_read_test(struct msdc_host *host)
 
         if(memcmp(g_test_read_pattern, &g_test_write_pattern[i*TUNING_TEST_TIME], 4*TUNING_TEST_TIME) != 0) {
             res = E_RESULT_CMP_ERR;
-            pr_debug("[%s] E_RESULT_CMP_ERR\n", __func__);
+		pr_debug("[%s] E_RESULT_CMP_ERR\n", __func__);
             goto end;
         }
     }
@@ -1388,7 +1397,7 @@ static E_RESULT_TYPE autok_cmd_test(struct msdc_host *host)
 
         if(g_test_read_pattern[0] != tuning_data[i]) {
         #ifdef AUTOK_DEBUG
-            pr_debug("write: 0x%x read: 0x%x\r\n", tuning_data[i], g_test_read_pattern[0]);
+		pr_debug("write: 0x%x read: 0x%x\r\n", tuning_data[i], g_test_read_pattern[0]);
         #endif
             res = E_RESULT_CMP_ERR;
             goto end;
@@ -2114,16 +2123,14 @@ autok_check_cmd_matrix (
     raw = 0;
 
     for (pad_idx = 0; pad_idx < PadDlyNum; pad_idx++) {
-        PadDlyScore = 1;
-        
+	PadDlyScore = 0;
+
         for (int_idx = 0; int_idx < IntDlyNum; int_idx++) {
-            PadDlyScore &= ((pMatrixRaw[int_idx] >> pad_idx) & 0x1);
-            if (!PadDlyScore)
-                break;
+		PadDlyScore += ((pMatrixRaw[int_idx] >> pad_idx) & 0x1);
         }
 
-        if (PadDlyScore)
-            raw |= 1 << pad_idx;
+	if (PadDlyScore >= 12)
+		raw |= 1 << pad_idx;
     }
 
     memset(&raw_scan, 0, sizeof(raw_scan));
@@ -2707,7 +2714,9 @@ ReTuneMatrix:
     /* Scan the cycle by CKGEN */
     k = 0;
     while(k <= rPadDlyRes.CKGenPeriodLen) {
-        if ((!fRdatPatFound || !rPadDlyRes.fHoleCK) && !fStopRDAT) {
+       //ccyeh if ((!fRdatPatFound || !rPadDlyRes.fHoleCK) && !fStopRDAT) {
+       //[12141927]xiaojian if(1){//ccyeh@xiaojian         
+       if(!fStopRDAT){ //[12141953]xiaojian
 
             /* Step1, tune CMD */
             
@@ -2811,9 +2820,15 @@ ReTuneMatrix:
                 }
 
                 /* Stop to find hole CKGEN */
+                #if DYNAMIC_CKGEN_RANGE_SEL_EN  // ccyeh@xiaojian
+                if (!rPadDlyRes.fHoleCK && 
+                    (k >= (g_ckgen_allow_end + 1)) && rPadDlyRes.fFBound)
+                    fStopRDAT = 1;
+                #else
                 if (!rPadDlyRes.fHoleCK && 
                     (k >= (AUTOK_CKGEN_ALLOW_MAX + 1)) && rPadDlyRes.fFBound)
                     fStopRDAT = 1;
+                #endif
             }
             /* Check if we have found the hole CKGEN */
             else if (!rPadDlyRes.fHoleCK) {
@@ -2822,7 +2837,11 @@ ReTuneMatrix:
             }
 
             #endif
-
+            #if DYNAMIC_CKGEN_RANGE_SEL_EN //[12141955]xiaojian Start
+            if(rPadDlyRes.fHoleCK && fRdatPatFound && (k>g_ckgen_allow_end)){
+            	   fStopRDAT = 1; 
+            }
+            #endif//[12141955]xiaojian End
             k++;
         }    
         else
@@ -4256,7 +4275,12 @@ autok_tune_rd(
     unsigned int RealCKGEN, RealPadDelay;
     unsigned int RBoundPad = 0;
     unsigned int RDlyRefCMD, RDlyRefSTG1;
+    #if DYNAMIC_CKGEN_RANGE_SEL_EN  //[Update]Xiaojian.Su
+    // unsigned int baseCKGEN = 3;//ccyeh@xiaojian
+    unsigned int baseCKGEN = g_ckgen_allow_start;//[1214]xiaojian    
+    #else
     unsigned int baseCKGEN = 0;
+    #endif
     unsigned int max_LBoundCnt = 0, LDeMarMin;
     unsigned int fUnEnoughRightMar = 0;
     unsigned int fLeftBoundary = 0;
@@ -4269,8 +4293,11 @@ autok_tune_rd(
     int reTuneCmd = 0;
     unsigned int pad_delay_period_cycle = 0;
     unsigned int range_max;
-    unsigned int CKGENMax = AUTOK_CKGEN_ALLOW_MAX;
-    
+    #if DYNAMIC_CKGEN_RANGE_SEL_EN  //[Update]Xiaojian.Su
+	  unsigned int CKGENMax =g_ckgen_allow_end;//[1214]xiaojian
+	  #else
+	  unsigned int CKGENMax = AUTOK_CKGEN_ALLOW_MAX;
+	  #endif
     S_AUTOK_CMD_DLY data;
     E_RESULT_TYPE res;
     AUTOK_RD_TUNE_RES_T rRdTuneRes;
@@ -4281,6 +4308,13 @@ autok_tune_rd(
     memset(&rRdTuneRes, 0, sizeof(rRdTuneRes));
     memset(CKGENFBound, 0, sizeof(CKGENFBound));
 
+    #if DYNAMIC_CKGEN_RANGE_SEL_EN  //[Update]Xiaojian.Su
+    if(g_ckgen_allow_start > pPadDlyRes->CKGenPeriodLen){
+    	AUTOK_PRINT("[WARN]CKGen Allow Range Out of 1T Cycle\r\n");
+    	AUTOK_PRINT("Allow Range Start:%d, 1T CKGen Cycle:%d\r\n",g_ckgen_allow_start,pPadDlyRes->CKGenPeriodLen);
+    }
+    #endif
+    
     #ifdef AUTOK_RDAT_ACC
         /* If do NOT find the hole CK, just equal to the cycle */
         if (!pPadDlyRes->fHoleCK)
@@ -4296,7 +4330,11 @@ autok_tune_rd(
 
         /* Determine the allowed maximum CKGEN */
         pPadDlyRes->HoleCK--;
+        #if DYNAMIC_CKGEN_RANGE_SEL_EN        //[Update]Xiaojian.Su
+        CKGENMax = g_ckgen_allow_end;
+        #else
         CKGENMax = MIN_GET(CKGENMax, pPadDlyRes->HoleCK);
+        #endif        
         pPadDlyRes->HoleCK++;
 
         AUTOK_PRINT("MAX allow CKGEN:%d, Hole CKGEN:%d\r\n", CKGENMax, pPadDlyRes->HoleCK);
@@ -4317,6 +4355,9 @@ autok_tune_rd(
          * Pad delay is confirmed now,
          * And scan read raw data for 1T
          */
+        #if DYNAMIC_CKGEN_RANGE_SEL_EN        //[Update]Xiaojian.Su
+        range_max = MAX_GET(range_max,g_ckgen_allow_end); ////ccyeh@xiaojian         
+        #endif
         for (ck = range_max; ck >= 0; ck--) {
 
             autok_ckg_data[range_max - ck].readScore = 
@@ -4325,7 +4366,12 @@ autok_tune_rd(
                 autok_ckg_data[range_max - ck].readScore, g_tune_result_str, 
                 autok_rdata_scan[range_max - ck].fInvalidCKGEN ? "(Invalid)" : "");
 
-            if (!autok_rdata_scan[ck].fInvalidCKGEN && !FBoundFound) {
+            #if DYNAMIC_CKGEN_RANGE_SEL_EN        //[Update]Xiaojian.Su
+         		//if(1){ //ccyeh@xiaojian suggestion
+         		if(!autok_rdata_scan[ck].fInvalidCKGEN){
+            #else
+      			if (!autok_rdata_scan[ck].fInvalidCKGEN && !FBoundFound) {   
+            #endif
                 /* Found the left pad boundary */
                 if ((autok_rdata_scan[ck].BoundReg1_S == 0) && autok_rdata_scan[ck].Reg1Cnt) {
                     
@@ -4506,7 +4552,7 @@ autok_tune_rd(
         DataPassWin = pad_delay_period_cycle - FBoundCnt;
         
     ChngBaseCK:
-        /* In case of Left boundary at CKGEN = 0 */
+        /* In case of Left boundary at baseCKGEN */
         if (!autok_rdata_scan[baseCKGEN].BoundReg1_S && 
             ((autok_rdata_scan[baseCKGEN].BoundReg1_E && (autok_rdata_scan[baseCKGEN].Reg1Cnt > 1)) || 
             (!autok_rdata_scan[baseCKGEN].BoundReg1_E && (autok_rdata_scan[baseCKGEN].Reg1Cnt == 1)))) {
@@ -4573,11 +4619,15 @@ autok_tune_rd(
                  (autok_rdata_scan[baseCKGEN].Reg1Cnt == 32)) {
 
             AUTOK_PRINT("[WARN] Timing is compressed by too large output delay(CK=%d)\r\n", baseCKGEN);
+//#if 0 //ccyeh@xiaojian@ckgen = 3
+
             baseCKGEN++;
 
             if (baseCKGEN <= CKGENMax)
                 goto ChngBaseCK;
-            else {
+            else 
+//#endif //ccyeh@xiaojian@ckgen = 3
+            {
                 AUTOK_PRINT("[ERR] Exceeds the Max. CKGEN limitation!\r\n");
                 AUTOK_ERR();
             }   
@@ -4622,12 +4672,24 @@ autok_tune_rd(
              * then consider the internal boundary
              */
             if (RBoundPad >= (DataPassWin/2)) {
-            
+            #if DYNAMIC_CKGEN_RANGE_SEL_EN        //[Update]Xiaojian.Su
+            // this part may not needed for after if else will check this pary ---comment by sxj
+            RealCKGEN = baseCKGEN + (RBoundPad - (DataPassWin/2)) /
+                                DIV_CEIL_FUNC(MIN_CLK_GEN_DELAY_IN_PS, MIN_PAD_DELAY_IN_PS);
+            if(RealCKGEN < baseCKGEN){
+            	RealCKGEN = baseCKGEN;
+            }
+						else if(RealCKGEN >= CKGENMax){
+								RealCKGEN = CKGENMax;
+						}
+						    RealPadDelay = RBoundPad - (DataPassWin/2) -
+                                    (RealCKGEN-baseCKGEN) *DIV_CEIL_FUNC(MIN_CLK_GEN_DELAY_IN_PS, MIN_PAD_DELAY_IN_PS);
+						#else
                 RealCKGEN = (RBoundPad - (DataPassWin/2)) /
                                 DIV_CEIL_FUNC(MIN_CLK_GEN_DELAY_IN_PS, MIN_PAD_DELAY_IN_PS);
-
                 RealPadDelay = RBoundPad - (DataPassWin/2) -
                                     RealCKGEN *DIV_CEIL_FUNC(MIN_CLK_GEN_DELAY_IN_PS, MIN_PAD_DELAY_IN_PS);
+            #endif
             }
             /* In case of un-enough margin */
             else {
@@ -4643,8 +4705,36 @@ autok_tune_rd(
                  * may be very little, at this situation, the CKGEN shifting
                  * should be considered
                  */
+            #if DYNAMIC_CKGEN_RANGE_SEL_EN        //[Update]Xiaojian.Su
+                if (autok_rdata_scan[baseCKGEN].Reg1Cnt && autok_rdata_scan[baseCKGEN].Reg2Cnt) {
+                    RBoundPad = autok_rdata_scan[baseCKGEN].BoundReg1_S;
+                    LBound = autok_rdata_scan[baseCKGEN].BoundReg2_S - autok_rdata_scan[baseCKGEN].BoundReg1_E - 1;
+                }
+                else if (autok_rdata_scan[baseCKGEN].Reg1Cnt && !autok_rdata_scan[baseCKGEN].Reg2Cnt) {
+                    RBoundPad = autok_rdata_scan[baseCKGEN].BoundReg1_S;
 
-                if (autok_rdata_scan[0].Reg1Cnt && autok_rdata_scan[0].Reg2Cnt) {
+                    if (autok_rdata_scan[baseCKGEN].BoundReg1_E && !IntBound) {
+                        LBound = 31 - autok_rdata_scan[baseCKGEN].BoundReg1_E;
+                    }
+                    else if (!autok_rdata_scan[baseCKGEN].BoundReg1_E && IntBound) {
+                        LBound = (autok_rdata_scan[baseCKGEN].Reg1Cnt - (32- IntBound)) - FBoundCnt;
+                    }
+                    else if (!autok_rdata_scan[baseCKGEN].BoundReg1_E && !IntBound) {
+                        LBound = autok_rdata_scan[baseCKGEN].Reg1Cnt - FBoundCnt;
+                    }
+                    else if (autok_rdata_scan[baseCKGEN].BoundReg1_E && IntBound) {
+                        LBound = IntBound - autok_rdata_scan[baseCKGEN].BoundReg1_E - 1;
+                    }
+                }
+                else
+                    AUTOK_PRINT("[NOTICE] Might be the low freq case\r\n");
+
+                /* Calculate the new margin after CKGEN shifting */
+                //NewMargin = LBound;
+                 NewMargin = LBound + (CKGENMax-baseCKGEN) * 
+                                DIV_CEIL_FUNC(MIN_CLK_GEN_DELAY_IN_PS, MIN_PAD_DELAY_IN_PS);
+#else
+                if (autok_rdata_scan[baseCKGEN].Reg1Cnt && autok_rdata_scan[0].Reg2Cnt) {
                     RBoundPad = autok_rdata_scan[0].BoundReg1_S;
                     LBound = autok_rdata_scan[0].BoundReg2_S - autok_rdata_scan[0].BoundReg1_E - 1;
                 }
@@ -4670,11 +4760,11 @@ autok_tune_rd(
                 /* Calculate the new margin after CKGEN shifting */
                 NewMargin = LBound + CKGENMax * 
                                 DIV_CEIL_FUNC(MIN_CLK_GEN_DELAY_IN_PS, MIN_PAD_DELAY_IN_PS);
-
+#endif
                 AUTOK_PRINT("RBound:%d, LBound:%d, CKGEN shift Mar:%d\r\n", 
                     RBoundPad, LBound, NewMargin);
-
-                if ((NewMargin/2 > (int)0) && (NewMargin/2 >= (int)(RBoundPad + 2))) {
+							if ((NewMargin>0)&&(NewMargin/2 > (int)0) && (NewMargin/2 >= (int)(RBoundPad + 2))) {   ////ccyeh@xiaojian@ckgen = 3   
+                //if ((NewMargin/2 > (int)0) && (NewMargin/2 >= (int)(RBoundPad + 2))) {
 
                     AUTOK_PRINT("Shifting CKGEN has more margin\r\n");
                     RealCKGEN = CKGENMax;
@@ -4685,9 +4775,15 @@ autok_tune_rd(
                     RealPadDelay = IntBound - NewMargin/2 - 1;
                 }
                 else {
+                    #if DYNAMIC_CKGEN_RANGE_SEL_EN        //[Update]Xiaojian.Su
+										RealCKGEN = baseCKGEN;
+                    RealPadDelay = 0;
+                    fUnEnoughRightMar = 1;
+                    #else
                     RealCKGEN = 0;
                     RealPadDelay = 0;
                     fUnEnoughRightMar = 1;
+                    #endif                    
                 }
             }
 
@@ -4696,8 +4792,13 @@ autok_tune_rd(
                 AUTOK_PRINT("Maybe NOT the best point due to CKGEN limit!\r\n");
             
                 RealCKGEN = CKGENMax;
+                #if DYNAMIC_CKGEN_RANGE_SEL_EN        //[Update]Xiaojian.Su
+                RealPadDelay = RBoundPad - (DataPassWin/2) -
+                                    (RealCKGEN-baseCKGEN) *DIV_CEIL_FUNC(MIN_CLK_GEN_DELAY_IN_PS, MIN_PAD_DELAY_IN_PS);
+                #else
                 RealPadDelay = RBoundPad - (DataPassWin/2) -
                                     RealCKGEN *DIV_CEIL_FUNC(MIN_CLK_GEN_DELAY_IN_PS, MIN_PAD_DELAY_IN_PS);
+                #endif
             }
 
             /* Record the pad delay for CMD reference */
@@ -5474,6 +5575,15 @@ static void autok_tuning_parameter_init(struct msdc_host *host, E_AUTOK_TUNING_S
 
 }
 
+//ccyeh
+extern u32 sdio_vio18_flag;
+extern u32 sdio_vcore1_flag;
+extern u32 sdio_vcore2_flag;
+extern u32 vio18_reg;
+extern u32 vcore1_reg;
+extern u32 vcore2_reg;
+//ccyeh
+
 static void autok_vcore_set(unsigned int vcore_uv) 
 {
     unsigned int idx, size;
@@ -5511,6 +5621,46 @@ static void autok_vcore_set(unsigned int vcore_uv)
             autok_abort_action();
         }
         #endif
+
+
+	pr_debug("@# vcore_uv = %d\n", vcore_uv);
+    if(vcore_uv == 1000000){
+	pr_debug("apply ckgen=3 @ 1000000\n");
+   	autok_ckgen_range(3,3); 	
+    }else if(vcore_uv == 1125000){
+	pr_debug("apply ckgen=0 @ 1125000\n");
+   	autok_ckgen_range(0,0); 	
+    }else{
+	pr_debug("apply ckgen=0 @ others\n");
+   	autok_ckgen_range(0,0); 	
+    }
+
+    if(vcore1_reg != 0){
+
+        if( sdio_vio18_flag > 1600 && sdio_vio18_flag <2000)
+        {
+            /*Originally divied by 12.5, to avoid floating-point division, amplify numerator and denominator by 4*/
+            vio18_reg = ((sdio_vio18_flag-1400)<<2)/50;
+            pmic_config_interface(0x396, vio18_reg, 0x7F, 0); //VIO18 1700mv 0x18
+            pmic_config_interface(0x398, vio18_reg, 0x7F, 0);
+	}
+	if( sdio_vcore1_flag > 900 && sdio_vcore1_flag <1200)
+	{
+            vcore1_reg = ((sdio_vcore1_flag-700)<<2)/25;
+            pmic_config_interface(0x24c, vcore1_reg, 0x7F, 0); //VCORE1 1100mv 0x40
+            pmic_config_interface(0x24e, vcore1_reg, 0x7F, 0);
+	}
+	if( sdio_vcore2_flag > 900 && sdio_vcore2_flag <1200)
+	{
+            vcore2_reg = ((sdio_vcore2_flag-700)<<2)/25;
+            pmic_config_interface(0x36a, vcore2_reg, 0x7F, 0); //VCORE2 990mv 0x2e
+            pmic_config_interface(0x36c, vcore2_reg, 0x7F, 0);
+	}
+
+    }
+
+
+
     #endif
     
     mdelay(1);
@@ -5566,7 +5716,9 @@ static void autok_show_parameters(struct msdc_host *host, void *pData)
     unsigned int val;
     unsigned int field;
     U_AUTOK_INTERFACE_DATA *pAutok;
+	char buf[64];
 
+	memset((void *)buf, 0, sizeof(buf));
     pAutok = (U_AUTOK_INTERFACE_DATA *)pData;
 
     AUTOK_PRINT("=====Delay Params Show:=====\r\n");
@@ -5577,9 +5729,12 @@ static void autok_show_parameters(struct msdc_host *host, void *pData)
         if(val != pAutok[parm].data.sel) {
             AUTOK_PRINT("%s expect:%02d, real:%02d\r\n", autok_param_name[parm], pAutok[parm].data.sel, val);
         }else {
-            AUTOK_PRINT("%s value:%02d\r\n", autok_param_name[parm], val);
+		snprintf(buf, sizeof(buf), "%s %02d", buf, val);
         }
     }
+
+	if (strlen(buf) != 0)
+		AUTOK_PRINT("%s\n", buf);
 }
 
 static void autok_setup_envir(struct msdc_host *host)
@@ -5951,3 +6106,9 @@ int msdc_autok_stg2_cal(
     return -res;
 }
 
+int autok_ckgen_range(int start, int end)
+{
+	
+	g_ckgen_allow_start = start;
+	g_ckgen_allow_end = end;
+}

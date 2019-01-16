@@ -55,6 +55,12 @@
 #ifdef MTK_SDIO30_ONLINE_TUNING_SUPPORT
 #include <linux/xlog.h>
 #include <mach/mtk_thermal_monitor.h>
+
+extern unsigned int autok_get_current_vcore_offset(void);
+extern int msdc_autok_stg1_data_get(void **ppData, int *pLen);
+extern int msdc_autok_apply_param(struct msdc_host *host, unsigned int vcore_uv);
+/* extern void mt_cpufreq_disable(unsigned int type, bool disabled); */
+
 #endif				/* MTK_SDIO30_ONLINE_TUNING_SUPPORT */
 
 #include <linux/proc_fs.h>
@@ -68,6 +74,10 @@
 
 #ifdef CONFIG_MTK_HIBERNATION
 #include "mach/mtk_hibernate_dpm.h"
+#endif
+
+#ifdef CONFIG_MMC_FFU
+#include <linux/mmc/ffu.h>
 #endif
 
 /*#if 1*/
@@ -103,6 +113,11 @@ u32 g_emmc_mode_switch = 0;
 /* #define MTK_EMMC_ETT_TO_DRIVER */ /* for eMMC off-line apply to driver */ 
 #endif
 
+#define FEATURE_MET_MMC_INDEX
+#if !defined(CONFIG_MT_ENG_BUILD)
+#undef FEATURE_MET_MMC_INDEX
+#endif
+
 #ifdef MTK_MSDC_USE_CACHE
 #define MSDC_MAX_FLUSH_COUNT    (3)
 #define CACHE_UN_FLUSHED        (0)
@@ -131,6 +146,8 @@ unsigned int print_nums;
 	__res & __mask;            \
 })
 
+static u8 emmc_id;
+
 #ifdef MTK_EMMC_ETT_TO_DRIVER
 #include "emmc_device_list.h"
 static u8 m_id;		/* Manufacturer ID */
@@ -154,7 +171,12 @@ struct mmc_blk_data {
 	unsigned int read_only;
 };
 static bool emmc_sleep_failed=0;
+
+static int emmc_do_sleep_awake;
+
+#if defined(FEATURE_MET_MMC_INDEX)
 static unsigned int met_mmc_bdnum;
+#endif
 
 #define DRV_NAME                         "mtk-msdc"
 
@@ -220,6 +242,8 @@ static unsigned int msdc_online_tuning(struct msdc_host *host, unsigned fn, unsi
 #define MSDC_MAX_W_TIMEOUT_TUNE_EMMC     (64)
 #define MSDC_MAX_R_TIMEOUT_TUNE          (3)
 #define MSDC_MAX_POWER_CYCLE             (5)
+
+#define MSDC_MAX_CONTINUOUS_FAIL_REQUEST_COUNT (50)
 
 #ifdef CONFIG_OF
 struct device_node *msdc_gpio_node = NULL;
@@ -1623,7 +1647,6 @@ static void msdc_reset_crc_tune_counter(struct msdc_host *host, TUNE_COUNTER ind
 	}
 }
 
-#if 0
 static void msdc_set_bad_card_and_remove(struct msdc_host *host)
 {
 	int got_polarity = 0;
@@ -1659,7 +1682,7 @@ static void msdc_set_bad_card_and_remove(struct msdc_host *host)
 		ERR_MSG("Do remove the bad card, block_bad_card=%d, card_inserted=%d", host->block_bad_card, host->card_inserted);
 	}
 }
-#endif
+
 unsigned int msdc_do_command(struct msdc_host *host,
 				 struct mmc_command *cmd, int tune, unsigned long timeout);
 int msdc_tune_cmdrsp(struct msdc_host *host);
@@ -1920,7 +1943,6 @@ static void msdc_tasklet_card(unsigned long arg)
 		msdc_reset_pwr_cycle_counter(host);
 		msdc_reset_crc_tune_counter(host, all_counter);
 		msdc_reset_tmo_tune_counter(host, all_counter);
-		host->error_tune_enable = 1; 
 	}
 
 	ERR_MSG("host->suspend(%d)", host->suspend);
@@ -2083,6 +2105,9 @@ static void msdc_select_clksrc(struct msdc_host *host, int clksrc)
 	}
 #endif
 #endif
+	/* set AHB clk 182->273M */
+	clkmux_sel(MT_MUX_MSDC50_0_hclk, 1, "msdc0");
+
 	host->hclk = hclks[clksrc];
 	host->hw->clk_src = clksrc;
 }
@@ -2256,9 +2281,6 @@ static u32 msdc_power_tuning(struct msdc_host *host)
 		return 1;
 #endif
 
-	if(!host->error_tune_enable) {
-		return 1; 
-	}
 	if ((host->sd_30_busy > 0) && (host->sd_30_busy <= MSDC_MAX_POWER_CYCLE)) {
 		host->power_cycle_enable = 1;
 	}
@@ -2341,7 +2363,7 @@ static u32 msdc_power_tuning(struct msdc_host *host)
 			host->read_time_tune = read_timeout_tune;
 			host->write_time_tune = write_timeout_tune;
 			host->rwcmd_time_tune = rwcmd_timeout_tune;
-			if(host->sclk > 100000000){
+			if (host->sclk > 100000000) {
 				host->write_timeout_uhs104 = write_timeout_tune_uhs104;
 			} else {
 				host->read_timeout_uhs104 = 0;
@@ -2354,18 +2376,17 @@ static u32 msdc_power_tuning(struct msdc_host *host)
 			ERR_MSG("the %d time, Power cycle Done, host->error(0x%x), ret(%d)",
 				host->power_cycle, host->error, ret);
 					(host->power_cycle)++;
-		} else if (host->power_cycle == MSDC_MAX_POWER_CYCLE) {
-#if 0
-			ERR_MSG("the %d time, exceed the max power cycle time %d, go to remove the bad card, power_cycle_enable=%d", host->power_cycle, MSDC_MAX_POWER_CYCLE, host->power_cycle_enable);
-			spin_unlock(&host->lock);
-			msdc_set_bad_card_and_remove(host);
-			spin_lock(&host->lock);
-#else
-			if(host->error_tune_enable){
-				ERR_MSG("do disable error tune flow of bad SD card");
-				host->error_tune_enable = 0;
-			}
-#endif
+		} else if (host->continuous_fail_request_count < MSDC_MAX_CONTINUOUS_FAIL_REQUEST_COUNT) {
+			host->continuous_fail_request_count++;
+			host->power_cycle = 0;
+		} else {
+			ERR_MSG(
+		"the %d time, exceed the max continuous fail request count %d, go to remove the bad card",
+				host->continuous_fail_request_count, MSDC_MAX_CONTINUOUS_FAIL_REQUEST_COUNT);
+			host->continuous_fail_request_count = 0;
+			spin_unlock(&host->lock);/*release the lock in request*/
+			msdc_set_bad_card_and_remove(host);/*card removing will define a new lock inside*/
+			spin_lock(&host->lock);/*restore the lock in request entry*/
 		}
 	}
 
@@ -2674,6 +2695,22 @@ static void msdc_pin_reset(struct msdc_host *host, int mode)
 		} else {
 			sdr_set_bits(EMMC_IOCON, EMMC_IOCON_BOOTRST);
 		}
+	}
+}
+static void msdc_pin_reset_force(struct msdc_host *host, int mode)
+{
+	struct msdc_hw *hw = (struct msdc_hw *)host->hw;
+	void __iomem *base = host->base;
+	int pull = (mode == MSDC_PIN_PULL_UP) ? MSDC_GPIO_PULL_UP : MSDC_GPIO_PULL_DOWN;
+
+	/* Config reset pin */
+	if (hw->config_gpio_pin)	/* NULL */
+		hw->config_gpio_pin(MSDC_RST_PIN, pull);
+
+	if (mode == MSDC_PIN_PULL_UP) {
+		sdr_clr_bits(EMMC_IOCON, EMMC_IOCON_BOOTRST);
+	} else {
+		sdr_set_bits(EMMC_IOCON, EMMC_IOCON_BOOTRST);
 	}
 }
 
@@ -3096,6 +3133,8 @@ static void msdc_pm(pm_message_t state, void *data)
 	int evt = state.event;
 
 	msdc_ungate_clock(host);
+	if (host->hw->host_function == MSDC_EMMC)
+		emmc_do_sleep_awake = 1;
 
 	if (evt == PM_EVENT_SUSPEND || evt == PM_EVENT_USER_SUSPEND) {
 		if (host->suspend)
@@ -3153,7 +3192,6 @@ static void msdc_pm(pm_message_t state, void *data)
 			host->mmc->pm_flags |= MMC_PM_IGNORE_PM_NOTIFY;
 			mmc_remove_host(host->mmc);
 		}
-		host->power_cycle = 0;
 	} else if (evt == PM_EVENT_RESUME || evt == PM_EVENT_USER_RESUME) {
 		if (!host->suspend){
 			goto end;
@@ -3184,7 +3222,8 @@ static void msdc_pm(pm_message_t state, void *data)
 				mdelay(10);
 				msdc_restore_emmc_setting(host);
 				if(emmc_sleep_failed){
-					msdc_pin_reset(host, MSDC_PIN_PULL_DOWN);
+					msdc_pin_reset_force(host, MSDC_PIN_PULL_DOWN);
+					msdc_pin_reset_force(host, MSDC_PIN_PULL_UP);
 					mdelay(200);
 					mmc_card_clr_sleep(host->mmc->card);
 					host->mmc->pm_flags &=~MMC_PM_KEEP_POWER;
@@ -3200,7 +3239,8 @@ static void msdc_pm(pm_message_t state, void *data)
 				mdelay(10);
 				msdc_restore_emmc_setting(host);
 				if(emmc_sleep_failed){
-					msdc_pin_reset(host, MSDC_PIN_PULL_DOWN);
+					msdc_pin_reset_force(host, MSDC_PIN_PULL_DOWN);
+					msdc_pin_reset_force(host, MSDC_PIN_PULL_UP);
 					mdelay(200);
 					mmc_card_clr_sleep(host->mmc->card);
 					host->mmc->pm_flags &=~MMC_PM_KEEP_POWER;
@@ -3230,6 +3270,8 @@ end:
 	} else {
 		msdc_gate_clock(host, 1);
 	}
+	if (host->hw->host_function == MSDC_EMMC)
+		emmc_do_sleep_awake = 0;
 }
 
 static u64 msdc_get_user_capacity(struct msdc_host *host)
@@ -3438,12 +3480,13 @@ int msdc_get_cache_region(void)
 
 	if(!(host->mmc->caps2 & MMC_CAP2_CACHE_CTRL))
 		return 0;
-    if (host->mmc != NULL) {
-        mmc_claim_host(host->mmc);
-        if (!mmc_cache_ctrl(host->mmc, 1))
-            printk("[%s]: cache_size=%dKB, cache_ctrl=%d\n", __func__, (host->mmc->card->ext_csd.cache_size/8), host->mmc->card->ext_csd.cache_ctrl);
-        mmc_release_host(host->mmc);
-    }
+        
+        if (host->mmc != NULL) {
+            mmc_claim_host(host->mmc);
+            if (!mmc_cache_ctrl(host->mmc, 1))
+                printk("[%s]: cache_size=%dKB, cache_ctrl=%d\n", __func__, (host->mmc->card->ext_csd.cache_size/8), host->mmc->card->ext_csd.cache_ctrl);
+            mmc_release_host(host->mmc);
+        }
 
 	msdc_get_cache_region_func(host);
 #endif
@@ -3738,6 +3781,7 @@ static unsigned int msdc_command_start(struct msdc_host *host, struct mmc_comman
 			if (time_after(jiffies, tmo)) {
 				ERR_MSG("XXX cmd_busy timeout: before CMD<%d>", opcode);
 				cmd->error = (unsigned int)-ETIMEDOUT;
+				msdc_dump_register(host);
 				msdc_reset_hw(host->id);
 				return cmd->error;
 			}
@@ -3749,6 +3793,7 @@ static unsigned int msdc_command_start(struct msdc_host *host, struct mmc_comman
 			if (time_after(jiffies, tmo)) {
 				ERR_MSG("XXX sdc_busy timeout: before CMD<%d>", opcode);
 				cmd->error = (unsigned int)-ETIMEDOUT;
+				msdc_dump_register(host);
 				msdc_reset_hw(host->id);
 				return cmd->error;
 			}
@@ -3940,7 +3985,13 @@ static unsigned int msdc_command_resp_polling(struct msdc_host *host,
 			pr_err("[%s]: msdc%d XXX CMD<%d> MSDC_INT_RSPCRCERR Arg<0x%.8x>", __func__,
 				host->id, cmd->opcode, cmd->arg);
 			/* msdc_dump_info(host->id); */
-			msdc_reset_hw(host->id);
+			if ((host->hw->host_function != MSDC_SDIO)
+					&& ((MMC_RSP_R1B == mmc_resp_type(cmd)) || (cmd->opcode == MMC_SEND_STATUS))) {
+				pr_err("[%s]: msdc%d XXX CMD<%d> ARG<0x%.8X> is R1B/CMD13, CRC not reset hw...\n",
+					__func__, host->id, cmd->opcode, cmd->arg);
+			} else {
+				msdc_reset_hw(host->id);
+			}
 		} else if (intsts & MSDC_INT_CMDTMO) {
 			cmd->error = (unsigned int)-ETIMEDOUT;
 			pr_err("[%s]: msdc%d XXX CMD<%d> MSDC_INT_CMDTMO Arg<0x%.8x>", __func__,
@@ -3949,7 +4000,17 @@ static unsigned int msdc_command_resp_polling(struct msdc_host *host,
 				&& (cmd->opcode != 55) && (cmd->opcode != 1))
 				msdc_dump_info(host->id);
 			/*msdc_dump_info(host->id);*/
-			msdc_reset_hw(host->id);
+			if ((cmd->opcode == 5) && emmc_do_sleep_awake)
+				msdc_dump_info(host->id);
+
+			if ((host->hw->host_function != MSDC_SDIO)
+						&& ((MMC_RSP_R1B == mmc_resp_type(cmd))
+						|| (cmd->opcode == MMC_SEND_STATUS))) {
+					pr_err("[%s]: msdc%d XXX CMD<%d> ARG<0x%.8X> is R1B/CMD13, CRC not reset hw...\n",
+						__func__, host->id, cmd->opcode, cmd->arg);
+			} else {
+					msdc_reset_hw(host->id);
+			}
 		}
 #ifdef MTK_MSDC_USE_CMD23
 		if ((sbc != NULL) && (host->autocmd & MSDC_AUTOCMD23)) {
@@ -4631,7 +4692,9 @@ static int msdc_dma_config(struct msdc_host *host, struct msdc_dma *dma)
 
 	switch (dma->mode) {
 	case MSDC_MODE_DMA_BASIC:
+#if defined(FEATURE_MET_MMC_INDEX)
 		met_mmc_bdnum = 1;
+#endif
 
 		if (host->hw->host_function == MSDC_SDIO) {
 			BUG_ON(dma->xfersz > 0xFFFFFFFF);
@@ -4661,7 +4724,9 @@ static int msdc_dma_config(struct msdc_host *host, struct msdc_dma *dma)
 		bd  = dma->bd;
 		bdlen = sglen;
 
+#if defined(FEATURE_MET_MMC_INDEX)
 		met_mmc_bdnum = bdlen;
+#endif
 
 		/* modify gpd */
 		/* gpd->intr = 0; */
@@ -4811,6 +4876,18 @@ static void msdc_restore_info(struct msdc_host *host)
 	sdr_write32(SDC_CFG, host->saved_para.sdc_cfg);
 	sdr_set_field(MSDC_INTEN, MSDC_INT_SDIOIRQ, host->saved_para.inten_sdio_irq);	/* get INTEN status for SDIO */
 	sdr_write32(MSDC_IOCON, host->saved_para.iocon);
+	
+	//ALPS01919187
+	if(host->saved_para.vcore_uv != 0){
+		u32 vcore_uv = 0;
+	
+		vcore_uv = autok_get_current_vcore_offset();
+		if(host->saved_para.vcore_uv != vcore_uv ){
+			pr_warn("resotre hazard: restore:0x%x actual:0x%x\n",host->saved_para.vcore_uv, vcore_uv);
+			msdc_autok_apply_param(host, vcore_uv);
+		}
+	}
+	
 }
 
 #if defined(MTK_SDIO30_ONLINE_TUNING_SUPPORT) || defined(ONLINE_TUNING_DVTTEST)
@@ -5417,11 +5494,6 @@ static int ot_process(struct msdc_host *host, struct ot_data *potData, u32 rawcm
 
 #ifdef MTK_SDIO30_ONLINE_TUNING_SUPPORT
 
-extern unsigned int autok_get_current_vcore_offset(void);
-extern int msdc_autok_stg1_data_get(void **ppData, int *pLen);
-extern int msdc_autok_apply_param(struct msdc_host *host, unsigned int vcore_uv);
-/* extern void mt_cpufreq_disable(unsigned int type, bool disabled); */
-
 static unsigned int msdc_online_tuning(struct msdc_host *host, unsigned fn, unsigned addr)
 {
 	void __iomem *base = host->base;
@@ -5729,6 +5801,10 @@ static int msdc_do_request(struct mmc_host *mmc, struct mmc_request *mrq)
 		}
 #endif
 
+		if ((host->hw->host_function == MSDC_EMMC) && (cmd->opcode == MMC_ALL_SEND_CID)) {
+			emmc_id = UNSTUFF_BITS(cmd->resp, 120, 8);
+		}
+		
 #ifdef MTK_EMMC_ETT_TO_DRIVER
 		if ((host->hw->host_function == MSDC_EMMC) && (cmd->opcode == MMC_ALL_SEND_CID)) {
 			m_id = UNSTUFF_BITS(cmd->resp, 120, 8);
@@ -6521,7 +6597,9 @@ static void msdc_post_req(struct mmc_host *mmc, struct mmc_request *mrq, int err
 
 }
 
+#if defined(FEATURE_MET_MMC_INDEX)
 extern void met_mmc_issue(struct mmc_host *host, struct mmc_request *req);
+#endif
 static int msdc_do_request_async(struct mmc_host*mmc, struct mmc_request*mrq)
 {
 	struct msdc_host *host = mmc_priv(mmc);
@@ -6681,7 +6759,9 @@ static int msdc_do_request_async(struct mmc_host*mmc, struct mmc_request*mrq)
 	//ERR_MSG("0.Power cycle enable(%d)",host->power_cycle_enable);
 	spin_unlock(&host->lock);
 
+#if defined(FEATURE_MET_MMC_INDEX)
 	met_mmc_issue(host->mmc, host->mrq);
+#endif
 
 #ifdef MTK_MSDC_USE_CMD23
 	/* for msdc use cmd23, but card not supported(sbc is NULL), need enable autocmd23 for next request */
@@ -6932,9 +7012,6 @@ int msdc_tune_cmdrsp(struct msdc_host *host)
 	u32 clkmode;
 	int hs400 = 0;
 
-	if(!host->error_tune_enable) {
-		return 1; 
-	}
 	
 	sdr_get_field(MSDC_IOCON, MSDC_IOCON_RSPL, orig_rsmpl);
 	sdr_get_field(MSDC_PAD_TUNE, MSDC_PAD_TUNE_CMDRDLY, orig_rrdly);
@@ -7264,6 +7341,29 @@ static void emmc_hs400_restore(void)
 }
 
 /*
+ *  2015-01-09
+ *  Runtime reducing to legacy speed or slower clock, clear eMMC ett timing
+ */
+static void emmc_clear_timing(void)
+{
+    int i = 0, err = 0;
+    void __iomem *base = 0;
+
+	if (!mtk_msdc_host[0]) {
+		pr_err("[%s] msdc%d is not exist\n", __func__, 0);
+		return;
+	}
+
+    pr_err("emmc_clear_timing msdc0\n");
+    for(i = 0; i < HS400_BACKUP_REG_NUM; i++)
+    {
+        sdr_set_field((hs400_backup_reg_list[i].addr+mtk_msdc_host[0]->base), hs400_backup_reg_list[i].mask,  hs400_backup_reg_list[i].default_value);
+    }
+
+    return;
+}
+
+/*
  *  2013-12-09
  *  HS400 error tune flow of read/write data error
  *  HS400 error tune flow of cmd error is same as eMMC4.5 backward speed mode.
@@ -7276,10 +7376,6 @@ int emmc_hs400_tune_rw(struct msdc_host *host)
 
 	if ((host->id != 0) || (host->state != MSDC_STATE_HS400)) {
 		return err;
-	}
-
-	if(!host->error_tune_enable) {
-		return 1; 
 	}
 	sdr_get_field(EMMC50_PAD_DS_TUNE, MSDC_EMMC50_PAD_DS_TUNE_DLY1, orig_ds_dly1);
 	sdr_get_field(EMMC50_PAD_DS_TUNE, MSDC_EMMC50_PAD_DS_TUNE_DLY3, orig_ds_dly3);
@@ -7348,9 +7444,6 @@ int msdc_tune_read(struct msdc_host *host)
 	u32 orig_dat0, orig_dat1, orig_dat2, orig_dat3, orig_dat4, orig_dat5, orig_dat6, orig_dat7;
 	int result = 0;
 
-	if(!host->error_tune_enable) {
-		return 1; 
-	}
 #if 1
 	if (host->mclk >= 100000000) {
 		sel = 1;
@@ -7588,9 +7681,6 @@ int msdc_tune_write(struct msdc_host *host)
 	int clkmode = 0;
 	int hs400 = 0;
 
-	if(!host->error_tune_enable) {
-		return 1; 
-	}
 #if 1
 	if (host->mclk >= 100000000)
 		sel = 1;
@@ -7990,19 +8080,6 @@ static void msdc_ops_request_legacy(struct mmc_host *mmc, struct mmc_request *mr
 				ERR_MSG("abort failed");
 				data_abort = 1;
 				if (host->hw->host_function == MSDC_SD) {
-#if 0
-					if (host->card_inserted) {
-						ERR_MSG("go to remove the bad card");
-						spin_unlock(&host->lock);
-						msdc_set_bad_card_and_remove(host);
-						spin_lock(&host->lock);
-					}
-#else
-					if(host->error_tune_enable){
-						ERR_MSG("do disable error tune flow of bad SD card");
-						host->error_tune_enable = 0;
-					}
-#endif
 					goto out;
 				}
 			}
@@ -8134,6 +8211,10 @@ static void msdc_ops_request_legacy(struct mmc_host *mmc, struct mmc_request *mr
 		msdc_dump_trans_error(host, cmd, data, stop, sbc);
 	}
 	host->sw_timeout = 0;
+
+	if (host->hw->host_function == MSDC_SD)
+		host->continuous_fail_request_count = 0;
+
  out:
 	msdc_reset_crc_tune_counter(host, all_counter);
 #ifdef MTK_MSDC_USE_CACHE
@@ -8362,19 +8443,6 @@ static void msdc_tune_async_request(struct mmc_host *mmc, struct mmc_request *mr
 			if (msdc_abort_data(host)) {
 				ERR_MSG("abort failed");
 				if (host->hw->host_function == MSDC_SD) {
-#if 0
-					if(host->card_inserted){
-						ERR_MSG("go to remove the bad card");
-						spin_unlock(&host->lock);
-						msdc_set_bad_card_and_remove(host);
-						spin_lock(&host->lock);
-					}
-#else
-					if(host->error_tune_enable){
-						ERR_MSG("do disable error tune flow of bad SD card");
-						host->error_tune_enable = 0;
-					}
-#endif
 					goto out;
 				}
 			}
@@ -8506,6 +8574,9 @@ static void msdc_tune_async_request(struct mmc_host *mmc, struct mmc_request *mr
 	host->power_cycle_enable = 1;
 	host->sw_timeout = 0;
 
+	if (host->hw->host_function == MSDC_SD)
+		host->continuous_fail_request_count = 0;
+
  out:
 	if (host->sclk <= 50000000 && (host->state != MSDC_STATE_DDR))
 		host->sd_30_busy = 0;
@@ -8578,14 +8649,54 @@ static void msdc_apply_ett_settings(struct msdc_host *host, int mode)
 	unsigned int i = 0;
 	void __iomem *base = host->base;
 	struct msdc_ett_settings *ett = NULL;
+	
+	struct msdc_ett_settings *current_ett = NULL;
+	struct msdc_ett_settings msdc0_ett_settings_for_sandisk[] = {
+        // common ett settings 
+        { MSDC_HS200_MODE, 0xb0,  (0x7 << 7), 0x0 }, //PATCH_BIT0[INT_DAT_LATCH_CK_SEL]
+        { MSDC_HS200_MODE, 0xb0,  (0x1f<<10), 0x0 }, //PATCH_BIT0[CKGEN_MSDC_DLY_SEL]
+        { MSDC_HS400_MODE, 0xb0,  (0x7 << 7), 0x0 }, //PATCH_BIT0[INT_DAT_LATCH_CK_SEL]
+        { MSDC_HS400_MODE, 0xb0,  (0x1f<<10), 0x0 }, //PATCH_BIT0[CKGEN_MSDC_DLY_SEL]
+        { MSDC_HS400_MODE, 0x188, (0x1f<< 2), 0x2 }, //EMMC50_PAD_DS_TUNE[DSDLY1]
+        { MSDC_HS400_MODE, 0x188, (0x1f<<12), 0xe }, //EMMC50_PAD_DS_TUNE[DSDLY3]
+
+        // command & resp ett settings
+        { MSDC_HS200_MODE, 0xb4,  (0x7 << 3), 0x1 }, //PATCH_BIT1[CMD_RSP_TA_CNTR]
+        { MSDC_HS200_MODE, 0x4,   (0x1 << 1), 0x1 }, //MSDC_IOCON[R_SMPL]
+        { MSDC_HS200_MODE, 0xec,  (0x1f<<16), 0xf }, //PAD_TUNE[CMD_RXDLY]
+        { MSDC_HS200_MODE, 0xec,  (0x1f<<22), 0x0 }, //PAD_TUNE[CMD_RESP_RXDLY]
+
+        { MSDC_HS400_MODE, 0xb4,  (0x7 << 3), 0x1 }, //PATCH_BIT1[CMD_RSP_TA_CNTR]
+        { MSDC_HS400_MODE, 0x4,   (0x1 << 1), 0x0 }, //MSDC_IOCON[R_SMPL]
+        { MSDC_HS400_MODE, 0xec,  (0x1f<<16), 0xf }, //PAD_TUNE[CMD_RXDLY]
+        { MSDC_HS400_MODE, 0xec,  (0x1f<<22), 0xd }, //PAD_TUNE[CMD_RESP_RXDLY]
+
+        // write ett settings
+        { MSDC_HS200_MODE, 0xb4,  (0x7 << 0), 0x1 }, //PATCH_BIT1[WRDAT_CRCS_TA_CNTR]
+        { MSDC_HS200_MODE, 0xec,  (0x1f<< 0), 0xf }, //PAD_TUNE[DAT_WR_RXDLY]
+        { MSDC_HS200_MODE, 0x4,   (0x1 <<10), 0x1 }, //MSDC_IOCON[WD0_SMPL]
+        { MSDC_HS200_MODE, 0xf0,  (0x1f<<24), 0xf }, //DAT_RD_DLY0[DAT0_RD_DLY]
+
+        // read ett settings
+        { MSDC_HS200_MODE, 0xec,  (0x1f<< 8), 0x16}, //PAD_TUNE[DAT_RD_RXDLY]
+        { MSDC_HS200_MODE, 0x4,   (0x1 << 2), 0x0 }, //MSDC_IOCON[R_D_SMPL]
+    }; 
+	
 
 	if (host->hw->ett_count == 0) {
 		printk("[%s][%d]\n", __func__, __LINE__);
 		return;
 	}
 
+	if(emmc_id == 0x45){
+		/*sandisk emmc*/
+		current_ett = msdc0_ett_settings_for_sandisk;
+	}else {
+		current_ett = host->hw->ett_settings;
+	}
+
 	for (i = 0; i < host->hw->ett_count; i++) {
-		ett = (struct msdc_ett_settings *)(host->hw->ett_settings + i);
+		ett = (struct msdc_ett_settings *)(current_ett + i);
 		if (mode == ett->speed_mode) {
 			sdr_set_field((volatile u32 *)(base + ett->reg_addr), ett->reg_offset,
 					  ett->value);
@@ -8658,6 +8769,12 @@ static void msdc_ops_set_ios(struct mmc_host *mmc, struct mmc_ios *ios)
 		}
 		msdc_clock_src[host->id] = MSDC_CLKSRC_200MHZ;
 	}
+	
+	#ifdef CONFIG_MMC_FFU
+	if ( (state != MSDC_STATE_HS400) && (host->hw->host_function == MSDC_EMMC)) {
+		msdc_clock_src[host->id]= MSDC50_CLKSRC_200MHZ;
+	}
+	#endif
 #else
 	if (ios->timing == MMC_TIMING_UHS_DDR50) {
 		state = MSDC_STATE_DDR;
@@ -8893,6 +9010,16 @@ static void msdc_ops_set_ios(struct mmc_host *mmc, struct mmc_ios *ios)
 			if (state == MSDC_STATE_HS200)
 				msdc_apply_ett_settings(host, MSDC_HS200_MODE);
 		}
+
+#ifdef CONFIG_EMMC_50_FEATURE
+		#ifdef CONFIG_MMC_FFU
+		if ( (host->hw->host_function == MSDC_EMMC) &&
+		     ((state == MSDC_STATE_DEFAULT) && (ios->clock<=25000000)) ) {
+			emmc_clear_timing();
+		}
+		#endif
+#endif
+
 		msdc_set_mclk(host, state, ios->clock);
 	}
 #if 0				/* PM Resume -> set 0 -> 260KHz */
@@ -9301,7 +9428,9 @@ static void msdc1_eint_handler(void)
 #endif
 #endif
 
-extern void met_mmc_dma_stop(struct mmc_host *host, struct mmc_async_req *areq, unsigned int bd_num);
+#if defined(FEATURE_MET_MMC_INDEX)
+extern void met_mmc_dma_stop(struct mmc_host *host, u32 lba, unsigned int len, u32 opcode, unsigned int bd_num);
+#endif
 
 static irqreturn_t msdc_irq(int irq, void *dev_id)
 {
@@ -9432,7 +9561,11 @@ static irqreturn_t msdc_irq(int irq, void *dev_id)
 					complete(&host->xfer_done);
 				}
 
-				met_mmc_dma_stop(host->mmc, host->mmc->areq, met_mmc_bdnum);
+#if defined(FEATURE_MET_MMC_INDEX)
+				if ((data->mrq != NULL) && (data->mrq->cmd != NULL)) {
+					met_mmc_dma_stop(host->mmc, data->mrq->cmd->arg, data->blocks, data->mrq->cmd->opcode, met_mmc_bdnum);
+				}
+#endif
 			}
 		} else
 #endif
@@ -9451,7 +9584,14 @@ static irqreturn_t msdc_irq(int irq, void *dev_id)
 					complete(&host->xfer_done);
 				}
 
-				met_mmc_dma_stop(host->mmc, host->mmc->areq, met_mmc_bdnum);
+#if defined(FEATURE_MET_MMC_INDEX)
+				if ((data->mrq != NULL) && (data->mrq->cmd != NULL)) {
+					met_mmc_dma_stop(host->mmc, data->mrq->cmd->arg, data->blocks, data->mrq->cmd->opcode, met_mmc_bdnum);
+				}
+#endif
+
+				if (host->hw->host_function == MSDC_SD)
+					host->continuous_fail_request_count = 0;
 			}
 		}
 
@@ -9593,6 +9733,9 @@ static irqreturn_t msdc_irq(int irq, void *dev_id)
 				*rsp = sdr_read32(SDC_RESP0);
 				break;
 			}
+
+			if (host->hw->host_function == MSDC_SD)
+				host->continuous_fail_request_count = 0;
 		} else if (intsts & MSDC_INT_RSPCRCERR) {
 			cmd->error = (unsigned int)-EIO;
 			ERR_MSG("XXX CMD<%d> MSDC_INT_RSPCRCERR Arg<0x%.8x>", cmd->opcode, cmd->arg);
@@ -9735,6 +9878,9 @@ static void msdc_init_hw(struct msdc_host *host)
 
 	/* Configure to MMC/SD mode */
 	sdr_set_field(MSDC_CFG, MSDC_CFG_MODE, MSDC_SDMMC);
+
+	/* set outstanding 1->4 */
+	sdr_set_field(EMMC50_CFG3, MSDC_EMMC50_CFG3_OUTS_WR, 4);
 
 	/* Reset */
 	msdc_reset_hw(host->id);
@@ -10574,6 +10720,8 @@ static int msdc_drv_probe(struct platform_device *pdev)
 	host->power_mode     = MMC_POWER_OFF;
 	host->power_control  = NULL;
 	host->power_switch   = NULL;
+	host->dma_mask = DMA_BIT_MASK(33);
+	mmc_dev(mmc)->dma_mask = &host->dma_mask;
 #ifdef SDIO_ERROR_BYPASS
 	host->sdio_error = 0;
 #endif
@@ -10640,7 +10788,6 @@ static int msdc_drv_probe(struct platform_device *pdev)
 	host->sd_30_busy = 0;
 	msdc_reset_tmo_tune_counter(host, all_counter);
 	msdc_reset_pwr_cycle_counter(host);
-	host->error_tune_enable = 1; 
 
 	if (is_card_sdio(host) || (host->hw->flags & MSDC_SDIO_IRQ)) {
 		host->saved_para.suspend_flag = 0;
@@ -10655,6 +10802,7 @@ static int msdc_drv_probe(struct platform_device *pdev)
 		host->saved_para.wrdat_crc_ta_cntr = 0;	/* for SDIO 3.0 */
 		host->saved_para.int_dat_latch_ck_sel = 0;	/* for SDIO 3.0 */
 		host->saved_para.ckgen_msdc_dly_sel = 0;	/* for SDIO 3.0 */
+		host->saved_para.vcore_uv  = 0; /* ALPS01919187 */
 		host->saved_para.inten_sdio_irq = 0;	/* default disable */
 		wake_lock_init(&host->trans_lock, WAKE_LOCK_SUSPEND, "MSDC Transfer Lock");
 	}
@@ -10899,6 +11047,7 @@ static int msdc_drv_suspend(struct platform_device *pdev, pm_message_t state)
 					ret = host->error;
 					host->error = 0;
 				}
+				host->saved_para.vcore_uv = autok_get_current_vcore_offset();/* ALPS01919187 */
 			}
 			ERR_MSG("msdc suspend cur_cfg=%x, save_cfg=%x, cur_hz=%d, save_hz=%d",
 				sdr_read32(MSDC_CFG), host->saved_para.msdc_cfg, host->mclk,

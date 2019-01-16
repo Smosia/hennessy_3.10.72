@@ -1,9 +1,3 @@
-/*
-* Copyright(C)2014 MediaTek Inc.
-* Modification based on code covered by the below mentioned copyright
-* and/or permission notice(S).
-*/
-
 /*  
  * Author: MingHsien Hsieh <minghsien.hsieh@mediatek.com>
  *
@@ -43,10 +37,8 @@
 #include <linux/hwmsensor.h>
 #include <linux/sensors_io.h>
 #include <linux/hwmsen_dev.h>
-#include <alsps.h>
+#include <cust_alsps.h>
 #include "stk3x1x.h"
-#include "stk_cust_alsps.h"
-
 #define DRIVER_VERSION          "3.1.2.1nk"
 //#define STK_PS_POLLING_LOG
 //#define STK_FIR
@@ -55,7 +47,6 @@
 #include <mach/mt_typedefs.h>
 #include <mach/mt_gpio.h>
 #include <mach/mt_pm_ldo.h>
-extern struct alsps_hw* stk_get_cust_alsps_hw(void);
 
 /*------------------------- define-------------------------------*/
 #define CUST_EINT_ALS_SENSITIVE 	CUST_EINTF_TRIGGER_LOW 
@@ -125,19 +116,6 @@ static int stk3x1x_i2c_suspend(struct i2c_client *client, pm_message_t msg);
 static int stk3x1x_i2c_resume(struct i2c_client *client);
 static struct stk3x1x_priv *g_stk3x1x_ptr = NULL;
 static unsigned long long int_top_time = 0;
-#define C_I2C_FIFO_SIZE     8
-
-static DEFINE_MUTEX(STK3X1X_i2c_mutex);
-static int	stk3x1x_init_flag = -1;	// 0<==>OK -1 <==> fail
-static int  stk3x1x_local_init(void);
-static int  stk3x1x_local_uninit(void);
-static struct alsps_init_info stk3x1x_init_info = {
-		.name = "stk3x1x",
-		.init = stk3x1x_local_init,
-		.uninit = stk3x1x_local_uninit,
-	
-};
-
 
 /*----------------------------------------------------------------------------*/
 typedef enum {
@@ -317,9 +295,7 @@ int stk3x1x_get_addr(struct alsps_hw *hw, struct stk3x1x_i2c_addr *addr)
 /*----------------------------------------------------------------------------*/
 int stk3x1x_hwmsen_read_block(struct i2c_client *client, u8 addr, u8 *data, u8 len)
 {
-    int err;
-	u8 beg = addr;
-	mutex_lock(&STK3X1X_i2c_mutex);
+	u8 beg = addr; 
 	struct i2c_msg msgs[2] = 
 	{
 		{
@@ -335,20 +311,17 @@ int stk3x1x_hwmsen_read_block(struct i2c_client *client, u8 addr, u8 *data, u8 l
 			.buf = data,
 		}
 	};
+	int err;
 
-	if (!client) {
-		mutex_unlock(&STK3X1X_i2c_mutex);
+	if (!client)
 		return -EINVAL;
-	}
 	else if (len > C_I2C_FIFO_SIZE) 
-	{   
-	    mutex_unlock(&STK3X1X_i2c_mutex);
+	{		 
 		APS_LOG(" length %d exceeds %d\n", len, C_I2C_FIFO_SIZE);
 		return -EINVAL;
 	}
 
 	err = i2c_transfer(client->adapter, msgs, sizeof(msgs)/sizeof(msgs[0]));
-	mutex_unlock(&STK3X1X_i2c_mutex);
 	if (err != 2) 
 	{
 		APS_LOG("i2c_transfer error: (%d %p %d) %d\n", addr, data, len, err);
@@ -360,43 +333,6 @@ int stk3x1x_hwmsen_read_block(struct i2c_client *client, u8 addr, u8 *data, u8 l
 	}
 	return err;
 }
-
-static int stk3x1x_i2c_write_block(struct i2c_client *client, u8 addr, u8 *data, u8 len)
-{   /*because address also occupies one byte, the maximum length for write is 7 bytes*/
-    int err, idx, num;
-    char buf[C_I2C_FIFO_SIZE];
-    err =0;
-    mutex_lock(&STK3X1X_i2c_mutex);
-    if (!client)
-    {
-        mutex_unlock(&STK3X1X_i2c_mutex);
-        return -EINVAL;
-    }
-    else if (len >= C_I2C_FIFO_SIZE)
-    {
-        APS_ERR(" length %d exceeds %d\n", len, C_I2C_FIFO_SIZE);
-        mutex_unlock(&STK3X1X_i2c_mutex);
-        return -EINVAL;
-    }
-
-    num = 0;
-    buf[num++] = addr;
-    for (idx = 0; idx < len; idx++)
-    {
-        buf[num++] = data[idx];
-    }
-
-    err = i2c_master_send(client, buf, num);
-    if (err < 0)
-    {
-        APS_ERR("send command error!!\n");
-        mutex_unlock(&STK3X1X_i2c_mutex);
-        return -EFAULT;
-    }
-    mutex_unlock(&STK3X1X_i2c_mutex);
-    return err;
-}
-
 /*----------------------------------------------------------------------------*/
 int stk3x1x_get_timing(void)
 {
@@ -1139,9 +1075,9 @@ static int stk3x1x_enable_ps(struct i2c_client *client, int enable)
 				sensor_data.value_divide = 1;
 				sensor_data.status = SENSOR_STATUS_ACCURACY_MEDIUM;
 				APS_LOG("%s:ps raw 0x%x -> value 0x%x \n",__FUNCTION__, obj->ps,sensor_data.values[0]);
-				if(ps_report_interrupt_data(sensor_data.values[0]))
+				if((err = hwmsen_get_interrupt_data(ID_PROXIMITY, &sensor_data)))
 				{	
-					APS_ERR("call ps_report_interrupt_data fail\n");
+					APS_ERR("call hwmsen_get_interrupt_data fail = %d\n", err);
 				}			
 			}			
 		}
@@ -1286,9 +1222,9 @@ static void stk3x1x_eint_work(struct work_struct *work)
 		sensor_data.status = SENSOR_STATUS_ACCURACY_MEDIUM;
 		APS_LOG("%s:als raw 0x%x -> value 0x%x \n", __FUNCTION__, obj->als,sensor_data.values[0]);
 		//let up layer to know
-		if(ps_report_interrupt_data(sensor_data.values[0]))
+		if((err = hwmsen_get_interrupt_data(ID_LIGHT, &sensor_data)))
 		{
-			APS_ERR("call ps_report_interrupt_data fail \n");
+			APS_ERR("call hwmsen_get_interrupt_data fail = %d\n", err);
 		}	  
 	}
 	if(((1<<STK_BIT_PS) &  obj->pending_intr) && (obj->hw->polling_mode_ps == 0))
@@ -1307,9 +1243,9 @@ static void stk3x1x_eint_work(struct work_struct *work)
 		sensor_data.status = SENSOR_STATUS_ACCURACY_MEDIUM;
 		APS_LOG("%s:ps raw 0x%x -> value 0x%x \n",__FUNCTION__, obj->ps,sensor_data.values[0]);
 		//let up layer to know
-		if(ps_report_interrupt_data(sensor_data.values[0]))
+		if((err = hwmsen_get_interrupt_data(ID_PROXIMITY, &sensor_data)))
 		{	
-			APS_ERR("call ps_report_interrupt_data fail\n");
+			APS_ERR("call hwmsen_get_interrupt_data fail = %d\n", err);
 		}
 		
 	}
@@ -1362,13 +1298,13 @@ static int stk3x1x_init_client(struct i2c_client *client)
 		APS_ERR("software reset error, err=%d", err);
 		return err;
 	}
-/*
+
 	if((err = stk3x1x_read_id(client)))
 	{
 		APS_ERR("stk3x1x_read_id error, err=%d", err);
 		return err;
 	}		
-*/	
+	
 	if(obj->hw->polling_mode_ps == 0 || obj->hw->polling_mode_als == 0)
 	{
         mt_eint_mask(CUST_EINT_ALS_NUM);
@@ -1489,7 +1425,7 @@ static ssize_t stk3x1x_store_config(struct device_driver *ddri, const char *buf,
 	}
 	else
 	{
-		APS_ERR("invalid content: '%s', length = %zu\n", buf, count);
+		APS_ERR("invalid content: '%s', length = %d\n", buf, count);
 	}
 	return count;    
 }
@@ -2195,13 +2131,13 @@ static int32_t stk3x1x_get_ir_value(struct stk3x1x_priv *obj)
 	bool re_enable_ps = false;
 	u8 flag;
 	u8 buf[2];
-/*	
+	
 	re_enable_ps = (atomic_read(&obj->state_val) & STK_STATE_EN_PS_MASK) ? true : false;	
 	if(re_enable_ps)
 	{
 		stk3x1x_enable_ps(obj->client, 0);
 	}
-*/
+	
 	ret = stk3x1x_set_irs_it_slp(obj, &irs_slp_time);
 	if(ret < 0)
 		goto irs_err_i2c_rw;
@@ -2255,13 +2191,13 @@ static int32_t stk3x1x_get_ir_value(struct stk3x1x_priv *obj)
 		printk(KERN_ERR "%s: write i2c error\n", __func__);
 		goto irs_err_i2c_rw;
 	}
-	//if(re_enable_ps)
-		//stk3x1x_enable_ps(obj->client, 1);		
+	if(re_enable_ps)
+		stk3x1x_enable_ps(obj->client, 1);		
 	return word_data;
 
 irs_err_i2c_rw:	
-	//if(re_enable_ps)
-		//stk3x1x_enable_ps(obj->client, 1);	
+	if(re_enable_ps)
+		stk3x1x_enable_ps(obj->client, 1);	
 	return ret;
 }
 
@@ -2523,13 +2459,13 @@ static int stk3x1x_ioctl(struct inode *inode, struct file *file, unsigned int cm
 
 				if((err = stk3x1x_write_ps_high_thd(obj->client, atomic_read(&obj->ps_high_thd_val))))
 				{
-					APS_ERR("write high thd error: %ld\n", err);
+					APS_ERR("write high thd error: %d\n", err);
 					goto err_out;        
 				}
 				
 				if((err = stk3x1x_write_ps_low_thd(obj->client, atomic_read(&obj->ps_low_thd_val))))
 				{
-					APS_ERR("write low thd error: %ld\n", err);
+					APS_ERR("write low thd error: %d\n", err);
 					goto err_out;       
 				}
 				
@@ -2589,13 +2525,10 @@ static struct miscdevice stk3x1x_device = {
 static int stk3x1x_i2c_suspend(struct i2c_client *client, pm_message_t msg) 
 {
 	APS_FUN();    
-
-	struct stk3x1x_priv *obj = stk3x1x_obj;
-	int err = 0;
-
+/*
 	if(msg.event == PM_EVENT_SUSPEND)
 	{   
-		if(!stk3x1x_obj)
+		if(!obj)
 		{
 			APS_ERR("null pointer!!\n");
 			return -EINVAL;
@@ -2618,16 +2551,14 @@ static int stk3x1x_i2c_suspend(struct i2c_client *client, pm_message_t msg)
 		stk3x1x_power(obj->hw, 0);
 	}
 	
+*/
 	return 0;
 }
 /*----------------------------------------------------------------------------*/
 static int stk3x1x_i2c_resume(struct i2c_client *client)
 {
 	APS_FUN();
-
-	struct stk3x1x_priv *obj = stk3x1x_obj;
-	int err = 0;
-	
+/*
 	if(!obj)
 	{
 		APS_ERR("null pointer!!\n");
@@ -2640,7 +2571,7 @@ static int stk3x1x_i2c_resume(struct i2c_client *client)
 		APS_ERR("initialize client fail!!\n");
 		return err;        
 	}
-	atomic_set(&(obj->als_suspend), 0);
+	atomic_set(&obj->als_suspend, 0);
 	if(test_bit(STK_BIT_ALS, &obj->enable))
 	{
 		if((err = stk3x1x_enable_als(client, 1)))
@@ -2648,15 +2579,15 @@ static int stk3x1x_i2c_resume(struct i2c_client *client)
 			APS_ERR("enable als fail: %d\n", err);        
 		}
 	}
-	atomic_set(&(obj->ps_suspend), 0);
-	if(test_bit(STK_BIT_PS,  &(obj->enable)))
+	atomic_set(&obj->ps_suspend, 0);
+	if(test_bit(STK_BIT_PS,  &obj->enable))
 	{
 		if((err = stk3x1x_enable_ps(client, 1)))
 		{
 			APS_ERR("enable ps fail: %d\n", err);                
 		}
 	}
-	
+*/
 	return 0;
 }
 /*----------------------------------------------------------------------------*/
@@ -2894,196 +2825,6 @@ int stk3x1x_als_operate(void* self, uint32_t command, void* buff_in, int size_in
 	return err;
 }
 
-static int als_open_report_data(int open)
-{
-	//should queuq work to report event if  is_report_input_direct=true
-	return 0;
-}
-
-// if use  this typ of enable , Gsensor only enabled but not report inputEvent to HAL
-
-static int als_enable_nodata(int en)
-{
-	int res = 0;
-#ifdef CUSTOM_KERNEL_SENSORHUB
-    SCP_SENSOR_HUB_DATA req;
-    int len;
-#endif //#ifdef CUSTOM_KERNEL_SENSORHUB
-
-    APS_LOG("stk3x1x_obj als enable value = %d\n", en);
-
-#ifdef CUSTOM_KERNEL_SENSORHUB
-    req.activate_req.sensorType = ID_LIGHT;
-    req.activate_req.action = SENSOR_HUB_ACTIVATE;
-    req.activate_req.enable = en;
-    len = sizeof(req.activate_req);
-    res = SCP_sensorHub_req_send(&req, &len, 1);
-#else //#ifdef CUSTOM_KERNEL_SENSORHUB
-	if(!stk3x1x_obj)
-	{
-		APS_ERR("stk3x1x_obj is null!!\n");
-		return -1;
-	}
-	res=	stk3x1x_enable_als(stk3x1x_obj->client, en);
-#endif //#ifdef CUSTOM_KERNEL_SENSORHUB
-	if(res){
-		APS_ERR("als_enable_nodata is failed!!\n");
-		return -1;
-	}
-	return 0;
-}
-
-static int als_set_delay(u64 ns)
-{
-	return 0;
-}
-
-static int als_get_data(int* value, int* status)
-{
-	int err = 0;
-#ifdef CUSTOM_KERNEL_SENSORHUB
-    SCP_SENSOR_HUB_DATA req;
-    int len;
-#else
-    struct stk3x1x_priv *obj = NULL;
-#endif //#ifdef CUSTOM_KERNEL_SENSORHUB
-
-#ifdef CUSTOM_KERNEL_SENSORHUB
-    req.get_data_req.sensorType = ID_LIGHT;
-    req.get_data_req.action = SENSOR_HUB_GET_DATA;
-    len = sizeof(req.get_data_req);
-    err = SCP_sensorHub_req_send(&req, &len, 1);
-    if (err)
-    {
-        APS_ERR("SCP_sensorHub_req_send fail!\n");
-    }
-    else
-    {
-        *value = req.get_data_rsp.int16_Data[0];
-        *status = SENSOR_STATUS_ACCURACY_MEDIUM;
-    }
-
-    if(atomic_read(&stk3x1x_obj->trace) & CMC_TRC_PS_DATA)
-	{
-        APS_LOG("value = %d\n", *value);
-        //show data
-	}
-#else //#ifdef CUSTOM_KERNEL_SENSORHUB
-	if(!stk3x1x_obj)
-	{
-		APS_ERR("stk3x1x_obj is null!!\n");
-		return -1;
-	}
-	obj = stk3x1x_obj;
-	if((err = stk3x1x_read_als(obj->client, &obj->als)))
-	{
-		err = -1;
-	}
-	else
-	{
-		*value = stk3x1x_get_als_value(obj, obj->als);
-		*status = SENSOR_STATUS_ACCURACY_MEDIUM;
-	}
-#endif //#ifdef CUSTOM_KERNEL_SENSORHUB
-
-	return err;
-}
-
-static int ps_open_report_data(int open)
-{
-	//should queuq work to report event if  is_report_input_direct=true
-	return 0;
-}
-
-// if use  this typ of enable , Gsensor only enabled but not report inputEvent to HAL
-
-static int ps_enable_nodata(int en)
-{
-	int res = 0;
-#ifdef CUSTOM_KERNEL_SENSORHUB
-    SCP_SENSOR_HUB_DATA req;
-    int len;
-#endif //#ifdef CUSTOM_KERNEL_SENSORHUB
-
-    APS_LOG("stk3x1x_obj als enable value = %d\n", en);
-
-#ifdef CUSTOM_KERNEL_SENSORHUB
-    req.activate_req.sensorType = ID_PROXIMITY;
-    req.activate_req.action = SENSOR_HUB_ACTIVATE;
-    req.activate_req.enable = en;
-    len = sizeof(req.activate_req);
-    res = SCP_sensorHub_req_send(&req, &len, 1);
-#else //#ifdef CUSTOM_KERNEL_SENSORHUB
-	if(!stk3x1x_obj)
-	{
-		APS_ERR("stk3x1x_obj is null!!\n");
-		return -1;
-	}
-	res=	stk3x1x_enable_ps(stk3x1x_obj->client, en);
-#endif //#ifdef CUSTOM_KERNEL_SENSORHUB
-    
-	if(res){
-		APS_ERR("als_enable_nodata is failed!!\n");
-		return -1;
-	}
-	return 0;
-
-}
-
-static int ps_set_delay(u64 ns)
-{
-	return 0;
-}
-
-static int ps_get_data(int* value, int* status)
-{
-    int err = 0;
-#ifdef CUSTOM_KERNEL_SENSORHUB
-    SCP_SENSOR_HUB_DATA req;
-    int len;
-#endif //#ifdef CUSTOM_KERNEL_SENSORHUB
-
-#ifdef CUSTOM_KERNEL_SENSORHUB
-    req.get_data_req.sensorType = ID_PROXIMITY;
-    req.get_data_req.action = SENSOR_HUB_GET_DATA;
-    len = sizeof(req.get_data_req);
-    err = SCP_sensorHub_req_send(&req, &len, 1);
-    if (err)
-    {
-        APS_ERR("SCP_sensorHub_req_send fail!\n");
-    }
-    else
-    {
-        *value = req.get_data_rsp.int16_Data[0];
-        *status = SENSOR_STATUS_ACCURACY_MEDIUM;
-    }
-
-    if(atomic_read(&stk3x1x_obj->trace) & CMC_TRC_PS_DATA)
-	{
-        APS_LOG("value = %d\n", *value);
-        //show data
-	}
-#else //#ifdef CUSTOM_KERNEL_SENSORHUB
-    if(!stk3x1x_obj)
-	{
-		APS_ERR("stk3x1x_obj is null!!\n");
-		return -1;
-	}
-    
-    if((err = stk3x1x_read_ps(stk3x1x_obj->client, &stk3x1x_obj->ps)))
-    {
-        err = -1;;
-    }
-    else
-    {
-        *value = stk3x1x_get_ps_value(stk3x1x_obj, stk3x1x_obj->ps);
-        *status = SENSOR_STATUS_ACCURACY_MEDIUM;
-    }
-#endif //#ifdef CUSTOM_KERNEL_SENSORHUB
-    
-	return 0;
-}
-
 
 /*----------------------------------------------------------------------------*/
 #if (LINUX_VERSION_CODE<KERNEL_VERSION(3,0,0))	
@@ -3096,22 +2837,20 @@ static int stk3x1x_i2c_detect(struct i2c_client *client, int kind, struct i2c_bo
 /*----------------------------------------------------------------------------*/
 static int stk3x1x_i2c_probe(struct i2c_client *client, const struct i2c_device_id *id)
 {
-	int err = 0;
 	struct stk3x1x_priv *obj;
-	struct als_control_path als_ctl={0};
-	struct als_data_path als_data={0};
-	struct ps_control_path ps_ctl={0};
-	struct ps_data_path ps_data={0};
+	struct hwmsen_object obj_ps, obj_als;
+	int err = 0;
 
 	APS_LOG("%s: driver version: %s\n", __FUNCTION__, DRIVER_VERSION);
+
 	if(!(obj = kzalloc(sizeof(*obj), GFP_KERNEL)))
 	{
 		err = -ENOMEM;
 		goto exit;
 	}
-
+	memset(obj, 0, sizeof(*obj));
 	stk3x1x_obj = obj;
-	obj->hw = stk_get_cust_alsps_hw();
+	obj->hw = get_cust_alsps_hw();
 	stk3x1x_get_addr(obj->hw, &obj->addr);
 
 	INIT_DELAYED_WORK(&obj->eint_work, stk3x1x_eint_work);
@@ -3190,80 +2929,44 @@ static int stk3x1x_i2c_probe(struct i2c_client *client, const struct i2c_device_
 		APS_ERR("stk3x1x_device register failed\n");
 		goto exit_misc_device_register_failed;
 	}
-    als_ctl.is_use_common_factory =false;
-	ps_ctl.is_use_common_factory = false;
 
-	if((err = stk3x1x_create_attr(&(stk3x1x_init_info.platform_diver_addr->driver))))
+	if((err = stk3x1x_create_attr(&stk3x1x_alsps_driver.driver)))
 	{
 		APS_ERR("create attribute err = %d\n", err);
 		goto exit_create_attr_failed;
 	}
-
-
-
-	als_ctl.open_report_data= als_open_report_data;
-	als_ctl.enable_nodata = als_enable_nodata;
-	als_ctl.set_delay  = als_set_delay;
-	als_ctl.is_report_input_direct = false;
-#ifdef CUSTOM_KERNEL_SENSORHUB
-	als_ctl.is_support_batch = obj->hw->is_batch_supported_als;
-#else
-    als_ctl.is_support_batch = false;
-#endif
-	
-	err = als_register_control_path(&als_ctl);
-	if(err)
+	obj_ps.self = stk3x1x_obj;
+	if(1 == obj->hw->polling_mode_ps)
 	{
-		APS_ERR("register fail = %d\n", err);
-		goto exit_sensor_obj_attach_fail;
+		obj_ps.polling = 1;
+		wake_lock_init(&ps_lock,WAKE_LOCK_SUSPEND,"ps wakelock");
 	}
-
-	als_data.get_data = als_get_data;
-	als_data.vender_div = 100;
-	err = als_register_data_path(&als_data);	
-	if(err)
+	else
 	{
-		APS_ERR("tregister fail = %d\n", err);
-		goto exit_sensor_obj_attach_fail;
-	}
-
-	
-	ps_ctl.open_report_data= ps_open_report_data;
-	ps_ctl.enable_nodata = ps_enable_nodata;
-	ps_ctl.set_delay  = ps_set_delay;
-	ps_ctl.is_report_input_direct = true;
-#ifdef CUSTOM_KERNEL_SENSORHUB
-	ps_ctl.is_support_batch = obj->hw->is_batch_supported_ps;
-#else
-    ps_ctl.is_support_batch = false;
-#endif
-	
-	err = ps_register_control_path(&ps_ctl);
-	if(err)
-	{
-		APS_ERR("register fail = %d\n", err);
-		goto exit_sensor_obj_attach_fail;
-	}
-
-	ps_data.get_data = ps_get_data;
-	ps_data.vender_div = 100;
-	err = ps_register_data_path(&ps_data);	
-	if(err)
-	{
-		APS_ERR("tregister fail = %d\n", err);
-		goto exit_sensor_obj_attach_fail;
-	}
-
-	err = batch_register_support_info(ID_LIGHT,als_ctl.is_support_batch, 100, 0);
-	if(err)
-	{
-		APS_ERR("register light batch support err = %d\n", err);
+	  obj_ps.polling = 0;//PS interrupt mode
 	}
 	
-	err = batch_register_support_info(ID_PROXIMITY,ps_ctl.is_support_batch, 100, 0);
-	if(err)
+	obj_ps.sensor_operate = stk3x1x_ps_operate;
+	if((err = hwmsen_attach(ID_PROXIMITY, &obj_ps)))
 	{
-		APS_ERR("register proximity batch support err = %d\n", err);
+		APS_ERR("attach fail = %d\n", err);
+		goto exit_create_attr_failed;
+	}
+	
+	obj_als.self = stk3x1x_obj;
+	if(1 == obj->hw->polling_mode_als)
+	{
+	  obj_als.polling = 1;
+	}
+	else
+	{
+	  obj_als.polling = 0;//ALS interrupt mode
+	}
+	obj_als.sensor_operate = stk3x1x_als_operate;
+	if((err = hwmsen_attach(ID_LIGHT, &obj_als)))
+	{
+		APS_ERR("attach fail = %d\n", err);
+		goto exit_create_attr_failed;
 	}
 
 
@@ -3274,29 +2977,28 @@ static int stk3x1x_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	register_early_suspend(&obj->early_drv);
 #endif
 
-    stk3x1x_init_flag = 0;
 	APS_LOG("%s: OK\n", __FUNCTION__);
+
 	return 0;
-	
-    exit_sensor_obj_attach_fail:
+
 	exit_create_attr_failed:
 	misc_deregister(&stk3x1x_device);
 	exit_misc_device_register_failed:
 	exit_init_failed:
+	//i2c_detach_client(client);
+//	exit_kfree:
 	kfree(obj);
-	obj = NULL;
 	exit:
-	stk3x1x_i2c_client = NULL;
-	stk3x1x_init_flag = -1;
+	stk3x1x_i2c_client = NULL;           
 	APS_ERR("%s: err = %d\n", __FUNCTION__, err);
 	return err;
 }
-
+/*----------------------------------------------------------------------------*/
 static int stk3x1x_i2c_remove(struct i2c_client *client)
 {
 	int err;	
 	
-	if((err = stk3x1x_delete_attr(&(stk3x1x_init_info.platform_diver_addr->driver))))
+	if((err = stk3x1x_delete_attr(&stk3x1x_i2c_driver.driver)))
 	{
 		APS_ERR("stk3x1x_delete_attr fail: %d\n", err);
 	} 
@@ -3313,9 +3015,9 @@ static int stk3x1x_i2c_remove(struct i2c_client *client)
 	return 0;
 }
 /*----------------------------------------------------------------------------*/
-static int stk3x1x_local_init(void) 
+static int stk3x1x_probe(struct platform_device *pdev) 
 {
-	struct alsps_hw *hw = stk_get_cust_alsps_hw();
+	struct alsps_hw *hw = get_cust_alsps_hw();
 	struct stk3x1x_i2c_addr addr;
 
 	stk3x1x_power(hw, 1);    
@@ -3329,37 +3031,73 @@ static int stk3x1x_local_init(void)
 		APS_ERR("add driver error\n");
 		return -1;
 	} 
-	if(-1 == stk3x1x_init_flag)
-	{
-	   return -1;
-	}
-	
+
 	return 0;
 }
-
-static int stk3x1x_local_uninit(void)
+/*----------------------------------------------------------------------------*/
+static int stk3x1x_remove(struct platform_device *pdev)
 {
-	struct alsps_hw *hw = stk_get_cust_alsps_hw();
+	struct alsps_hw *hw = get_cust_alsps_hw();
 	APS_FUN();    
 	stk3x1x_power(hw, 0);    
 	i2c_del_driver(&stk3x1x_i2c_driver);
 	return 0;
 }
+/*----------------------------------------------------------------------------*/
+#if 0
+static struct platform_driver stk3x1x_alsps_driver = {
+	.probe      = stk3x1x_probe,
+	.remove     = stk3x1x_remove,    
+	.driver     = {
+		.name  = "als_ps",
+#if (LINUX_VERSION_CODE<KERNEL_VERSION(3,0,0))	
+		.owner = THIS_MODULE,
+#endif
+	}
+};
+#endif
 
+#ifdef CONFIG_OF
+static const struct of_device_id alsps_of_match[] = {
+	{ .compatible = "mediatek,als_ps", },
+	{},
+};
+#endif
+
+static struct platform_driver stk3x1x_alsps_driver =
+{
+	.probe      = stk3x1x_probe,
+	.remove     = stk3x1x_remove,    
+	.driver     = 
+	{
+		.name = "als_ps",
+        #ifdef CONFIG_OF
+		.of_match_table = alsps_of_match,
+		#endif
+	}
+};
 
 /*----------------------------------------------------------------------------*/
 static int __init stk3x1x_init(void)
 {
-	struct alsps_hw *hw = stk_get_cust_alsps_hw();
+#if (LINUX_VERSION_CODE>=KERNEL_VERSION(3,0,0))	
+	struct alsps_hw *hw = get_cust_alsps_hw();
 	APS_LOG("%s: i2c_number=%d\n", __func__,hw->i2c_num); 
 	i2c_register_board_info(hw->i2c_num, &i2c_stk3x1x, 1);	
-	alsps_driver_add(&stk3x1x_init_info);
+#endif
+	APS_FUN();
+	if(platform_driver_register(&stk3x1x_alsps_driver))
+	{
+		APS_ERR("failed to register driver");
+		return -ENODEV;
+	}
 	return 0;
 }
-
+/*----------------------------------------------------------------------------*/
 static void __exit stk3x1x_exit(void)
 {
 	APS_FUN();
+	platform_driver_unregister(&stk3x1x_alsps_driver);
 }
 /*----------------------------------------------------------------------------*/
 module_init(stk3x1x_init);

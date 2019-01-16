@@ -1,0 +1,4 @@
+
+config MTK_BMA222E
+	bool "BMA222E for MediaTek package"
+	default n

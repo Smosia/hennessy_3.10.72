@@ -35,10 +35,6 @@
 #define VERSION					        "v 0.1"
 #define VIB_DEVICE				"mtk_vibrator"
 
-//PIN VIBRO
-#define VIBRA_PIN_2            GPIO_KPD_KCOL1_PIN
-#define VIBRA_PIN_1            GPIO_KPD_KCOL2_PIN
-#define VIBRA_PIN_3            GPIO_KPD_KCOL3_PIN
 
 /******************************************************************************
 Error Code No.
@@ -89,17 +85,6 @@ static int vibr_Enable(void)
 {
 	if (!ldo_state) {
 		vibr_Enable_HW();
-		mt_set_gpio_mode(VIBRA_PIN_3, 3);
-
-		mt_set_gpio_mode(VIBRA_PIN_2, 0);
-		mt_set_gpio_dir(VIBRA_PIN_2, 1);
-		mt_set_gpio_out(VIBRA_PIN_2, 1);
-
-		mt_set_gpio_mode(VIBRA_PIN_1, 0);
-		mt_set_gpio_dir(VIBRA_PIN_1, 1);
-		mt_set_gpio_out(VIBRA_PIN_1, 1);
-
-		//vibr_ON
 		ldo_state = 1;
 	}
 	return 0;
@@ -109,18 +94,6 @@ static int vibr_Disable(void)
 {
 	if (ldo_state) {
 		vibr_Disable_HW();
-		mt_set_gpio_out(VIBRA_PIN_1, 0);
-
-		mt_set_gpio_mode(VIBRA_PIN_2, 0);
-		mt_set_gpio_dir(VIBRA_PIN_2, 1);
-		mt_set_gpio_out(VIBRA_PIN_2, 0);;
-
-		//mt_pwm_disable(2, 0);
-		mt_set_gpio_mode(VIBRA_PIN_3, 0);
-		mt_set_gpio_dir(VIBRA_PIN_3, 1);
-		mt_set_gpio_out(VIBRA_PIN_3, 0);
-
-		//vibr_OFF
 		ldo_state = 0;
 	}
 	return 0;

@@ -1,0 +1,4 @@
+
+config MTK_L3G4200D
+	bool "L3G4200D for MediaTek package"
+	default n

@@ -1,0 +1,4 @@
+
+config MTK_TMD2771
+	bool "TMD2771 for MediaTek package"
+	default n

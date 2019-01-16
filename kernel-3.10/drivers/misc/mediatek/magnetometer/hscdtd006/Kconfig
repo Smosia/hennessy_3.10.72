@@ -1,0 +1,4 @@
+
+config MTK_HSCDTD006
+	bool "HSCDTD006 for MediaTek package"
+	default n

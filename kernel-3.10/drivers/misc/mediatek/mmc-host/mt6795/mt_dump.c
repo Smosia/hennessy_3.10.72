@@ -56,8 +56,6 @@ char test_kdump[] = { 6, 5, 8, 2, 'k', 'd', 'u', 'm', 'p', 't', 'e', 's', 't' };
 
 /* ============== */
 #define TEST_SIZE       (128*1024)
-unsigned char g_tst_buf_w[TEST_SIZE] = { 0 };
-unsigned char g_tst_buf_r[TEST_SIZE] = { 0 };
 
 //==============
 //#define printk(         printk(KERN_EMERG
@@ -77,6 +75,7 @@ static unsigned int clks[] = { 200000000 };
 #define MAX_SCLK           (52000000)
 #define NORMAL_SCLK        (25000000)
 #define MIN_SCLK           (260000)
+#define MAX_DMA_CNT        (64 * 1024 - 512)  
 
 extern void __iomem *msdc_gpio_base;
 extern void __iomem *msdc_infracfg_ao_base;
@@ -2389,15 +2388,23 @@ static int emmc_dump_read(unsigned char *buf, unsigned int len, unsigned int off
 	msdc_ctl.iswrite = 0;
 	msdc_ctl.host_num = slot;
 	msdc_ctl.opcode = MSDC_CARD_DUNM_FUNC;
-	msdc_ctl.total_size = 512;
+	msdc_ctl.total_size = MAX_DMA_CNT;
 	msdc_ctl.trans_type = 0;
-	for (i = 0; i < (len/512); i++) {
-		/* code */
-		msdc_ctl.address = (l_start_offset >> 9) + i; /*blk address*/
-		msdc_ctl.buffer = (u32 *)(buf + i * 512);
-
+	msdc_ctl.address = l_start_offset >> 9;
+	msdc_ctl.buffer = (u32 *) buf; 
+	for (i = 0; i < (len/MAX_DMA_CNT); i++) {
 #if DEBUG_MMC_IOCTL
-		pr_debug("l_start_offset =0x%x\n", msdc_ctl.address);
+		pr_debug("l_start_offset = 0x%x\n", msdc_ctl.address);
+#endif
+		msdc_ctl.result = simple_sd_ioctl_rw(&msdc_ctl);
+		msdc_ctl.address +=  MAX_DMA_CNT >> 9;
+		msdc_ctl.buffer = (u32 *) (buf + MAX_DMA_CNT * (i+1));
+	}
+
+	msdc_ctl.total_size = len % MAX_DMA_CNT;
+	if(0 != msdc_ctl.total_size){
+#if DEBUG_MMC_IOCTL
+		pr_debug("l_start_offset = 0x%x\n", msdc_ctl.address);
 #endif
 		msdc_ctl.result = simple_sd_ioctl_rw(&msdc_ctl);
 	}

@@ -527,11 +527,6 @@ static struct platform_driver gyroscope_driver = {
 	}
 };
 
-//shihaobin@yulong.com add for gyro_sensor compatible begin 20150418
- int bmi160_gyro_init_flag = -1; // 0<==>OK -1 <==> fail;
- int lsm6ds3_gyro_init_flag = -1; // 0<==>OK -1 <==> fail;
-//shihaobin@yulong.com add for gyro_sensor compatible end 20150418
-
 static int gyro_real_driver_init(void) 
 {
     int i =0;
@@ -539,13 +534,12 @@ static int gyro_real_driver_init(void)
 	GYRO_LOG(" gyro_real_driver_init +\n");
 	for(i = 0; i < MAX_CHOOSE_GYRO_NUM; i++)
 	{
-	  	GYRO_LOG(" i=%d\n",i);
-	  	if(0 != gyroscope_init_list[i])
-	 	{
+	  GYRO_LOG(" i=%d\n",i);
+	  if(0 != gyroscope_init_list[i])
+	  {
 	    	GYRO_LOG(" gyro try to init driver %s\n", gyroscope_init_list[i]->name);
 	    	err = gyroscope_init_list[i]->init();
-		if (((0 == err) && (0 == bmi160_gyro_init_flag))
-        	|| ((0 == err) && (0 == lsm6ds3_gyro_init_flag)))
+		if(0 == err)
 		{
 		   GYRO_LOG(" gyro real driver %s probe ok\n", gyroscope_init_list[i]->name);
 		   break;

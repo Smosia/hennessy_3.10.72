@@ -1,0 +1,4 @@
+
+config MTK_MPU3050C_NEW
+        bool "MPU3050C for MediaTek package"
+        default n

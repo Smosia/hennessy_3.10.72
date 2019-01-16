@@ -1,0 +1,4 @@
+
+config MTK_BMA250
+	bool "Accelerometer BMA250 for MediaTek package"
+	default n

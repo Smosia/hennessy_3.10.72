@@ -34,19 +34,19 @@
  #define MC_PM_RUNTIME
 #endif
 
-// #define TBASE_CORE_SWITCHER
+#define TBASE_CORE_SWITCHER
 /* Values of MPIDR regs in  cpu0, cpu1, cpu2, cpu3*/
 #define CPU_IDS {0x0000, 0x0001, 0x0002, 0x0003, 0x0100, 0x0101, 0x0102, 0x0103}
-#define COUNT_OF_CPUS CONFIG_NR_CPUS
+#define COUNT_OF_CPUS 8
 
 /* Enable Fastcall worker thread */
 #define MC_FASTCALL_WORKER_THREAD
 
-#if !defined(CONFIG_ARCH_MT6580)
 /* Enable LPAE */
 #define LPAE_SUPPORT
+
 /* Enable AARCH32 Fast call IDs */
 #define MC_AARCH32_FC
-#endif
+
 
 #endif /* _MC_DRV_PLATFORM_H_ */

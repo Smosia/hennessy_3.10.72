@@ -701,17 +701,6 @@ config MTK_FT5206
 	  To compile this driver as a module, choose M here: the
 	  module will be called MTK_FT5206.
 
-config TOUCHSCREEN_MTK_ATMEL_MXT336
-	bool " ATMEL_MXT336 for Mediatek package"
-	default n
-	help
-	  Say Y here if you have GT1151 touch panel.
-
-	  If unsure, say N.
-
-	  To compile this dirver as a module, choose M here: the
-	  module will be called.
-
 config MTK_FT5X0X
 	bool "FT5X0X for Mediatek package"
 	default n
@@ -1395,20 +1384,4 @@ config TOUCHSCREEN_SYNAPTICS
 	  To compile this driver as a module, choose M here: the
 	  module will be called Synaptics.
 
-config TOUCHSCREEN_SWEEP2WAKE
-	tristate "Sweep2Wake for touchscreens"
-	select TOUCHSCREEN_PREVENT_SLEEP
-	default n
-
-config TOUCHSCREEN_DOUBLETAP2WAKE
-	tristate "DoubleTap2Wake for touchscreens"
-	select TOUCHSCREEN_PREVENT_SLEEP
-	default n
-
-config TOUCHSCREEN_PREVENT_SLEEP
-	bool "Inihibit sleep on modified touchscreen drivers"
-	default n
-	help
-	  This disables the sleep function of modified touchscreen drivers.
-	  
 endif

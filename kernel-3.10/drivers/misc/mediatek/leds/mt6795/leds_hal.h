@@ -32,9 +32,5 @@ extern void mt_mt65xx_led_work(struct work_struct *work);
 extern void mt_mt65xx_led_set(struct led_classdev *led_cdev, enum led_brightness level);
 extern int mt_mt65xx_blink_set(struct led_classdev *led_cdev,
 			       unsigned long *delay_on, unsigned long *delay_off);
-/* hermes add */
-extern int longcheer_brigness_led(int led_type, int level);
-extern int longcheer_breath_led(int led_type, int level);
-/* hermes add */
 
 struct cust_mt65xx_led *mt_get_cust_led_list(void);

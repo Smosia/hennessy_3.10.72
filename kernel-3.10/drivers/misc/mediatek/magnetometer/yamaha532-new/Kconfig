@@ -1,0 +1,4 @@
+
+config MTK_YAS532_NEW
+        bool "YAS532 for Mediatek package"
+        default n

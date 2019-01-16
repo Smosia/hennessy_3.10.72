@@ -1,0 +1,4 @@
+
+config MTK_YAS530
+        bool "YAS530 for Mediatek package"
+        default n

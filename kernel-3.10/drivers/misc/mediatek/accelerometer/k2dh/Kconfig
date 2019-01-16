@@ -1,0 +1,4 @@
+
+config MTK_K2DH
+	bool "K2DH for MediaTek package"
+	default n

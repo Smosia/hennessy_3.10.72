@@ -1,0 +1,4 @@
+
+config MTK_IST8303_NEW
+	bool "IST8303 for MediaTek package"
+	default n

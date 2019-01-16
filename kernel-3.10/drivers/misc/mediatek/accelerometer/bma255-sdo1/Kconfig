@@ -1,0 +1,4 @@
+
+config MTK_BMA255_SDO1
+	bool "MTK_BMA255_SDO1 for MediaTek package"
+	default n

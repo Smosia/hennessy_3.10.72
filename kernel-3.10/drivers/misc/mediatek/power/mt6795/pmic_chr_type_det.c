@@ -47,8 +47,6 @@ extern void Charger_Detect_Init(void);
 extern void Charger_Detect_Release(void);
 extern unsigned int get_pmic_mt6332_cid(void);
 
-int FG_charging_type = 0; // Hermes
-
 #if defined(CONFIG_POWER_EXT) || defined(CONFIG_MTK_FPGA)
 
 int hw_charging_get_charger_type(void)
@@ -121,7 +119,7 @@ static U32 hw_bc12_DCD(void)
     else                                            mt6332_upmu_set_rg_bc12_cmp_en(0x2);
 
     //msleep(20);
-    msleep(200);
+    msleep(80);
 
     wChargerAvail = mt6332_upmu_get_rgs_bc12_cmp_out();
 
@@ -335,7 +333,7 @@ int hw_charging_get_charger_type(void)
 
     /********* Finally setting *******************************/
     hw_bc12_done();
-    FG_charging_type = CHR_Type_num; // Hermes
+
     return CHR_Type_num;
 #endif
 }

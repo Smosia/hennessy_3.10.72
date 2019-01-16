@@ -1,0 +1,4 @@
+
+config MTK_BMA250E
+        bool "MTK_BMA250E for MediaTek package"
+        default n

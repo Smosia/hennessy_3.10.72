@@ -1,0 +1,4 @@
+
+config MTK_RPR410
+	bool "rpr410 for MediaTek package"
+	default n

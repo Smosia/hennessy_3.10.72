@@ -44,7 +44,7 @@
 #include <linux/hwmsen_helper.h>
 
 /*----------------------------------------------------------------------------*/
-#define DEBUG 1
+#define DEBUG 0
 #define AKM09911_DEV_NAME         "akm09911"
 #define DRIVER_VERSION          "1.0.1"
 /*----------------------------------------------------------------------------*/
@@ -80,7 +80,7 @@ static struct mutex sense_data_mutex;
 // calibration msensor and orientation data
 static int sensor_data[CALIBRATION_DATA_SIZE];
 static struct mutex sensor_data_mutex;
-//static DECLARE_WAIT_QUEUE_HEAD(data_ready_wq);
+static DECLARE_WAIT_QUEUE_HEAD(data_ready_wq);
 static DECLARE_WAIT_QUEUE_HEAD(open_wq);
 
 static short akmd_delay = AKM09911_DEFAULT_DELAY;
@@ -2848,14 +2848,6 @@ static int akm09911_i2c_probe(struct i2c_client *client, const struct i2c_device
 		goto exit;
 	}
 	memset(data, 0, sizeof(struct akm09911_i2c_data));
-
-        mt_set_gpio_mode(GPIO12, 0);
-        mt_set_gpio_dir(GPIO12, 1);
-        mt_set_gpio_out(GPIO12, 0);
-        msleep(5);
-        mt_set_gpio_out(GPIO12,0);
-        msleep(5);
-
 	data->hw = get_cust_mag_hw();	
 	
 	atomic_set(&data->layout, data->hw->direction);
@@ -2864,7 +2856,7 @@ static int akm09911_i2c_probe(struct i2c_client *client, const struct i2c_device
 	mutex_init(&sense_data_mutex);
 	mutex_init(&sensor_data_mutex);
 	
-	//init_waitqueue_head(&data_ready_wq);
+	init_waitqueue_head(&data_ready_wq);
 	init_waitqueue_head(&open_wq);
 
 	data->client = client;
@@ -2873,7 +2865,7 @@ static int akm09911_i2c_probe(struct i2c_client *client, const struct i2c_device
 	
 	this_client = new_client;	
 
-        printk(KERN_ERR " AKM09911 akm09911_probe: befor init prob \n");
+     printk(KERN_ERR " AKM09911 akm09911_probe: befor init prob \n");
 	/* Check connection */
 	err = AKECS_CheckDevice();
 	if(err < 0)
@@ -3035,14 +3027,6 @@ static int __init akm09911_init(void)
     {
         printk(KERN_ERR "create_proc_entry ecompass_status failed");
     }
-
-        mt_set_gpio_mode(GPIO12, 0);
-        mt_set_gpio_dir(GPIO12, 1);
-        mt_set_gpio_out(GPIO12, 0);
-        msleep(5);
-        mt_set_gpio_out(GPIO12,0);
-        msleep(5);
-
 	i2c_register_board_info(hw->i2c_num, &i2c_akm09911, 1);
 	if(platform_driver_register(&akm_sensor_driver))
 	{
@@ -3060,7 +3044,7 @@ static void __exit akm09911_exit(void)
 module_init(akm09911_init);
 module_exit(akm09911_exit);
 
-MODULE_AUTHOR("viral wang <viral_wang@htc.com>");
+MODULE_AUTHOR("viral wang");
 MODULE_DESCRIPTION("AKM09911 compass driver");
 MODULE_LICENSE("GPL");
 MODULE_VERSION(DRIVER_VERSION);

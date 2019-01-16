@@ -21,7 +21,7 @@
 *  DEBUG CONTROL
 **************************************************************************/
 #define SEC_AES_DEBUG_LOG           (0)
-#define SMSG                        printk
+#define SMSG                        pr_debug
 
 /**************************************************************************
  *  LOCAL VARIABLE

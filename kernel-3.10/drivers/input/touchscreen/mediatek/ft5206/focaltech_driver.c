@@ -44,7 +44,7 @@ extern int tpd_v_magnify_y;
 #include <linux/wait.h>
 #include <linux/time.h>
 #include <linux/delay.h>
-#include "tpd_custom_fts.h"
+#include "tpd_custom_ft5206.h"
 #include "focaltech_ex_fun.h"
 
 u8 *I2CDMABuf_va = NULL;

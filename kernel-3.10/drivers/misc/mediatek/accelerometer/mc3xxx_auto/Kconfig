@@ -1,0 +1,4 @@
+
+config MTK_MC3XXX_AUTO
+        bool "MTK_MC3XXX_AUTO for MediaTek package"
+        default n

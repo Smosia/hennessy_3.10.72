@@ -1,0 +1,4 @@
+
+config MTK_MAG3110
+	bool "MAG3110 for MediaTek package"
+	default n

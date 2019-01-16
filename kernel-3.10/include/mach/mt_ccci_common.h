@@ -32,7 +32,6 @@ typedef enum {
 #define MD_LWG_FLAG (MD_LTE_FLAG|MD_FDD_FLAG|MD_2G_FLAG)
 #define MD_LTG_FLAG (MD_LTE_FLAG|MD_TDD_FLAG|MD_2G_FLAG)
 
-
 /* MD type defination */
 typedef enum {
 	md_type_invalid = 0,
@@ -765,11 +764,12 @@ typedef enum {
 	EXCEPTION, /* broadcast by port_kernel */
 	RESET, /* broadcast by modem driver, no traffic */
 
-	RX_IRQ, // broadcast by modem driver, illegal for md->md_state, only for NAPI! 
+	RX_IRQ, /* broadcast by modem driver, illegal for md->md_state, only for NAPI! */
 	TX_IRQ, /* broadcast by modem driver, illegal for md->md_state, only for network! */
 	TX_FULL, /* broadcast by modem driver, illegal for md->md_state, only for network! */
 	BOOT_FAIL, /* broadcast by port_kernel, illegal for md->md_state */
 } MD_STATE; /* for CCCI internal */
+
 
 /* ================================================================================= */
 /* Image type and header defination part */
@@ -1024,5 +1024,3 @@ int ccci_dump_write(int md_id, int buf_type, unsigned int flag, const char *fmt,
 int ccci_log_write(const char *fmt, ...);
 int ccci_log_write_raw(unsigned int flags, const char *fmt, ...);
 #endif
-
-

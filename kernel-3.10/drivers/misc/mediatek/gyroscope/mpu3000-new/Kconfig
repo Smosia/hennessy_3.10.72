@@ -1,0 +1,4 @@
+
+config MTK_MPU3000_NEW
+	bool "MPU3000 for MediaTek package"
+	default n

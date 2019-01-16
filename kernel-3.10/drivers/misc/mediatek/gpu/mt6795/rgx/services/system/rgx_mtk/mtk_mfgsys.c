@@ -617,32 +617,30 @@ static IMG_BOOL MTKGpuDVFSPolicy(IMG_UINT32 ui32GPULoading, unsigned int* pui32N
     int i32CurFreqID = (int)mt_gpufreq_get_cur_freq_index();
     int i32NewFreqID = i32CurFreqID;
 
-	//CORE-BH-LowPowerPatch-00*[
     if (ui32GPULoading >= 99)
     {
         i32NewFreqID = 0;
     }
-    else if (ui32GPULoading <= 25)
+    else if (ui32GPULoading <= 1)
     {
         i32NewFreqID = i32MaxLevel;
     }
-    else if (ui32GPULoading >= 97)
+    else if (ui32GPULoading >= 85)
     {
         i32NewFreqID -= 2;
     }
-    else if (ui32GPULoading <= 45)
+    else if (ui32GPULoading <= 30)
     {
         i32NewFreqID += 2;
     }
-    else if (ui32GPULoading >= 85)
+    else if (ui32GPULoading >= 70)
     {
         i32NewFreqID -= 1;
     }
-    else if (ui32GPULoading <= 65)
+    else if (ui32GPULoading <= 50)
     {
         i32NewFreqID += 1;
     }
-	//CORE-BH-LowPowerPatch-00*]
 
     if (i32NewFreqID < i32CurFreqID)
     {

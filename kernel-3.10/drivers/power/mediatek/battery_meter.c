@@ -79,10 +79,10 @@ static kal_bool g_USE_UI_SOC = KAL_TRUE;
 /* ///////////////////////////////////////////////////////////////////////////////////////// */
 /* // PMIC AUXADC Related Variable */
 /* ///////////////////////////////////////////////////////////////////////////////////////// */
-// int g_R_BAT_SENSE = R_BAT_SENSE;
-// int g_R_I_SENSE = R_I_SENSE;
-// int g_R_CHARGER_1 = R_CHARGER_1;
-// int g_R_CHARGER_2 = R_CHARGER_2;
+int g_R_BAT_SENSE = R_BAT_SENSE;
+int g_R_I_SENSE = R_I_SENSE;
+int g_R_CHARGER_1 = R_CHARGER_1;
+int g_R_CHARGER_2 = R_CHARGER_2;
 
 int fg_qmax_update_for_aging_flag = 1;
 
@@ -556,12 +556,9 @@ int BattVoltToTemp(int dwVolt)
 	kal_int64 TRes;
 	int sBaTTMP = -100;
 
-// Reverse from sourse kernel TODO: need to correct function
-// TRes = ((kal_int64)RBAT_PULL_UP_R*(kal_int64)dwVolt) / (RBAT_PULL_UP_VOLT-dwVolt);
-
-	/*TRes_temp = ((kal_int64)RBAT_PULL_UP_R*(kal_int64)dwVolt) / (RBAT_PULL_UP_VOLT-dwVolt);*/
+	/* TRes_temp = ((kal_int64)RBAT_PULL_UP_R*(kal_int64)dwVolt) / (RBAT_PULL_UP_VOLT-dwVolt); */
 	/* TRes = (TRes_temp * (kal_int64)RBAT_PULL_DOWN_R)/((kal_int64)RBAT_PULL_DOWN_R - TRes_temp); */
-	
+
 	TRes_temp = (RBAT_PULL_UP_R * (kal_int64) dwVolt);
 	do_div(TRes_temp, (RBAT_PULL_UP_VOLT - dwVolt));
 
@@ -571,7 +568,7 @@ int BattVoltToTemp(int dwVolt)
 #else
 	TRes = TRes_temp;
 #endif
-	
+
 	/* convert register to temperature */
 	sBaTTMP = BattThermistorConverTemp((int)TRes);
 
@@ -2005,8 +2002,8 @@ kal_int32 fgauge_update_dod(void)
 	if (C_FGCurrent != 0)
 		FG_dod_1 =  gFG_DOD0 - ((gFG_columb*100)/gFG_BATT_CAPACITY_aging)*C_0mA/C_FGCurrent;
 
-	bm_print(BM_LOG_CRTI, "[fgauge_update_dod] FG_dod_1=%d, adjust_coulomb_counter=%d, gFG_columb=%d, gFG_DOD0=%d," \
-		"gFG_temp=%d, gFG_BATT_CAPACITY=%d, C_0mA=%d, C_400mA=%d, C_FGCurrent=%d, gFG_current_AVG=%d\n",
+	bm_print(BM_LOG_CRTI, "[fgauge_update_dod] FG_dod_1=%d, adjust_coulomb_counter=%d, gFG_columb=%d, gFG_DOD0=%d,
+		gFG_temp=%d, gFG_BATT_CAPACITY=%d, C_0mA=%d, C_400mA=%d, C_FGCurrent=%d, gFG_current_AVG=%d\n",
 		FG_dod_1, adjust_coulomb_counter, gFG_columb, gFG_DOD0, gFG_temp,
 		gFG_BATT_CAPACITY, C_0mA, C_400mA, C_FGCurrent, gFG_current_AVG);
 #else
@@ -2828,11 +2825,8 @@ kal_int32 battery_meter_set_columb_interrupt(kal_uint32 val)
 }
 #endif /* #if defined(FG_BAT_INT) */
 
-extern int get_capacity();
-
 kal_int32 battery_meter_get_battery_percentage(void)
 {
-#if 0
 #if defined(CONFIG_POWER_EXT)
 	return 50;
 #else
@@ -2876,9 +2870,6 @@ kal_int32 battery_meter_get_battery_percentage(void)
 #endif
 #endif
 
-#endif
-#else
-	return get_capacity();
 #endif
 }
 

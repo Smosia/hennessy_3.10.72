@@ -1,5 +1,5 @@
 #######################################
-# Sepcify source files
+# Specify source files
 #######################################
 core_obj += asf/core/alg_aes_export.o
 core_obj += asf/core/alg_aes_legacy.o
@@ -30,6 +30,9 @@ core_obj += asf/core/sec_usif.o
 core_obj += asf/core/sec_fsutil_inter.o
 core_obj += asf/core/sec_boot_core.o
 core_obj += asf/core/sec_mod_core.o
+core_obj += asf/core/sec_osal.o
 
 # HEADER FILE
-EXTRA_CFLAGS += -I$(src)/asf/asf_inc
+ccflags-y += -I$(src)/asf/asf_inc
+ccflags-y += -I$(src)/asf/asf_export_inc
+ccflags-y += -I$(src)/$(MTK_PLATFORM)/module

@@ -3624,8 +3624,8 @@ static const struct file_operations msdc_tune_flag_fops = {
 	.llseek = seq_lseek,
 	.release = single_release,
 };
-#define ROME_HQA
-#ifdef ROME_HQA
+#define MSDC_HQA
+#ifdef MSDC_HQA
 u32 sdio_vio18_flag = 0;
 u32 sdio_vcore1_flag = 0;
 u32 sdio_vcore2_flag = 0;
@@ -3761,7 +3761,7 @@ int msdc_debug_proc_init(void)
 	} else {
 		pr_err("[%s]: failed to create /proc/msdc_tune_flag\n", __func__);
 	}
-#ifdef ROME_HQA
+#ifdef MSDC_HQA
 #ifndef USER_BUILD_KERNEL
 	voltage_flag = proc_create("msdc_voltage_flag", 0660, NULL, &msdc_voltage_flag_fops);
 #else

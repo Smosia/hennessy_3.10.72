@@ -603,12 +603,6 @@ typedef struct {
 	unsigned int height;
 	unsigned int io_select_mode;	/* DBI or DPI should select IO mode according to chip spec */
 
-// LCSH specific (reversed)
-    char *disp_class;     // Display class, such as NT35596, etc.
-    char *disp_vendor1;   // Display vendor id
-    char *disp_vendor2;   // Display vendor id
-    char *sres;           // Display resolution as string value
-//
 	/* particular parameters */
 	LCM_DBI_PARAMS dbi;
 	LCM_DPI_PARAMS dpi;

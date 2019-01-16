@@ -11,6 +11,10 @@ obj-y   +=  tpd_init.o
 obj-y   +=  tpd_misc.o
 obj-y   +=  tpd_setting.o
 
+ifeq ($(CONFIG_MTK_FT5206),y)
+obj-y	+=  ft5206/
+endif
+
 ifeq ($(CONFIG_TOUCHSCREEN_MTK_MAX1187X),y)
 obj-y	+=  max1187x/
 endif
@@ -50,6 +54,8 @@ endif
 ifeq ($(CONFIG_TOUCHSCREEN_S7020),y)
 obj-y	+=  S7020/
 endif
+
+obj-$(CONFIG_TOUCHSCREEN_MTK_GT9XX_HOTKNOT_SCP)	+=  GT9XX_hotknot_SCP/
 
 ifeq ($(CONFIG_GT9XX_HOTKNOT_FLASHLESS),y)
 obj-y	+=  GT9XX_hotknot_FLASHLESS/
@@ -137,16 +143,4 @@ endif
 
 ifeq ($(CONFIG_MTK_GT911TB_HOTKNOT),y)
 obj-y	+=  GT911TB_HOTKNOT/
-endif
-
-ifeq ($(CONFIG_TOUCHSCREEN_MTK_ATMEL_MXT336),y)
-obj-y	+=  ATMEL_MXT336/
-endif
-
-ifeq ($(CONFIG_MTK_FT5436I),y)
-obj-y	+=  ft5436i/
-endif
-
-ifeq ($(CONFIG_MTK_FT5206),y)
-obj-y	+=  ft5206/
 endif

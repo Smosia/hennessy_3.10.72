@@ -1,0 +1,4 @@
+
+config MTK_QMC5983
+	bool "QMC5983 for MediaTek package"
+	default n

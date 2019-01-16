@@ -1,0 +1,4 @@
+
+config MTK_MPU60X0
+        bool "MPU60X0 for MediaTek package"
+        default n

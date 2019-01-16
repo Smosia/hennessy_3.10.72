@@ -1,0 +1,4 @@
+
+config MTK_EPL2182
+	bool "EPL2182 for MediaTek package"
+	default n

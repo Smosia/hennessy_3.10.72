@@ -16,4 +16,25 @@ struct sec_mod {
     const struct sec_ops *ops;
 };
 
+#define NUM_SBC_PUBK_HASH           8
+#define NUM_CRYPTO_SEED          16
+#define NUM_RID 4
+
+
+#ifdef CONFIG_OF
+/*device information data*/
+struct masp_tag {
+	u32 size;
+	u32 tag;
+	unsigned int rom_info_sbc_attr;
+	unsigned int rom_info_sdl_attr;
+	unsigned int hw_sbcen;
+	unsigned int lock_state;
+	unsigned int rid[NUM_RID];
+	/*rom_info.m_SEC_KEY.crypto_seed */
+	unsigned char crypto_seed[NUM_CRYPTO_SEED];
+	unsigned int sbc_pubk_hash[NUM_SBC_PUBK_HASH];
+};
+#endif
+
 #endif /* end of SECMOD_H */

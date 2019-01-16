@@ -17,7 +17,7 @@
  *Note:the error code of EIO is the general error in this file.
  */
 #include "tpd.h"
-#include "tpd_custom_fts.h"
+#include "tpd_custom_ft5206.h"
 #ifdef TPD_AUTO_UPGRADE
 #include "focaltech_ex_fun.h"
 

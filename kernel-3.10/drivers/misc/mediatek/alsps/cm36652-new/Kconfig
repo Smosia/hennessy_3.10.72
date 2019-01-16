@@ -1,0 +1,4 @@
+
+config MTK_CM36652_NEW
+	bool "cm36652 for MediaTek package"
+	default n

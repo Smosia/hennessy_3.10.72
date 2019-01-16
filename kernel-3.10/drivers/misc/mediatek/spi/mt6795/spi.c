@@ -468,16 +468,6 @@ static void disable_clk(void)
 	return;
 }
 
-void mt_spi_enable_clk(struct mt_spi_t *ms)
-{
-	enable_clk();
-}
-void mt_spi_disable_clk(struct mt_spi_t *ms)
-{
-	disable_clk();
-}
-
-
 static int is_pause_mode(struct spi_message	*msg)
 {
 	struct mt_chip_conf *conf;	

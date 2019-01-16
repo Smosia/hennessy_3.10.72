@@ -1,0 +1,4 @@
+
+config MTK_KXTIK1004
+	bool "KXTIK1004 for MediaTek package"
+	default n

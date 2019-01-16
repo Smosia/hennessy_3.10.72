@@ -29,7 +29,7 @@ ifneq ($(CONFIG_MTK_GIC),y)
 obj-y   += irq/
 endif
 
-#obj-$(CONFIG_MTK_CPU_STRESS)	+= cpu_stress/
+obj-$(CONFIG_MTK_CPU_STRESS)	+= cpu_stress/
 obj-$(CONFIG_MTK_LASTPC)	    += lastpc/
 obj-$(CONFIG_MTK_DBG_DUMP) += dbg_dump/
 
@@ -154,7 +154,6 @@ ifeq (,$(filter $(CONFIG_MTK_PLATFORM), "mt6735"))
 obj-y	+=  flashlight/src/
 endif
 
-obj-$(CONFIG_MTK_FINGERPRINT)   += fingerprint/
 obj-$(CONFIG_MTK_SYNC)	+= sync/
 
 #rtc must compile before power, because they are both in fs_initcall, rtc need initial first for PMIC alarm call back
@@ -234,7 +233,7 @@ obj-$(CONFIG_SECURITY_SELINUX)	+= selinux_warning/
 # MTK PASR SW flow
 obj-$(CONFIG_MTKPASR)	+= mtkpasr/
 
-#obj-$(CONFIG_MTK_TC1_FEATURE)	+= tc1_interface/
+obj-$(CONFIG_MTK_TC1_FEATURE)	+= tc1_interface/
 
 obj-$(CONFIG_MTK_SWITCH_TX_POWER) += sw_tx_power/
 
@@ -261,7 +260,7 @@ obj-$(CONFIG_MTK_IN_HOUSE_TEE_SUPPORT) += trustzone/
 #power-loss-test
 obj-$(CONFIG_PWR_LOSS_MTK_TEST) += power-loss-test/
 
-endif       # end of CONFIG_ARCH_MT6735
+endif           # end of CONFIG_ARCH_MT6735
 endif		# end of CONFIG_ARCH_MT6795
 endif       # end of CONFIG_ARCH_MT6580
 

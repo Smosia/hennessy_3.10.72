@@ -4,4 +4,4 @@
 
 include $(srctree)/drivers/misc/mediatek/Makefile.custom
 
-obj-y				+= lm3644.o
+obj-y				+= leds_strobe.o

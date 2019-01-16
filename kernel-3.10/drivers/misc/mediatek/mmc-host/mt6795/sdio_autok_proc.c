@@ -401,7 +401,7 @@ int wait_sdio_autok_ready(void *data){
     int id;
 #ifdef CONFIG_SDIOAUTOK_SUPPORT    
     int is_screen_off;
-    is_autok_lifecycle_before = true;
+/* ALPS02096287 is_autok_lifecycle_before = true; */
 #endif    
     unsigned int vcore_uv = 0;
     int ret = 0;
@@ -496,6 +496,7 @@ EXIT_WAIT_AUTOK_READY:
 #ifdef MTK_SDIO30_ONLINE_TUNING_SUPPORT
         atomic_set(&host->ot_work.autok_done, 1);
         atomic_set(&host->ot_work.ot_disable, 0);
+        is_autok_lifecycle_before = true; /* ALPS02096287 */
 #endif  // MTK_SDIO30_ONLINE_TUNING_SUPPORT
 #endif
     }
