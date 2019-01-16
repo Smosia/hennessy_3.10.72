@@ -29,15 +29,27 @@
 #define FG_METER_RESISTANCE	0
 
 /* Qmax for battery  */
-#define Q_MAX_POS_50			2628
-#define Q_MAX_POS_25			2660
-#define Q_MAX_POS_0			2544
-#define Q_MAX_NEG_10			2404
+#ifdef CONFIG_CM865_MAINBOARD
+#define Q_MAX_POS_50            4016
+#define Q_MAX_POS_25            4062
+#define Q_MAX_POS_0             3741
+#define Q_MAX_NEG_10            2346
 
-#define Q_MAX_POS_50_H_CURRENT		2696
-#define Q_MAX_POS_25_H_CURRENT		2706
-#define Q_MAX_POS_0_H_CURRENT		2430
-#define Q_MAX_NEG_10_H_CURRENT		1763
+#define Q_MAX_POS_50_H_CURRENT  3936
+#define Q_MAX_POS_25_H_CURRENT  3981
+#define Q_MAX_POS_0_H_CURRENT   3666
+#define Q_MAX_NEG_10_H_CURRENT  2299
+#else
+#define Q_MAX_POS_50			3200
+#define Q_MAX_POS_25			3152
+#define Q_MAX_POS_0				3181
+#define Q_MAX_NEG_10			3107
+
+#define Q_MAX_POS_50_H_CURRENT	3187
+#define Q_MAX_POS_25_H_CURRENT	3117
+#define Q_MAX_POS_0_H_CURRENT	2524
+#define Q_MAX_NEG_10_H_CURRENT	2202
+#endif
 
 
 /* Discharge Percentage */
@@ -55,7 +67,11 @@
 #define OCV_BOARD_COMPESATE	0	/* mV */
 #define R_FG_BOARD_BASE		1000
 #define R_FG_BOARD_SLOPE	1000	/* slope */
-#define CAR_TUNE_VALUE		100	/* 1.00 */
+#ifdef CONFIG_CM865_MAINBOARD
+#define CAR_TUNE_VALUE		    98 //1.00
+#else
+#define CAR_TUNE_VALUE		    98 //1.00
+#endif
 
 
 /* HW Fuel gague  */
@@ -74,10 +90,18 @@
 #define AGING1_LOAD_SOC			70
 #define AGING1_UPDATE_SOC		30
 #define BATTERYPSEUDO100		95
-#define BATTERYPSEUDO1			4
+#ifdef CONFIG_CM865_MAINBOARD
+#define BATTERYPSEUDO1              8
+#else
+#define BATTERYPSEUDO1              4
+#endif
 
 #define Q_MAX_BY_SYS		/* 8. Qmax varient by system drop voltage. */
-#define Q_MAX_SYS_VOLTAGE		3400
+#ifdef CONFIG_CM865_MAINBOARD
+#define Q_MAX_SYS_VOLTAGE           3350
+#else
+#define Q_MAX_SYS_VOLTAGE           3400
+#endif
 #define SHUTDOWN_GAUGE0
 #define SHUTDOWN_GAUGE1_XMINS
 #define SHUTDOWN_GAUGE1_MINS		60
@@ -113,7 +137,7 @@
 #define INIT_SOC_BY_SW_SOC
 /* #define SYNC_UI_SOC_IMM                       //3. UI SOC sync to FG SOC immediately */
 #define MTK_ENABLE_AGING_ALGORITHM	/* 6. Q_MAX aging algorithm */
-#define MD_SLEEP_CURRENT_CHECK	/* 5. Gauge Adjust by OCV 9. MD sleep current check */
+//#define MD_SLEEP_CURRENT_CHECK	/* 5. Gauge Adjust by OCV 9. MD sleep current check */
 					/*#define Q_MAX_BY_CURRENT*//* 7. Qmax varient by current loading. */
 
 #endif				/* #ifndef _CUST_BATTERY_METER_H */

@@ -701,6 +701,11 @@ static struct battery_data battery_main = {
 	.present_smb = 0,
 	/* ADB CMD discharging*/
 	.adjust_power = -1,
+#ifdef CONFIG_CM865_MAINBOARD  //add by longcheer_liml_12_06 
+	.charge_full_design = 4050*1000,
+#else
+	.charge_full_design = 3020*1000,
+#endif
 #endif
 };
 
@@ -2170,6 +2175,13 @@ static kal_uint32 mt_battery_average_method(BATTERY_AVG_ENUM type, kal_uint32 *b
 	return avgdata;
 }
 
+int FG_charging_status=0;
+//ywq 20150806
+#ifdef CONFIG_CM865_MAINBOARD
+	extern int hmi_battery_version; //ignore the compatible battery
+#else
+	extern int hmi_battery_version;
+#endif
 void mt_battery_GetBatteryData(void)
 {
 	kal_uint32 bat_vol, charger_vol, Vsense, ZCV;
@@ -2181,6 +2193,7 @@ void mt_battery_GetBatteryData(void)
 	static kal_uint8 batteryIndex = 0;
 	static kal_int32 previous_SOC = -1;
 
+	FG_charging_status=upmu_is_chr_det();
 	bat_vol = battery_meter_get_battery_voltage(KAL_TRUE);
 	Vsense = battery_meter_get_VSense();
 	if( upmu_is_chr_det() == KAL_TRUE ) {
@@ -2269,10 +2282,10 @@ void mt_battery_GetBatteryData(void)
 		g_battery_soc_ready = KAL_TRUE;
 
 	battery_log(BAT_LOG_CRTI,
-			    "AvgVbat=(%d),bat_vol=(%d),AvgI=(%d),I=(%d),VChr=(%d),AvgT=(%d),T=(%d),pre_SOC=(%d),SOC=(%d),ZCV=(%d)\n",
+			    "AvgVbat=(%d),bat_vol=(%d),AvgI=(%d),I=(%d),VChr=(%d),AvgT=(%d),T=(%d),pre_SOC=(%d),SOC=(%d),ZCV=(%d),bat_id=(%d)\n",
 			    BMT_status.bat_vol, bat_vol, BMT_status.ICharging, ICharging,
 			    BMT_status.charger_vol, BMT_status.temperature, temperature,
-			    previous_SOC, BMT_status.SOC, BMT_status.ZCV);
+			    previous_SOC, BMT_status.SOC, BMT_status.ZCV, hmi_battery_version);
 
 
 }
@@ -2374,6 +2387,20 @@ static PMU_STATUS mt_battery_CheckChargingTime(void)
 
 }
 
+static PMU_STATUS mt_battery_CheckBatteryversion(void)//liuchao
+{
+	PMU_STATUS status = PMU_STATUS_OK;
+
+	if ((hmi_battery_version != 1)&&
+		(hmi_battery_version !=2) &&
+		(hmi_battery_version !=3))
+	{
+		status = PMU_STATUS_FAIL;
+		battery_xlog_printk(BAT_LOG_CRTI, "mt_battery_CheckBatteryversion_error\n");
+	}	
+	return status;
+}
+
 #if defined(STOP_CHARGING_IN_TAKLING)
 static PMU_STATUS mt_battery_CheckCallState(void)
 {
@@ -2418,6 +2445,10 @@ static void mt_battery_CheckBatteryStatus(void)
 	}
 #endif
 
+	if (mt_battery_CheckBatteryversion() != PMU_STATUS_OK) {
+		BMT_status.bat_charging_state = CHR_ERROR;
+		return;
+	}
 	if (mt_battery_CheckChargingTime() != PMU_STATUS_OK) {
 		BMT_status.bat_charging_state = CHR_ERROR;
 		return;
@@ -2678,7 +2709,11 @@ CHARGER_TYPE mt_charger_type_detection(void)
 	BMT_status.charger_type = CHR_Type_num;
 #else
 	#if !defined(CONFIG_MTK_DUAL_INPUT_CHARGER_SUPPORT)
-	if (BMT_status.charger_type == CHARGER_UNKNOWN) {
+		#ifdef CONFIG_CM865_MAINBOARD
+			if ((BMT_status.charger_type == CHARGER_UNKNOWN) || (BMT_status.charger_type == NONSTANDARD_CHARGER)){
+		#else
+			if (BMT_status.charger_type == CHARGER_UNKNOWN){
+		#endif
 	#else
 	if ((BMT_status.charger_type == CHARGER_UNKNOWN) &&
 	    (DISO_data.diso_state.cur_vusb_state == DISO_ONLINE)) {
@@ -2741,7 +2776,12 @@ static void mt_battery_charger_detect_check(void)
 		    (DISO_data.diso_state.cur_vusb_state == DISO_ONLINE)) {
 		#endif
 			mt_charger_type_detection();
-
+#ifdef CONFIG_CM865_MAINBOARD 
+		if (BMT_status.charger_type == NONSTANDARD_CHARGER)
+		{
+			mt_charger_type_detection();
+		}
+#endif
 			if ((BMT_status.charger_type == STANDARD_HOST)
 			    || (BMT_status.charger_type == CHARGING_HOST)) {
 				mt_usb_connect();

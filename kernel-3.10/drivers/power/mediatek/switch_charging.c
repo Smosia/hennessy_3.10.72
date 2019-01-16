@@ -604,8 +604,13 @@ void select_charging_curret(void)
 			}
 #else
 			{
+			#ifdef CONFIG_CM865_MAINBOARD  //add by longcheer_liml_2015_10_14
+				g_temp_input_CC_value = USB_INPUT_CHARGER_CURRENT;
+				g_temp_CC_value = USB_CHARGER_CURRENT;
+			#else
 				g_temp_input_CC_value = USB_CHARGER_CURRENT;
 				g_temp_CC_value = USB_CHARGER_CURRENT;
+			#endif
 			}
 #endif
 		} else if (BMT_status.charger_type == NONSTANDARD_CHARGER) {
@@ -613,8 +618,13 @@ void select_charging_curret(void)
 			g_temp_CC_value = NON_STD_AC_CHARGER_CURRENT;
 
 		} else if (BMT_status.charger_type == STANDARD_CHARGER) {
+	#ifdef CONFIG_CM861_MAINBOARD_CHARGER_CURRENT_1A //add by longcheer_limi_2015_10_13
+			g_temp_input_CC_value = AC_CHARGER_CURRENT_1A;
+			g_temp_CC_value = AC_CHARGER_CURRENT_1A;
+	#else
 			g_temp_input_CC_value = AC_CHARGER_CURRENT;
 			g_temp_CC_value = AC_CHARGER_CURRENT;
+	#endif
 #if defined(CONFIG_MTK_PUMP_EXPRESS_PLUS_SUPPORT)
         		if(is_ta_connect == KAL_TRUE)
         			set_ta_charging_current();
@@ -735,7 +745,11 @@ static void pchr_turn_on_charging(void)
 			/*Set CV Voltage */
 #if !defined(CONFIG_MTK_JEITA_STANDARD_SUPPORT)
 #ifdef HIGH_BATTERY_VOLTAGE_SUPPORT
-			cv_voltage = BATTERY_VOLT_04_340000_V;
+#ifdef CONFIG_CM865_MAINBOARD //modify by Longcheer_liml_2015_8_4
+			cv_voltage = BATTERY_VOLT_04_400000_V;
+#else
+			cv_voltage = BATTERY_VOLT_04_425000_V;
+#endif
 #else
 			cv_voltage = BATTERY_VOLT_04_200000_V;
 #endif
