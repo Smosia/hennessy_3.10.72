@@ -97,12 +97,26 @@ NSFeature :  : RAWSensorInfo < _id >  :  : getFlickerPara \
 *
 ********************************************************************************/
 /* SENSOR CHIP VERSION */
-
+#define S5K3M2_SENSOR_ID                        0x30D2
+#define S5K3M2_2ND_SENSOR_ID                    0x30D3
+#define OV13853_SENSOR_ID                       0xD853
+#define OV13853_SENSOR_ID_MTS                   0xD854
+#define OV5670MIPI_SENSOR_ID                    0x5670
+#define OV5670_2ND_MIPI_SENSOR_ID               0x5671
+#define OV5670_FLT_2ND_MIPI_SENSOR_ID           0x5673
+#define S5K5E8YX_SENSOR_ID                      0x5e80
 
 /* CAMERA DRIVER NAME */
 #define CAMERA_HW_DEVNAME                       "kd_camera_hw"
 /* SENSOR DEVICE DRIVER NAME */
-
+#define SENSOR_DRVNAME_S5K3M2_MIPI_RAW          "s5k3m2mipiraw"
+#define SENSOR_DRVNAME_S5K3M2_2ND_MIPI_RAW      "s5k3m2_2ndmipiraw"
+#define SENSOR_DRVNAME_OV13853_MIPI_RAW         "ov13853mipiraw"
+#define SENSOR_DRVNAME_OV13853_MIPI_RAW_MTS     "ov13853mipiraw_mts"
+#define SENSOR_DRVNAME_OV5670_MIPI_RAW          "ov5670mipi"
+#define SENSOR_DRVNAME_OV5670_2ND_MIPI_RAW      "ov5670_2nd_mipi"
+#define SENSOR_DRVNAME_OV5670_FLT_2ND_MIPI_RAW  "ov5670_flt_2nd_mipi"
+#define SENSOR_DRVNAME_S5K5E8YX_MIPI_RAW        "s5k5e8yxmipiraw"
 
 /*******************************************************************************
 *
