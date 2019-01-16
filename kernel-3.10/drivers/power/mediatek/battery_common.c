@@ -80,7 +80,9 @@
 #if defined(CONFIG_MTK_DUAL_INPUT_CHARGER_SUPPORT)
 #include <mach/diso.h>
 #endif
-
+#ifdef CONFIG_CW2015_SUPPORT
+#include <mach/cw2015_battery.h>
+#endif
 #if defined(CONFIG_MTK_PUMP_EXPRESS_PLUS_SUPPORT)
 #include "cust_pe.h"
 #endif
@@ -1542,7 +1544,11 @@ static DEVICE_ATTR(Pump_Express, 0664, show_Pump_Express, store_Pump_Express);
 
 static void mt_battery_update_EM(struct battery_data *bat_data)
 {
+#ifdef CONFIG_CW2015_SUPPORT
+	bat_data->BAT_CAPACITY = g_cw2015_capacity;
+#else
 	bat_data->BAT_CAPACITY = BMT_status.UI_SOC;
+#endif
 	bat_data->BAT_TemperatureR = BMT_status.temperatureR;	/* API */
 	bat_data->BAT_TempBattVoltage = BMT_status.temperatureV;	/* API */
 	bat_data->BAT_InstatVolt = BMT_status.bat_vol;	/* VBAT */
@@ -2235,7 +2241,9 @@ void mt_battery_GetBatteryData(void)
 				      batteryIndex);
 	}
 
-
+#ifdef CONFIG_CW2015_SUPPORT
+	BMT_status.bat_vol = g_cw2015_vol;
+#endif
 	BMT_status.Vsense = Vsense;
 	BMT_status.charger_vol = charger_vol;
 	BMT_status.temperatureV = temperatureV;

@@ -39,6 +39,9 @@
 
 #include <mach/upmu_common.h>
 
+#ifdef CONFIG_CW2015_SUPPORT
+#include <mach/cw2015_battery.h>
+#endif
 
 /* ============================================================ // */
 /* define */
@@ -1324,9 +1327,30 @@ void fg_qmax_update_for_aging(void)
 #endif
 }
 
+#ifndef CONFIG_CW2015_SUPPORT
+#ifdef CONFIG_BAT_SEC_SUPPORT
+int hmi_battery_version=0;
+void hmi_get_battery_version(void)
+{
+char *ptr;
+ptr =strstr(saved_command_line,"batversion=");
+ptr +=strlen("batversion=");
+hmi_battery_version=simple_strtol(ptr,NULL,10);
+//bat_id=battery_ub_vendor();
+printk("liuchao_test_hmi_battery_version=%d\n",hmi_battery_version);
+}
+#endif
+#endif
 
 void dod_init(void)
 {
+
+#ifndef CONFIG_CW2015_SUPPORT
+#ifdef CONFIG_BAT_SEC_SUPPORT
+	hmi_get_battery_version();//liuchao
+#endif
+#endif
+
 #if defined(SOC_BY_HW_FG)
 	int ret = 0;
 
@@ -2831,6 +2855,9 @@ kal_int32 battery_meter_get_battery_percentage(void)
 	return 50;
 #else
 
+#ifdef CONFIG_CW2015_SUPPORT
+	return g_cw2015_capacity;
+#endif
 	if (bat_is_charger_exist() == KAL_FALSE)
 		fg_qmax_update_for_aging_flag = 1;
 
@@ -3643,10 +3670,48 @@ static ssize_t store_FG_g_fg_dbg_percentage_voltmode(struct device *dev,
 static DEVICE_ATTR(FG_g_fg_dbg_percentage_voltmode, 0664, show_FG_g_fg_dbg_percentage_voltmode,
 		   store_FG_g_fg_dbg_percentage_voltmode);
 
+#ifdef CONFIG_CW2015_SUPPORT
+extern int CW2015_test_init;
+static ssize_t show_Cwtest(struct device *dev, struct device_attribute *attr, char *buf)
+{
+	bm_print(BM_LOG_CRTI, "[FG] CW2015_test  : %d\n", CW2015_test_init);
+	return sprintf(buf, "%d\n", CW2015_test_init);
+}
+
+static ssize_t store_Cwtest(struct device *dev, struct device_attribute *attr,
+				      const char *buf, size_t size)
+{
+	return size;
+}
+
+static DEVICE_ATTR(Cwtest, 0664, show_Cwtest, store_Cwtest);
+
+extern int cw2015_check;
+static ssize_t show_Cwcheck(struct device *dev, struct device_attribute *attr, char *buf)
+{
+	bm_print(BM_LOG_CRTI, "[FG] CW2015_test  : %d\n", cw2015_check);
+	return sprintf(buf, "%d\n", cw2015_check);
+}
+
+static ssize_t store_Cwcheck(struct device *dev, struct device_attribute *attr,
+				      const char *buf, size_t size)
+{
+	return size;
+}
+
+static DEVICE_ATTR(Cwcheck, 0664, show_Cwcheck, store_Cwcheck);;
+
+static ssize_t show_is_charging(struct device *dev, struct device_attribute *attr, char *buf)
+{
+	return sprintf(buf, "%d\n", gFG_Is_Charging);
+}
+static DEVICE_ATTR(is_charging, 0664, show_is_charging, NULL);;
+#endif
 /* ============================================================ // */
 static int battery_meter_probe(struct platform_device *dev)
 {
 	int ret_device_file = 0;
+	int ret = 0;
 #if defined(CONFIG_MTK_KERNEL_POWER_OFF_CHARGING)
 	char *temp_strptr;
 #endif
@@ -3655,6 +3720,13 @@ static int battery_meter_probe(struct platform_device *dev)
 	bm_print(BM_LOG_CRTI, "[battery_meter_probe] probe\n");
 	/* select battery meter control method */
 	battery_meter_ctrl = bm_ctrl_cmd;
+
+	ret = battery_meter_ctrl(BATTERY_METER_CMD_GET_HW_OCV, &gFG_voltage);
+#ifdef CONFIG_CW2015_SUPPORT
+    g_mtk_init_vol = gFG_voltage;
+#endif
+    
+    printk("%s, %d, ret_batter_meter:%d \n",__func__, __LINE__,  gFG_voltage);
 #if defined(CONFIG_MTK_KERNEL_POWER_OFF_CHARGING)
 	if (g_boot_mode == LOW_POWER_OFF_CHARGING_BOOT || g_boot_mode == KERNEL_POWER_OFF_CHARGING_BOOT) {
 		temp_strptr = kzalloc(strlen(saved_command_line)+strlen(" androidboot.mode=charger")+1, GFP_KERNEL);
@@ -3695,6 +3767,12 @@ static int battery_meter_probe(struct platform_device *dev)
 	ret_device_file = device_create_file(&(dev->dev), &dev_attr_FG_Min_Battery_Temperature);
 #endif
 
+#ifdef CONFIG_CW2015_SUPPORT
+	ret_device_file = device_create_file(&(dev->dev), &dev_attr_Cwtest);
+	ret_device_file = device_create_file(&(dev->dev), &dev_attr_Cwcheck);
+#endif
+
+	ret_device_file = device_create_file(&(dev->dev), &dev_attr_is_charging);
 	return 0;
 }
 

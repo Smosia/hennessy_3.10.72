@@ -17,3 +17,5 @@ else
           obj-$(CONFIG_MTK_SMART_BATTERY) += charging_hw_pmic.o
      endif
 endif
+
+obj-$(CONFIG_CW2015_SUPPORT) += cw2015_battery.o
