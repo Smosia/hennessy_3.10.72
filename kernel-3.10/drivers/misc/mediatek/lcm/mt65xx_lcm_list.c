@@ -18,8 +18,27 @@
 #define LCD_DEBUG(fmt)  pr_debug(fmt)
 #endif
 
-LCM_DRIVER *lcm_driver_list[] = {
+extern LCM_DRIVER nt35596_fhd_tianma_phantom_lcm_drv;
+extern LCM_DRIVER r63315_fhd_sharp_phantom_lcm_drv;
+extern LCM_DRIVER nt35532_fhd_boe_vdo_lcm_drv;
+extern LCM_DRIVER nt35532_fhd_boe_s11_vdo_lcm_drv;
 
+LCM_DRIVER *lcm_driver_list[] = {
+#if defined(NT35596_FHD_DSI_VDO_TIANMA_CX865)
+	&nt35596_fhd_tianma_phantom_lcm_drv,
+#endif
+
+#if defined(R63315_FHD_DSI_VDO_SHARP)
+	&r63315_fhd_sharp_phantom_lcm_drv,
+#endif
+
+#if defined(NT35532_FHD_DSI_VDO_BOE_CX865)
+	&nt35532_fhd_boe_vdo_lcm_drv,
+#endif
+
+#if defined(NT35532_FHD_DSI_VDO_BOE_S11_CX865)
+	&nt35532_fhd_boe_s11_vdo_lcm_drv,
+#endif
 };
 
 #define LCM_COMPILE_ASSERT(condition) LCM_COMPILE_ASSERT_X(condition, __LINE__)
