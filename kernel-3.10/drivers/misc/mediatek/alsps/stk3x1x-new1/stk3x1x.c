@@ -84,12 +84,8 @@
 //#define STK_CHK_REG
 //#define STK_GES
 
-/////
-#include "cust_alsps.h"  //wangxiqiang
-extern struct alsps_hw* stk_get_cust_alsps_hw(void);
-
+#include <cust_alsps.h>  //wangxiqiang
 #include <alsps.h>
-
 
 #ifdef MT6516
 	#include <mach/mt6516_devs.h>
@@ -5133,8 +5129,7 @@ static int ps_get_data(int* value, int* status)
 	return 0;
 }
 
-#include <linux/dev_info.h>
-
+//#include <linux/dev_info.h>
 /*----------------------------------------------------------------------------*/
 static int stk3x1x_i2c_probe(struct i2c_client *client, const struct i2c_device_id *id)
 {
@@ -5372,16 +5367,17 @@ static int stk3x1x_i2c_probe(struct i2c_client *client, const struct i2c_device_
     stk3x1x_init_flag = 0;
 #endif
 
-		struct devinfo_struct *dev = (struct devinfo_struct*)kmalloc(sizeof(struct devinfo_struct), GFP_KERNEL);;
-		dev->device_type = "ALSPS";
-		dev->device_vendor = "STK"; 
-		dev->device_ic = "stk3311";
-		dev->device_version = DEVINFO_NULL;
-		dev->device_module = DEVINFO_NULL; 
-		dev->device_info = DEVINFO_NULL;
-		dev->device_used = DEVINFO_USED;	
-		  DEVINFO_CHECK_ADD_DEVICE(dev);
-
+#if 0
+	struct devinfo_struct *dev = (struct devinfo_struct*)kmalloc(sizeof(struct devinfo_struct), GFP_KERNEL);;
+	dev->device_type = "ALSPS";
+	dev->device_vendor = "STK"; 
+	dev->device_ic = "stk3311";
+	dev->device_version = DEVINFO_NULL;
+	dev->device_module = DEVINFO_NULL; 
+	dev->device_info = DEVINFO_NULL;
+	dev->device_used = DEVINFO_USED;	
+	DEVINFO_CHECK_ADD_DEVICE(dev);
+#endif
 	APS_LOG("%s: OK\n", __FUNCTION__);
 
 	return 0;
