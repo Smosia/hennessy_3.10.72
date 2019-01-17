@@ -1,4 +1,0 @@
-
-config MTK_LSM303M
-	bool "LSM303M for MediaTek package"
-	default n
