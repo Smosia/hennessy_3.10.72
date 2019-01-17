@@ -1,0 +1,8 @@
+config MTK_LSM6DS3
+        bool "MTK_LSM6DS3 for MediaTek package"
+        default y
+	help
+	  It support different accelerometer sensor.
+          If this option is set,
+	  it will support
+          MTK_LSM6DS3 Accelerometer.

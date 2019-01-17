@@ -1,0 +1,3 @@
+config MTK_BMA050_NEW
+	bool "MTK_BMA050_NEW for MediaTek package"
+	default y

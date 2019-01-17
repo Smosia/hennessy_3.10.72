@@ -1,0 +1,3 @@
+config MTK_BMA160
+	bool "Accelerometer BMA160 for MediaTek package"
+	default y
