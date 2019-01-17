@@ -8,8 +8,12 @@ obj-y   += dct/dct/
 endif
 
 ifeq ($(CONFIG_MTK_SENSOR_SUPPORT),y)
-ifeq ($(CONFIG_MTK_CM36652_NEW),y)
-obj-y	+=  alsps/cm36652-new/
+ifeq ($(CONFIG_MTK_STK3X1X_NEW),y)
+obj-y	+=  alsps/stk3x1x-new1/
+endif
+
+ifeq ($(CONFIG_MTK_LTR559),y)
+obj-y	+=  alsps/ltr559/
 endif
 
 ifeq ($(CONFIG_MTK_BMA160),y)
