@@ -1,5 +1,5 @@
 config MTK_IRTX_SUPPORT
 	bool "MediaTek consumer IR transmitter"
-	default n
+	default y
 	---help---
 	  IRTX driver support for MediaTek SoC
