@@ -15,4 +15,4 @@ config CUSTOM_KERNEL_SIGNIFICANT_MOTION_SENSOR
           of a system that automatically performs a task or alerts
           a user of motion in an area.
 
-source "drivers/misc/mediatek/accelerometer/bmi160_stc/Kconfig"
+source "drivers/misc/mediatek/step_counter/bmi160_stc/Kconfig"
