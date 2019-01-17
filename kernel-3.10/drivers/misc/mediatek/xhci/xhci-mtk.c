@@ -68,6 +68,7 @@ struct xhci_hcd *mtk_xhci;
 static spinlock_t *mtk_hub_event_lock;
 static struct list_head* mtk_hub_event_list;
 static int mtk_ep_count;
+static bool vbus_on = false;
 
 static struct wake_lock mtk_xhci_wakelock;
 
@@ -96,6 +97,10 @@ static struct delayed_work mtk_xhci_delaywork;
 
 int mtk_iddig_debounce = 10;
 module_param(mtk_iddig_debounce, int, 0644);
+
+#if defined(CONFIG_MTK_BQ24296_SUPPORT)
+extern void bq24296_set_otg_config(kal_uint32 val);
+#endif
 
 static void mtk_set_iddig_out_detect(void)
 {
@@ -168,10 +173,17 @@ static void mtk_enable_pmic_otg_mode(void)
 {
 	int val;
 
+	if (vbus_on)
+		return;
+	vbus_on = true;
+
+#if defined(CONFIG_MTK_BQ24296_SUPPORT)
+    bq24296_set_otg_config(0x1);
+#else
 	mt_set_gpio_mode(GPIO_OTG_DRVVBUS_PIN, GPIO_MODE_GPIO);
 	mt_set_gpio_pull_select(GPIO_OTG_DRVVBUS_PIN, GPIO_PULL_DOWN);
 	mt_set_gpio_pull_enable(GPIO_OTG_DRVVBUS_PIN, GPIO_PULL_ENABLE);
-
+#endif
 	/* save PMIC related registers */
 	pmic_save_regs();
 
@@ -225,6 +237,13 @@ static void mtk_disable_pmic_otg_mode(void)
 {
 	int val;
 
+	if (!vbus_on)
+		return
+	vbus_on = false;
+
+#if defined(CONFIG_MTK_BQ24296_SUPPORT)
+	bq24296_set_otg_config(0);
+#endif
 	pmic_config_interface(0x8068, 0x0, 0x1, 0);
 	pmic_config_interface(0x8084, 0x0, 0x1, 0);
 	mdelay(50);

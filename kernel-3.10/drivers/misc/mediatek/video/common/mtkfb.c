@@ -79,6 +79,10 @@ static u32 MTK_FB_PAGES;
 static u32 fb_xres_update;
 static u32 fb_yres_update;
 
+#ifdef CONFIG_CM865_MAINBOARD  //add by longcheer_liml_2015_11_13
+extern void bq24296_set_otg_config(kal_uint32 val);
+#endif
+
 #define MTK_FB_XRESV (ALIGN_TO(MTK_FB_XRES, MTK_FB_ALIGNMENT))
 #define MTK_FB_YRESV (ALIGN_TO(MTK_FB_YRES, MTK_FB_ALIGNMENT) * MTK_FB_PAGES)	/* For page flipping */
 #define MTK_FB_BYPP  ((MTK_FB_BPP + 7) >> 3)
@@ -2475,6 +2479,9 @@ static void mtkfb_shutdown(struct device *pdev)
 {
 	MTKFB_LOG("[FB Driver] mtkfb_shutdown()\n");
 	/* mt65xx_leds_brightness_set(MT65XX_LED_TYPE_LCD, LED_OFF); */
+	#ifdef CONFIG_CM865_MAINBOARD
+		bq24296_set_otg_config(0); //add by longcheer_liml_2015_11_13
+	#endif
 	if (!lcd_fps)
 		msleep(30);
 	else
