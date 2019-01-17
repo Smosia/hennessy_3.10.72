@@ -534,7 +534,7 @@ EXPORT_SYMBOL(mt_wifi_power_off);
         .ett_count            = 0, //should be same with ett_settings array size
         .host_function        = MSDC_SD,
         .boot	                = 0,
-        .cd_level             = MSDC_CD_LOW,
+        .cd_level             = MSDC_CD_HIGH,
     };
 #endif
 #endif
@@ -574,7 +574,7 @@ EXPORT_SYMBOL(mt_wifi_power_off);
         .cmdrddly             = 0,
         .host_function        = MSDC_SDIO,
         .boot	                = 0,
-        .cd_level             = MSDC_CD_LOW,
+        .cd_level             = MSDC_CD_HIGH,
         .request_sdio_eirq = mtk_wcn_cmb_sdio_request_eirq,
         .enable_sdio_eirq  = mtk_wcn_cmb_sdio_enable_eirq,
         .disable_sdio_eirq = mtk_wcn_cmb_sdio_disable_eirq,
@@ -601,9 +601,11 @@ EXPORT_SYMBOL(mt_wifi_power_off);
         .data_pins            = 4,
         .data_offset          = 0,
 #ifdef CUST_EINT_MSDC1_INS_NUM
-        .flags                = MSDC_SYS_SUSPEND | MSDC_CD_PIN_EN | MSDC_REMOVABLE | MSDC_HIGHSPEED | MSDC_UHS1 |MSDC_DDR,    
+        //.flags                = MSDC_SYS_SUSPEND | MSDC_CD_PIN_EN | MSDC_REMOVABLE | MSDC_HIGHSPEED | MSDC_UHS1 |MSDC_DDR,    
+        .flags                = MSDC_SYS_SUSPEND,
 #else
-        .flags                = MSDC_SYS_SUSPEND | MSDC_HIGHSPEED | MSDC_UHS1 |MSDC_DDR,   
+        //.flags                = MSDC_SYS_SUSPEND | MSDC_HIGHSPEED | MSDC_UHS1 |MSDC_DDR,   
+        .flags                = MSDC_SYS_SUSPEND,
 #endif
         .dat0rddly            = 0,
         .dat1rddly            = 0,
@@ -619,7 +621,7 @@ EXPORT_SYMBOL(mt_wifi_power_off);
         .ett_count            = 0, //should be same with ett_settings array size
         .host_function        = MSDC_SD,
         .boot	                = 0,
-        .cd_level             = MSDC_CD_LOW,
+        .cd_level             = MSDC_CD_HIGH,
     };
 #endif
 #endif
@@ -692,7 +694,7 @@ EXPORT_SYMBOL(mt_wifi_power_off);
         .ett_count            = 0, //should be same with ett_settings array size
         .host_function        = MSDC_SD,
         .boot	                = 0,
-        .cd_level             = MSDC_CD_LOW,
+        .cd_level             = MSDC_CD_HIGH,
 };
 #endif
 #endif
