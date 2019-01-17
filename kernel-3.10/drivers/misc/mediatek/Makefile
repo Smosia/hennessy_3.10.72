@@ -117,6 +117,7 @@ obj-$(CONFIG_CUSTOM_KERNEL_RV_SENSOR)	+= rotationvector/
 obj-$(CONFIG_CUSTOM_KERNEL_LINEARACCEL_SENSOR)	+= linearacceleration/
 obj-$(CONFIG_CUSTOM_KERNEL_GRV_SENSOR)	+= gamerotationvector/
 obj-$(CONFIG_CUSTOM_KERNEL_GMRV_SENSOR)	+= geomagneticrotationvector/
+obj-$(CONFIG_CUSTOM_KERNEL_HALL) += hall_sensor/
 
 endif
 
