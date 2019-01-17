@@ -1241,7 +1241,7 @@ static ssize_t store_cpsopmode_value(struct device_driver *ddri, const char *buf
 	}
 	else if (bma250_set_mode(bma250_i2c_client, (unsigned char) data) < 0)
 	{
-		GSE_ERR("invalid content: '%s', length = %d\n", buf, count);
+		GSE_ERR("invalid content: '%s', length = %d\n", buf, (int)count);
 	}
 	return count;
 }
@@ -1279,7 +1279,7 @@ static ssize_t store_cpsrange_value(struct device_driver *ddri, const char *buf,
 	}
 	if (bma250_set_range(bma250_i2c_client, (unsigned char) data) < 0)
 	{
-		GSE_ERR("invalid content: '%s', length = %d\n", buf, count);
+		GSE_ERR("invalid content: '%s', length = %d\n", buf, (int)count);
 	}
 
 	return count;
@@ -1317,7 +1317,7 @@ static ssize_t store_cpsbandwidth_value(struct device_driver *ddri, const char *
 	}
 	if (bma250_set_bandwidth(bma250_i2c_client, (unsigned char) data) < 0)
 	{
-		GSE_ERR("invalid content: '%s', length = %d\n", buf, count);
+		GSE_ERR("invalid content: '%s', length = %d\n", buf, (int)count);
 	}
 
 	return count;
@@ -1537,7 +1537,7 @@ static ssize_t store_trace_value(struct device_driver *ddri, const char *buf, si
 	}	
 	else
 	{
-		GSE_ERR("invalid content: '%s', length = %d\n", buf, count);
+		GSE_ERR("invalid content: '%s', length = %d\n", buf, (int)count);
 	}
 	
 	return count;    
