@@ -235,6 +235,7 @@ kal_int32 gFG_min_temperature = 100;
 
 #endif				/* battery info */
 
+extern char* saved_command_line;
 /* Temperature window size */
 #define TEMP_AVERAGE_SIZE	30
 
@@ -3670,6 +3671,22 @@ static ssize_t store_FG_g_fg_dbg_percentage_voltmode(struct device *dev,
 static DEVICE_ATTR(FG_g_fg_dbg_percentage_voltmode, 0664, show_FG_g_fg_dbg_percentage_voltmode,
 		   store_FG_g_fg_dbg_percentage_voltmode);
 
+int Boardid_value=1;
+static ssize_t show_Boardid(struct device *dev, struct device_attribute *attr, char *buf)
+{
+	bm_print(BM_LOG_CRTI, "[FG] Boardid  : %d\n", Boardid_value);
+	return sprintf(buf, "%d\n", Boardid_value);
+}
+
+static ssize_t store_Boardid(struct device *dev, struct device_attribute *attr,
+				      const char *buf, size_t size)
+{
+
+	return size;
+}
+
+static DEVICE_ATTR(Boardid, 0664, show_Boardid, store_Boardid);
+
 #ifdef CONFIG_CW2015_SUPPORT
 extern int CW2015_test_init;
 static ssize_t show_Cwtest(struct device *dev, struct device_attribute *attr, char *buf)
@@ -3766,7 +3783,7 @@ static int battery_meter_probe(struct platform_device *dev)
 	ret_device_file = device_create_file(&(dev->dev), &dev_attr_FG_Max_Battery_Temperature);
 	ret_device_file = device_create_file(&(dev->dev), &dev_attr_FG_Min_Battery_Temperature);
 #endif
-
+	ret_device_file = device_create_file(&(dev->dev), &dev_attr_Boardid);
 #ifdef CONFIG_CW2015_SUPPORT
 	ret_device_file = device_create_file(&(dev->dev), &dev_attr_Cwtest);
 	ret_device_file = device_create_file(&(dev->dev), &dev_attr_Cwcheck);
