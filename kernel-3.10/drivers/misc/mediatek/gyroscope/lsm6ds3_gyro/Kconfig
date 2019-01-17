@@ -1,0 +1,8 @@
+config MTK_LSM6DS3_GYRO
+	bool "ST LSM6DS3 Gyroscope driver for MediaTek package"
+	default y
+	help
+	  To claim the support of gyroscope of LSM6DS3 A+G sensor.
+	  If this option is set,
+	  it will support gyroscope function of LSM6DS3.
+	  If unsure,say N.
