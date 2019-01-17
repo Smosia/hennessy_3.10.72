@@ -53,7 +53,7 @@
 
 
 /* Discharge Percentage */
-#define OAM_D5		 1	/* 1 : D5,   0: D2 */
+#define OAM_D5		 0	/* 1 : D5,   0: D2 */
 
 
 /* battery meter parameter */
