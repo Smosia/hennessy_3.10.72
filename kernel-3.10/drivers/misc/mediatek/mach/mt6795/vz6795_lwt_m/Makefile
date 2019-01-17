@@ -24,8 +24,8 @@ ifeq ($(CONFIG_MTK_LSM6DS3),y)
 obj-y   +=  accelerometer/lsm6ds3/
 endif
 
-ifeq ($(CONFIG_MTK_MPU6050GY_NEW),y)
-obj-y   +=  gyroscope/mpu6050gy-new/
+ifeq ($(CONFIG_MTK_BMI160_GYRO),y)
+obj-y   +=  gyroscope/bmi160_gyro/
 endif
 
 ifeq ($(CONFIG_MTK_AKM8963_NEW),y)
