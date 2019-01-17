@@ -16,6 +16,10 @@ ifeq ($(CONFIG_MTK_MPU6050G_NEW),y)
 obj-y   +=  accelerometer/mpu6050g-new/
 endif
 
+ifeq ($(CONFIG_MTK_BMA160),y)
+obj-y   +=  accelerometer/bma160/
+endif
+
 ifeq ($(CONFIG_MTK_MPU6050GY_NEW),y)
 obj-y   +=  gyroscope/mpu6050gy-new/
 endif
