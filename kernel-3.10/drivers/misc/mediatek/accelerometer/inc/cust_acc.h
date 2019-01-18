@@ -18,6 +18,10 @@ struct acc_hw {
 };
 
 extern struct acc_hw *get_cust_acc_hw(void);
+
+#if defined(CONFIG_MTK_LSM6DS3)
 extern struct acc_hw *get_cust_acc_hw_lsm(void);
+#endif
+
 struct acc_hw* get_accel_dts_func(const char *, struct acc_hw*);
 #endif
