@@ -61,6 +61,7 @@ typedef enum
 typedef enum
 {
     e_FLASH_DRIVER_6332=0,
+    e_FLASH_DRIVER_OTHERS=1   //ADD BY LCSH LVXIAOLIANG FOR DUAL FLASH 
 
 } eDrvierNameId;
 

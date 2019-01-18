@@ -547,7 +547,16 @@ static long flashlight_ioctl_core(struct file *file, unsigned int cmd, unsigned 
 			}
 			break;
 		case FLASH_IOC_GET_FLASH_DRIVER_NAME_ID:
-	case FLASH_IOC_GET_PRE_ON_TIME_MS:
+			//ADD BY LCSH LVXIAOLIANG FOR DUAL FLASH
+			vTemp = e_FLASH_DRIVER_OTHERS; 
+			kdArg.arg = vTemp;
+			logI("FLASH_IOC_GET_FLASH_DRIVER_NAME_ID r=%d\n", vTemp);
+			if(copy_to_user((void __user *) arg, (void*)&kdArg, sizeof(kdStrobeDrvArg)))
+			{
+				logI("[FLASH_IOC_GET_FLASH_DRIVER_NAME_ID] ioctl copy to user failed ~");
+				return -EFAULT;
+			}
+		case FLASH_IOC_GET_PRE_ON_TIME_MS:
 			{
 				FLASHLIGHT_FUNCTION_STRUCT *pF;
 				pF = g_pFlashInitFunc[sensorDevIndex][strobeIndex][partIndex];
