@@ -1,0 +1,8 @@
+config MTK_AH1903
+	bool "AH1903 hall sensor driver for MediaTek package"
+	default y
+	help
+	  To claim the support of hall sensor AH1903.
+	  If this option is set,
+	  it will support hall sensor function of AH1903.
+	  If unsure,say N.
