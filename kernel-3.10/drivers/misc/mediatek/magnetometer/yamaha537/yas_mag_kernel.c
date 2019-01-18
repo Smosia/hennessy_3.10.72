@@ -965,7 +965,6 @@ static void yas_late_resume(struct early_suspend *h)
 }
 #endif
 
-#include <linux/dev_info.h>
 static int yas_probe(struct i2c_client *i2c,
 		const struct i2c_device_id *id)
 {
@@ -1221,16 +1220,6 @@ static int yas_probe(struct i2c_client *i2c,
 		register_early_suspend(&st->sus);
 #endif
 	MAGN_ERR("%s: OK\n", __func__);
-		struct devinfo_struct *dev = (struct devinfo_struct*)kmalloc(sizeof(struct devinfo_struct), GFP_KERNEL);;
-		dev->device_type = "MAG";
-		dev->device_vendor = "YAMAHA"; 
-		dev->device_ic = "yas537";
-		dev->device_version = DEVINFO_NULL;
-		dev->device_module = DEVINFO_NULL; 
-		dev->device_info = DEVINFO_NULL;
-		dev->device_used = DEVINFO_USED;	
-		  DEVINFO_CHECK_ADD_DEVICE(dev);
-
 
 	return 0;
 

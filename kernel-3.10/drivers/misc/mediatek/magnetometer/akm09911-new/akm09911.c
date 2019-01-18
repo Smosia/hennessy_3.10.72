@@ -2990,7 +2990,6 @@ static int akm09911_o_get_data(int* x ,int* y,int* z, int* status)
 	return 0;
 }
 
-#include <linux/dev_info.h>
 /*----------------------------------------------------------------------------*/
 static int akm09911_i2c_probe(struct i2c_client *client, const struct i2c_device_id *id)
 {
@@ -3159,18 +3158,7 @@ static int akm09911_i2c_probe(struct i2c_client *client, const struct i2c_device
 #endif
 
 	MAG_ERR("%s: OK\n", __func__);
-	akm09911_init_flag = 1;  
-
-		struct devinfo_struct *dev = (struct devinfo_struct*)kmalloc(sizeof(struct devinfo_struct), GFP_KERNEL);;
-		dev->device_type = "MAG";
-		dev->device_vendor = "AKM"; 
-		dev->device_ic = "akm09911";
-		dev->device_version = DEVINFO_NULL;
-		dev->device_module = DEVINFO_NULL; 
-		dev->device_info = DEVINFO_NULL;
-		dev->device_used = DEVINFO_USED;	
-		  DEVINFO_CHECK_ADD_DEVICE(dev);
-
+	akm09911_init_flag = 1;
 
 	printk("%s, %d \n", __func__, __LINE__);
 	return 0;
