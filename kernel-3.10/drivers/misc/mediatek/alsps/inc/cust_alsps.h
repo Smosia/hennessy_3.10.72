@@ -50,4 +50,6 @@ extern struct alsps_hw* ltr559_get_cust_alsps_hw(void);
 #if defined(CONFIG_MTK_STK3X1X_NEW)
 extern struct alsps_hw* stk_get_cust_alsps_hw(void);
 #endif
+
+__weak int pmic_ldo_suspend_enable(int enable);
 #endif
