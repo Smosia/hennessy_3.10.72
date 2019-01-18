@@ -434,6 +434,27 @@ config TOUCHSCREEN_MTK
 	  To compile this driver as a module, choose M here: the
 	  module will be called MediaTek touch panel.
 
+config TOUCHSCREEN_MTK_FT5346
+	bool "FT5346 for Mediatek package"
+	depends on TOUCHSCREEN_MTK
+	help
+	  Say Y here to enable MTK_FT5346 touchscreen support.
+
+	  If unsure, say N.
+
+	  To compile this driver as a module, choose M here: the
+	  module will be called MTK_FT5346.
+
+config TOUCHSCREEN_MTK_ATMEL336T
+	bool "ATMEL336T for Mediatek package"
+	depends on TOUCHSCREEN_MTK
+	help
+	  Say Y here to enable ATMEL336T touchscreen support.
+
+	  If unsure, say N.
+
+	  To compile this driver as a module, choose M here: the
+	  module will be called ATMEL336T.
 
 config TOUCHSCREEN_MTK_GT9XX
 	bool "GT9XX for Mediatek package"
