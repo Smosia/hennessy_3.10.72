@@ -41,7 +41,6 @@
   //#define FILE_PATH "/lastsoc"
   #define CPSOC  90
 #endif
-#include <linux/dev_info.h>//add liuchao
 #include <linux/module.h>
 #include <linux/unistd.h>
 #include <linux/init.h>
@@ -53,11 +52,6 @@
   #include <linux/fcntl.h>
 #include <cust_charging.h>
 #include <mach/charging.h>
-//#include <mach/cw2015_battery.h>
-//#include <linux/miscdevice.h>
-//#include <linux/uaccess.h>
-//#include <mach/mt_typedefs.h>
-
 
 #define REG_VERSION             0x0
 #define REG_VCELL               0x2
@@ -980,31 +974,6 @@ static int cw_init(struct cw_battery *cw_bat)
 	int i;
 	u8 reg_val = MODE_SLEEP;
 	hmi_get_battery_version();//liuchao
-
-	struct devinfo_struct *dev = (struct devinfo_struct*)kmalloc(sizeof(struct devinfo_struct), GFP_KERNEL);
-	dev->device_type = "Battery";
-	dev->device_vendor = DEVINFO_NULL;
-	dev->device_ic = DEVINFO_NULL;
-	dev->device_version = DEVINFO_NULL;
-#ifdef CONFIG_CM865_MAINBOARD
-	if(hmi_battery_version==1)		
-	dev->device_module = "Cos"; 
-	else if(hmi_battery_version==2)	
-	dev->device_module = "Sun";
-	else if(hmi_battery_version==3)	
-	dev->device_module = "Scud";
-#else
-	if(hmi_battery_version==1)		
-	dev->device_module = "Cos"; 
-	else if(hmi_battery_version==2)	
-	dev->device_module = "Des";
-#endif
-	else
-	dev->device_module = "ERROR";	
-	dev->device_info = DEVINFO_NULL;
-	dev->device_used = DEVINFO_USED;	
-	DEVINFO_CHECK_ADD_DEVICE(dev);
-
 
 #if 0
 	ret = cw_read(cw_bat->client, REG_MODE, &reg_val);
