@@ -505,6 +505,11 @@ config MTK_BQ27541_SUPPORT
 	help
 	  yes : support TI bq27541 external gauge IC
 
+config CW2015_SUPPORT
+	bool "CW2015_SUPPORT"
+	help
+	  yes : support CW2015 external battery control IC
+
 config MTK_NCP1851_SUPPORT
 	bool "MTK_NCP1851_SUPPORT"
 	help
