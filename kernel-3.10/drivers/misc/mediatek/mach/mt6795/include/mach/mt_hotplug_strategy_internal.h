@@ -51,7 +51,11 @@ extern "C" {
 #define DEF_CPU_UP_THRESHOLD                (95)
 #define DEF_CPU_UP_TIMES                    (2)
 #define DEF_CPU_DOWN_THRESHOLD              (85)
+#ifdef CONFIG_CPU_LOW_POWER
+#define DEF_CPU_DOWN_TIMES                  (5)
+#else
 #define DEF_CPU_DOWN_TIMES                  (8)
+#endif
 #define DEF_TLP_TIMES                       (1)
 
 #define EN_CPU_INPUT_BOOST                  (1)
