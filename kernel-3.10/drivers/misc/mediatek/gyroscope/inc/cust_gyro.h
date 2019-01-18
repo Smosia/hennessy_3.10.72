@@ -20,5 +20,10 @@ struct gyro_hw {
 };
 
 extern struct gyro_hw* get_cust_gyro_hw(void);
+
+#if defined(CONFIG_MTK_LSM6DS3_GYRO)
+extern struct gyro_hw* get_cust_gyro_hw_lsm(void);
+#endif
+
 struct gyro_hw* get_gyro_dts_func(const char *, struct gyro_hw*);
 #endif 

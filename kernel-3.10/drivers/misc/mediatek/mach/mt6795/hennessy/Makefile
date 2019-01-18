@@ -28,6 +28,10 @@ ifeq ($(CONFIG_MTK_BMI160_GYRO),y)
 obj-y   +=  gyroscope/bmi160_gyro/
 endif
 
+ifeq ($(CONFIG_MTK_LSM6DS3_GYRO),y)
+obj-y   +=  gyroscope/lsm6ds3_gyro/
+endif
+
 ifeq ($(CONFIG_MTK_AKM09911_NEW),y)
 obj-y	+=  magnetometer/akm09911-new/
 endif
