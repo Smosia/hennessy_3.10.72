@@ -617,6 +617,32 @@ static IMG_BOOL MTKGpuDVFSPolicy(IMG_UINT32 ui32GPULoading, unsigned int* pui32N
     int i32CurFreqID = (int)mt_gpufreq_get_cur_freq_index();
     int i32NewFreqID = i32CurFreqID;
 
+#ifdef CONFIG_CPU_LOW_POWER
+    if (ui32GPULoading >= 99)
+    {
+        i32NewFreqID = 0;
+    }
+    else if (ui32GPULoading <= 1)
+    {
+        i32NewFreqID = i32MaxLevel;
+    }
+    else if (ui32GPULoading >= 95)
+    {
+        i32NewFreqID -= 2;
+    }
+    else if (ui32GPULoading <= 40)
+    {
+        i32NewFreqID += 2;
+    }
+    else if (ui32GPULoading >= 80)
+    {
+        i32NewFreqID -= 1;
+    }
+    else if (ui32GPULoading <= 60)
+    {
+        i32NewFreqID += 1;
+    }
+#else
     if (ui32GPULoading >= 99)
     {
         i32NewFreqID = 0;
@@ -641,7 +667,7 @@ static IMG_BOOL MTKGpuDVFSPolicy(IMG_UINT32 ui32GPULoading, unsigned int* pui32N
     {
         i32NewFreqID += 1;
     }
-
+#endif
     if (i32NewFreqID < i32CurFreqID)
     {
         if (gpu_pre_loading * 17 / 10 < ui32GPULoading)
