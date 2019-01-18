@@ -156,6 +156,13 @@ config MD5_SIZE
 config MTK_EXTERNAL_MODEM_SLOT
 	string "MTK_EXTERNAL_MODEM_SLOT"
 
+config MTK_LTE_SUPPORT
+	bool "MediaTek LTE support"
+	select MTK_CONN_MD
+	default y
+	help
+	  This option enables LTE support
+
 # Frame Buffer Related
 menuconfig MTK_FB
 	bool "MediaTek Framebuffer Driver"
@@ -1163,3 +1170,11 @@ config SW_SYNC64
 	  A sync object driver that uses a 64bit counter to coordinate
 	  syncrhronization.  Useful when there is no hardware primitive backing
 	  the synchronization.
+
+config CM865_MAINBOARD
+	bool "CM865 MAINBOARD Driver"
+	default y
+
+config CPU_LOW_POWER
+	bool "MTK CPU_LOW_POWER_SUPPORT"
+	default y
