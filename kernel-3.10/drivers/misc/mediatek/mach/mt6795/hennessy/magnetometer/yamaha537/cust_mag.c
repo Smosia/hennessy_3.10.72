@@ -18,5 +18,5 @@ static struct mag_hw cust_mag_hw_yas = {
 };
 struct mag_hw* get_cust_mag_hw_yas(void) 
 {
-    return &cust_mag_hw;
+    return &cust_mag_hw_yas;
 }

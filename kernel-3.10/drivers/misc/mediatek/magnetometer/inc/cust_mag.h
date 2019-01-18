@@ -17,5 +17,10 @@ struct mag_hw {
 };
 
 extern struct mag_hw* get_cust_mag_hw(void);
+
+#if defined(CONFIG_MTK_YAS537)
+extern struct mag_hw* get_cust_mag_hw_yas(void);
+#endif
+
 struct mag_hw* get_mag_dts_func(const char *, struct mag_hw*);
 #endif 
