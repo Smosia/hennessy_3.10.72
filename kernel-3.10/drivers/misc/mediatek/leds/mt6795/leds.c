@@ -94,7 +94,7 @@ static void backlight_debug_log(int level)
  * custom APIs
 ***************************************************************************/
 extern unsigned int brightness_mapping(unsigned int level);
-
+extern void flashlight_onoff(unsigned int);
 /*****************PWM *************************************************/
 static int time_array_hal[PWM_DIV_NUM] = { 256, 512, 1024, 2048, 4096, 8192, 16384, 32768 };
 static unsigned int div_array_hal[PWM_DIV_NUM] = { 1, 2, 4, 8, 16, 32, 64, 128 };
@@ -239,7 +239,7 @@ int mt_led_set_pwm(int pwm_num, struct nled_setting *led)
 	pwm_setting.PWM_MODE_FIFO_REGS.GUARD_VALUE = 0;
 	pwm_setting.PWM_MODE_FIFO_REGS.GDURATION = 0;
 	pwm_setting.PWM_MODE_FIFO_REGS.WAVE_NUM = 0;
-	pwm_set_spec_config(&pwm_setting);
+	//pwm_set_spec_config(&pwm_setting);
 
 	return 0;
 }
@@ -461,14 +461,14 @@ int mt_backlight_set_pwm(int pwm_num, u32 level, u32 div, struct PWM_config *con
 		LEDS_DEBUG("[%d]backlight_set_pwm:clk_src/div is %d%d\n",
 			   BacklightLevelSupport, pwm_setting.clk_src, pwm_setting.clk_div);
 		if (level > 0 && level < 256) {
-			pwm_set_spec_config(&pwm_setting);
+			//pwm_set_spec_config(&pwm_setting);
 			LEDS_DEBUG
 			    ("[%d]backlight_set_pwm: old mode: thres/data_width is %d/%d\n",
 			     BacklightLevelSupport, pwm_setting.PWM_MODE_OLD_REGS.THRESH,
 			     pwm_setting.PWM_MODE_OLD_REGS.DATA_WIDTH);
 		} else {
 			LEDS_DEBUG("[%d]Error level in backlight\n", BacklightLevelSupport);
-			mt_pwm_disable(pwm_setting.pwm_no, config_data->pmic_pad);
+			//mt_pwm_disable(pwm_setting.pwm_no, config_data->pmic_pad);
 		}
 		return 0;
 
@@ -504,15 +504,15 @@ int mt_backlight_set_pwm(int pwm_num, u32 level, u32 div, struct PWM_config *con
 		if (level > 0 && level <= 32) {
 			pwm_setting.PWM_MODE_FIFO_REGS.GUARD_VALUE = 0;
 			pwm_setting.PWM_MODE_FIFO_REGS.SEND_DATA0 = (1 << level) - 1;
-			pwm_set_spec_config(&pwm_setting);
+			//pwm_set_spec_config(&pwm_setting);
 		} else if (level > 32 && level <= 64) {
 			pwm_setting.PWM_MODE_FIFO_REGS.GUARD_VALUE = 1;
 			level -= 32;
 			pwm_setting.PWM_MODE_FIFO_REGS.SEND_DATA0 = (1 << level) - 1;
-			pwm_set_spec_config(&pwm_setting);
+			//pwm_set_spec_config(&pwm_setting);
 		} else {
 			LEDS_DEBUG("Error level in backlight\n");
-			mt_pwm_disable(pwm_setting.pwm_no, config_data->pmic_pad);
+			//mt_pwm_disable(pwm_setting.pwm_no, config_data->pmic_pad);
 		}
 
 		return 0;
@@ -524,7 +524,7 @@ void mt_led_pwm_disable(int pwm_num)
 {
 	struct cust_mt65xx_led *cust_led_list = get_cust_led_list();
 
-	mt_pwm_disable(pwm_num, cust_led_list->config_data.pmic_pad);
+	//mt_pwm_disable(pwm_num, cust_led_list->config_data.pmic_pad);
 }
 
 void mt_backlight_set_pwm_duty(int pwm_num, u32 level, u32 div, struct PWM_config *config_data)
@@ -773,6 +773,455 @@ int mt_brightness_set_pmic_duty_store(u32 level, u32 div)
 	return -1;
 }
 
+static bool led_flag = true;
+int longcheer_brigness_led( int type,int level)
+{ 
+	printk("longcheer_brigness_color_led_type=%d,level=%d,led_flag=%d",type,level,led_flag);
+	if(type == 0)
+		return -1;
+	
+	if((led_flag == false)&&(level == 0))
+		return 0;	
+
+	switch(type){
+		case 1:
+			mt6331_upmu_set_rg_drv_isink0_ck_pdn(0);//liuchao1
+			mt6331_upmu_set_rg_drv_isink0_ck_cksel(0);//liuchao1
+			mt6331_upmu_set_isink_ch0_mode(PMIC_PWM_0);//ISINK_BREATH_MODE);
+			mt6331_upmu_set_isink_ch0_step(0x0);//8mA
+			mt6331_upmu_set_isink_dim0_duty(12);//15
+			mt6331_upmu_set_isink_dim0_fsel(0);//6323 1KH	
+			mutex_lock(&leds_pmic_mutex);
+			mt6331_upmu_set_rg_drv_32k_ck_pdn(0x0); // Disable power down  
+			if (level) 
+			{
+				mt6331_upmu_set_isink_ch0_en(0x1);
+				mt6331_upmu_set_isink_ch1_en(0x0);
+				mt6331_upmu_set_isink_ch2_en(0x0);
+				led_flag = true;
+			}
+			else 
+			{
+				mt6331_upmu_set_isink_ch0_en(0x0);
+				mt6331_upmu_set_isink_ch1_en(0x0);
+				mt6331_upmu_set_isink_ch2_en(0x0);
+				led_flag = false;
+		
+			}
+			mutex_unlock(&leds_pmic_mutex);
+			break;
+		case 2:
+			mt6331_upmu_set_rg_drv_isink1_ck_pdn(0);
+			mt6331_upmu_set_rg_drv_isink1_ck_cksel(0);
+			mt6331_upmu_set_isink_ch1_mode(PMIC_PWM_0);//ISINK_BREATH_MODE);
+			mt6331_upmu_set_isink_ch1_step(0x1);//8mA
+			mt6331_upmu_set_isink_dim1_duty(8);//15
+			mt6331_upmu_set_isink_dim1_fsel(0);//6323 1KHz
+			mutex_lock(&leds_pmic_mutex);
+			mt6331_upmu_set_rg_drv_32k_ck_pdn(0x0); // Disable power down  
+			if (level) 
+			{
+				mt6331_upmu_set_isink_ch0_en(0x0);
+				mt6331_upmu_set_isink_ch1_en(0x1);
+				mt6331_upmu_set_isink_ch2_en(0x0);
+				led_flag = true;
+			}
+			else 
+			{
+				mt6331_upmu_set_isink_ch0_en(0x0);
+				mt6331_upmu_set_isink_ch1_en(0x0);
+				mt6331_upmu_set_isink_ch2_en(0x0);
+				led_flag = false;
+			}
+			mutex_unlock(&leds_pmic_mutex);
+			break;
+	case 3:
+			mt6331_upmu_set_rg_drv_isink2_ck_pdn(0);
+			mt6331_upmu_set_rg_drv_isink2_ck_cksel(0);
+			mt6331_upmu_set_isink_ch2_mode(PMIC_PWM_0);//ISINK_BREATH_MODE);
+			mt6331_upmu_set_isink_ch2_step(0x1);//8mA
+			mt6331_upmu_set_isink_dim2_duty(30);//15
+			mt6331_upmu_set_isink_dim2_fsel(0);//6323 1KHz
+			mutex_lock(&leds_pmic_mutex);
+			mt6331_upmu_set_rg_drv_32k_ck_pdn(0x0); // Disable power down  
+			if (level) 
+			{
+				mt6331_upmu_set_isink_ch0_en(0x0);
+				mt6331_upmu_set_isink_ch1_en(0x0);
+				mt6331_upmu_set_isink_ch2_en(0x1);
+				led_flag = true;
+			}
+			else 
+			{
+				mt6331_upmu_set_isink_ch0_en(0x0);
+				mt6331_upmu_set_isink_ch1_en(0x0);
+				mt6331_upmu_set_isink_ch2_en(0x0);
+				led_flag = false;
+			}
+			mutex_unlock(&leds_pmic_mutex);
+			break;
+		case 4:
+			mt6331_upmu_set_rg_drv_isink0_ck_pdn(0);
+			mt6331_upmu_set_rg_drv_isink0_ck_cksel(0);
+			mt6331_upmu_set_isink_ch0_mode(PMIC_PWM_0);//ISINK_BREATH_MODE);
+			mt6331_upmu_set_isink_ch0_step(0x2);//8mA
+			mt6331_upmu_set_isink_dim0_duty(12);//15
+			mt6331_upmu_set_isink_dim0_fsel(0);//6323 1KH	
+			mt6331_upmu_set_rg_drv_isink1_ck_pdn(0);
+			mt6331_upmu_set_rg_drv_isink1_ck_cksel(0);
+			mt6331_upmu_set_isink_ch1_mode(PMIC_PWM_0);//ISINK_BREATH_MODE);
+			mt6331_upmu_set_isink_ch1_step(0x2);//8mA
+			mt6331_upmu_set_isink_dim1_duty(8);//15
+			mt6331_upmu_set_isink_dim1_fsel(0);//6323 1KHz
+			mutex_lock(&leds_pmic_mutex);
+			mt6331_upmu_set_rg_drv_32k_ck_pdn(0x0); // Disable power down  
+			if (level) 
+			{
+				mt6331_upmu_set_isink_ch0_en(0x1);
+				mt6331_upmu_set_isink_ch1_en(0x1);
+				mt6331_upmu_set_isink_ch2_en(0x0);
+				led_flag = true;
+			}
+			else 
+			{
+				mt6331_upmu_set_isink_ch0_en(0x0);
+				mt6331_upmu_set_isink_ch1_en(0x0);
+				mt6331_upmu_set_isink_ch2_en(0x0);
+				led_flag = false;
+			}
+			mutex_unlock(&leds_pmic_mutex);
+			break;
+		case 5:
+			mt6331_upmu_set_rg_drv_isink1_ck_pdn(0);
+			mt6331_upmu_set_rg_drv_isink1_ck_cksel(0);
+			mt6331_upmu_set_isink_ch1_mode(PMIC_PWM_0);//ISINK_BREATH_MODE);
+			mt6331_upmu_set_isink_ch1_step(0x2);//8mA
+			mt6331_upmu_set_isink_dim1_duty(12);//15
+			mt6331_upmu_set_isink_dim1_fsel(0);//6323 1KH	
+			mt6331_upmu_set_rg_drv_isink2_ck_pdn(0);
+			mt6331_upmu_set_rg_drv_isink2_ck_cksel(0);
+			mt6331_upmu_set_isink_ch2_mode(PMIC_PWM_0);//ISINK_BREATH_MODE);
+			mt6331_upmu_set_isink_ch2_step(0x2);//8mA
+			mt6331_upmu_set_isink_dim2_duty(15);//15
+			mt6331_upmu_set_isink_dim2_fsel(0);//6323 1KHz
+			mutex_lock(&leds_pmic_mutex);
+			mt6331_upmu_set_rg_drv_32k_ck_pdn(0x0); // Disable power down  s
+			if (level) 
+			{
+				mt6331_upmu_set_isink_ch0_en(0x0);
+				mt6331_upmu_set_isink_ch1_en(0x1);
+				mt6331_upmu_set_isink_ch2_en(0x1);
+				led_flag = true;
+			}
+			else 
+			{
+				mt6331_upmu_set_isink_ch0_en(0x0);
+				mt6331_upmu_set_isink_ch1_en(0x0);
+				mt6331_upmu_set_isink_ch2_en(0x0);
+				led_flag = false;
+			}
+			mutex_unlock(&leds_pmic_mutex);
+			break;
+		case 6:
+			mt6331_upmu_set_rg_drv_isink0_ck_pdn(0);
+			mt6331_upmu_set_rg_drv_isink0_ck_cksel(0);
+			mt6331_upmu_set_isink_ch0_mode(PMIC_PWM_0);//ISINK_BREATH_MODE);
+			mt6331_upmu_set_isink_ch0_step(0x2);//8mA
+			mt6331_upmu_set_isink_dim0_duty(15);//15
+			mt6331_upmu_set_isink_dim0_fsel(0);//6323 1KH	
+			mt6331_upmu_set_rg_drv_isink2_ck_pdn(0);
+			mt6331_upmu_set_rg_drv_isink2_ck_cksel(0);
+			mt6331_upmu_set_isink_ch2_mode(PMIC_PWM_0);//ISINK_BREATH_MODE);
+			mt6331_upmu_set_isink_ch2_step(0x2);//8mA
+			mt6331_upmu_set_isink_dim2_duty(15);//15
+			mt6331_upmu_set_isink_dim2_fsel(0);//6323 1KHz
+			mutex_lock(&leds_pmic_mutex);
+			mt6331_upmu_set_rg_drv_32k_ck_pdn(0x0); // Disable power down  
+			if (level) 
+			{
+				mt6331_upmu_set_isink_ch0_en(0x1);
+				mt6331_upmu_set_isink_ch1_en(0x0);
+				mt6331_upmu_set_isink_ch2_en(0x1);
+				led_flag = true;
+			}
+			else 
+			{
+				mt6331_upmu_set_isink_ch0_en(0x0);
+				mt6331_upmu_set_isink_ch1_en(0x0);
+				mt6331_upmu_set_isink_ch2_en(0x0);
+				led_flag = false;
+			}
+			mutex_unlock(&leds_pmic_mutex);
+			break;
+		case 7:
+			mt6331_upmu_set_rg_drv_isink0_ck_pdn(0);
+			mt6331_upmu_set_rg_drv_isink0_ck_cksel(0);
+			mt6331_upmu_set_isink_ch0_mode(PMIC_PWM_0);//ISINK_BREATH_MODE);
+			mt6331_upmu_set_isink_ch0_step(0x2);//8mA
+			mt6331_upmu_set_isink_dim0_duty(12);//15
+			mt6331_upmu_set_isink_dim0_fsel(0);//6323 1KH	
+			mt6331_upmu_set_rg_drv_isink1_ck_pdn(0);
+			mt6331_upmu_set_rg_drv_isink1_ck_cksel(0);
+			mt6331_upmu_set_isink_ch1_mode(PMIC_PWM_0);//ISINK_BREATH_MODE);
+			mt6331_upmu_set_isink_ch1_step(0x2);//8mA
+			mt6331_upmu_set_isink_dim1_duty(15);//15
+			mt6331_upmu_set_isink_dim1_fsel(0);//6323 1KH	
+			mt6331_upmu_set_rg_drv_isink2_ck_pdn(0);
+			mt6331_upmu_set_rg_drv_isink2_ck_cksel(0);
+			mt6331_upmu_set_isink_ch2_mode(PMIC_PWM_0);//ISINK_BREATH_MODE);
+			mt6331_upmu_set_isink_ch2_step(0x2);//8mA
+			mt6331_upmu_set_isink_dim2_duty(15);//15
+			mt6331_upmu_set_isink_dim2_fsel(0);//6323 1KHz
+			mutex_lock(&leds_pmic_mutex);
+			mt6331_upmu_set_rg_drv_32k_ck_pdn(0x0); // Disable power down  
+			if (level) 
+			{
+				mt6331_upmu_set_isink_ch0_en(0x01);
+				mt6331_upmu_set_isink_ch1_en(0x01);
+				mt6331_upmu_set_isink_ch2_en(0x01);
+				led_flag = true;
+			}
+			else 
+			{
+				mt6331_upmu_set_isink_ch0_en(0x0);
+				mt6331_upmu_set_isink_ch1_en(0x0);
+				mt6331_upmu_set_isink_ch2_en(0x0);
+				led_flag = false;	
+			}
+			mutex_unlock(&leds_pmic_mutex);
+			break;
+		default:
+			mutex_unlock(&leds_pmic_mutex);	
+			return -1;
+			break;
+	}
+	return 0;
+}
+int longcheer_breath_led( int type,int level)
+{ 
+	printk("longcheer_brigness_color_led_type=%d,level=%d,led_flag=%d",type,level,led_flag);
+	if(type == 0)
+		return -1;
+
+	if((led_flag == false)&&(level ==0))
+		return 0;
+
+	mt6331_upmu_set_rg_driver_rst(1);
+	mdelay(10);
+	mt6331_upmu_set_rg_driver_rst(0);	
+	switch(type){
+		case 1:
+			mt6331_upmu_set_rg_drv_isink0_ck_pdn(0);
+			mt6331_upmu_set_rg_drv_isink0_ck_cksel(0);
+			mt6331_upmu_set_isink_ch0_mode(ISINK_BREATH_MODE);//ISINK_BREATH_MODE);
+			mt6331_upmu_set_isink_ch0_step(0x2);//8mA
+			mt6331_upmu_set_isink_breath0_ton_sel(0x08);
+			mt6331_upmu_set_isink_breath0_toff_sel(0x04);
+			mutex_lock(&leds_pmic_mutex);
+			mt6331_upmu_set_rg_drv_32k_ck_pdn(0x0); // Disable power down  
+			if (level) 
+			{
+				mt6331_upmu_set_isink_ch0_en(0x1);
+				mt6331_upmu_set_isink_ch1_en(0x0);
+				mt6331_upmu_set_isink_ch2_en(0x0);
+				led_flag = true;
+			}
+			else 
+			{
+				mt6331_upmu_set_isink_ch0_en(0x0);
+				mt6331_upmu_set_isink_ch1_en(0x0);
+				mt6331_upmu_set_isink_ch2_en(0x0);
+				led_flag = false;
+			}
+			mutex_unlock(&leds_pmic_mutex);
+			break;
+		case 2:
+			mt6331_upmu_set_rg_drv_isink1_ck_pdn(0);
+			mt6331_upmu_set_rg_drv_isink1_ck_cksel(0);
+			mt6331_upmu_set_isink_ch1_mode(ISINK_BREATH_MODE);//ISINK_BREATH_MODE);
+			mt6331_upmu_set_isink_ch1_step(0x1);//8mA
+			mt6331_upmu_set_isink_breath1_ton_sel(0x08);
+			mt6331_upmu_set_isink_breath1_toff_sel(0x04);
+			mutex_lock(&leds_pmic_mutex);
+			mt6331_upmu_set_rg_drv_32k_ck_pdn(0x0); // Disable power down  
+			if (level) 
+			{
+				mt6331_upmu_set_isink_ch0_en(0x0);
+				mt6331_upmu_set_isink_ch1_en(0x1);
+				mt6331_upmu_set_isink_ch2_en(0x0);
+				led_flag = true;
+			}
+			else 
+			{
+				mt6331_upmu_set_isink_ch0_en(0x0);
+				mt6331_upmu_set_isink_ch1_en(0x0);
+				mt6331_upmu_set_isink_ch2_en(0x0);
+				led_flag = false;
+			}
+			mutex_unlock(&leds_pmic_mutex);
+			break;
+	case 3:
+			mt6331_upmu_set_rg_drv_isink2_ck_pdn(0);
+			mt6331_upmu_set_rg_drv_isink2_ck_cksel(0);
+			mt6331_upmu_set_isink_ch2_mode(ISINK_BREATH_MODE);//ISINK_BREATH_MODE);
+			mt6331_upmu_set_isink_ch2_step(0x1);//8mA
+			mt6331_upmu_set_isink_breath2_ton_sel(0x08);
+			mt6331_upmu_set_isink_breath2_toff_sel(0x04);
+			mutex_lock(&leds_pmic_mutex);
+			mt6331_upmu_set_rg_drv_32k_ck_pdn(0x0); // Disable power down  
+			if (level) 
+			{
+				mt6331_upmu_set_isink_ch0_en(0x0);
+				mt6331_upmu_set_isink_ch1_en(0x0);
+				mt6331_upmu_set_isink_ch2_en(0x1);
+				led_flag = true;
+			}
+			else 
+			{
+				mt6331_upmu_set_isink_ch0_en(0x0);
+				mt6331_upmu_set_isink_ch1_en(0x0);
+				mt6331_upmu_set_isink_ch2_en(0x0);
+				led_flag = false;
+			}
+			mutex_unlock(&leds_pmic_mutex);
+			break;
+		case 4:
+			mt6331_upmu_set_rg_drv_isink0_ck_pdn(0);
+			mt6331_upmu_set_rg_drv_isink0_ck_cksel(0);
+			mt6331_upmu_set_isink_ch0_mode(ISINK_BREATH_MODE);//ISINK_BREATH_MODE);
+			mt6331_upmu_set_isink_ch0_step(0x2);//8mA
+			mt6331_upmu_set_isink_breath0_ton_sel(0x08);
+			mt6331_upmu_set_isink_breath0_toff_sel(0x04);
+			mt6331_upmu_set_rg_drv_isink1_ck_pdn(0);
+			mt6331_upmu_set_rg_drv_isink1_ck_cksel(0);
+			mt6331_upmu_set_isink_ch1_mode(ISINK_BREATH_MODE);//ISINK_BREATH_MODE);
+			mt6331_upmu_set_isink_ch1_step(0x2);//8mA
+			mt6331_upmu_set_isink_breath1_ton_sel(0x08);
+			mt6331_upmu_set_isink_breath1_toff_sel(0x04);
+			mutex_lock(&leds_pmic_mutex);
+			mt6331_upmu_set_rg_drv_32k_ck_pdn(0x0); // Disable power down  
+			if (level) 
+			{
+				mt6331_upmu_set_isink_ch0_en(0x1);
+				mt6331_upmu_set_isink_ch1_en(0x1);
+				mt6331_upmu_set_isink_ch2_en(0x0);
+				led_flag = true;
+			}
+			else 
+			{
+				mt6331_upmu_set_isink_ch0_en(0x0);
+				mt6331_upmu_set_isink_ch1_en(0x0);
+				mt6331_upmu_set_isink_ch2_en(0x0);
+				led_flag = false;
+			}
+			mutex_unlock(&leds_pmic_mutex);
+			break;
+		case 5:
+			mt6331_upmu_set_rg_drv_isink1_ck_pdn(0);
+			mt6331_upmu_set_rg_drv_isink1_ck_cksel(0);
+			mt6331_upmu_set_isink_ch1_mode(ISINK_BREATH_MODE);//ISINK_BREATH_MODE);
+			mt6331_upmu_set_isink_ch1_step(0x2);//8mA
+			mt6331_upmu_set_isink_breath1_ton_sel(0x08);
+			mt6331_upmu_set_isink_breath1_toff_sel(0x04);		
+			mt6331_upmu_set_rg_drv_isink2_ck_pdn(0);
+			mt6331_upmu_set_rg_drv_isink2_ck_cksel(0);
+			mt6331_upmu_set_isink_ch2_mode(ISINK_BREATH_MODE);//ISINK_BREATH_MODE);
+			mt6331_upmu_set_isink_ch2_step(0x2);//8mA
+			mt6331_upmu_set_isink_breath2_ton_sel(0x08);
+			mt6331_upmu_set_isink_breath2_toff_sel(0x04);
+			mutex_lock(&leds_pmic_mutex);
+			mt6331_upmu_set_rg_drv_32k_ck_pdn(0x0); // Disable power down  
+			if (level) 
+			{
+				mt6331_upmu_set_isink_ch0_en(0x0);
+				mt6331_upmu_set_isink_ch1_en(0x1);
+				mt6331_upmu_set_isink_ch2_en(0x1);
+				led_flag = true;
+			}
+			else 
+			{
+				mt6331_upmu_set_isink_ch0_en(0x0);
+				mt6331_upmu_set_isink_ch1_en(0x0);
+				mt6331_upmu_set_isink_ch2_en(0x0);
+				led_flag = false;
+			}
+			mutex_unlock(&leds_pmic_mutex);
+			break;
+		case 6:
+			mt6331_upmu_set_rg_drv_isink0_ck_pdn(0);
+			mt6331_upmu_set_rg_drv_isink0_ck_cksel(0);
+			mt6331_upmu_set_isink_ch0_mode(ISINK_BREATH_MODE);//ISINK_BREATH_MODE);
+			mt6331_upmu_set_isink_ch0_step(0x2);//8mA
+			mt6331_upmu_set_isink_breath0_ton_sel(0x08);
+			mt6331_upmu_set_isink_breath0_toff_sel(0x04);		
+			mt6331_upmu_set_rg_drv_isink2_ck_pdn(0);
+			mt6331_upmu_set_rg_drv_isink2_ck_cksel(0);
+			mt6331_upmu_set_isink_ch2_mode(ISINK_BREATH_MODE);//ISINK_BREATH_MODE);
+			mt6331_upmu_set_isink_ch2_step(0x2);//8mA
+			mt6331_upmu_set_isink_breath2_ton_sel(0x08);
+			mt6331_upmu_set_isink_breath2_toff_sel(0x04);
+			mutex_lock(&leds_pmic_mutex);
+			mt6331_upmu_set_rg_drv_32k_ck_pdn(0x0); // Disable power down  
+			if (level) 
+			{
+				mt6331_upmu_set_isink_ch0_en(0x1);
+				mt6331_upmu_set_isink_ch1_en(0x0);
+				mt6331_upmu_set_isink_ch2_en(0x1);
+				led_flag = true;
+			}
+			else 
+			{
+				mt6331_upmu_set_isink_ch0_en(0x0);
+				mt6331_upmu_set_isink_ch1_en(0x0);
+				mt6331_upmu_set_isink_ch2_en(0x0);
+				led_flag = false;
+			}
+			mutex_unlock(&leds_pmic_mutex);
+			break;
+		case 7:
+			mt6331_upmu_set_rg_drv_isink0_ck_pdn(0);
+			mt6331_upmu_set_rg_drv_isink0_ck_cksel(0);
+			mt6331_upmu_set_isink_ch0_mode(ISINK_BREATH_MODE);//ISINK_BREATH_MODE);
+			mt6331_upmu_set_isink_ch0_step(0x2);//8mA
+			mt6331_upmu_set_isink_breath0_ton_sel(0x08);
+			mt6331_upmu_set_isink_breath0_toff_sel(0x04);
+			mt6331_upmu_set_rg_drv_isink1_ck_pdn(0);
+			mt6331_upmu_set_rg_drv_isink1_ck_cksel(0);
+			mt6331_upmu_set_isink_ch1_mode(ISINK_BREATH_MODE);//ISINK_BREATH_MODE);
+			mt6331_upmu_set_isink_ch1_step(0x2);//8mA
+			mt6331_upmu_set_isink_breath1_ton_sel(0x08);
+			mt6331_upmu_set_isink_breath1_toff_sel(0x04);
+			mt6331_upmu_set_rg_drv_isink2_ck_pdn(0);
+			mt6331_upmu_set_rg_drv_isink2_ck_cksel(0);
+			mt6331_upmu_set_isink_ch2_mode(ISINK_BREATH_MODE);//ISINK_BREATH_MODE);
+			mt6331_upmu_set_isink_ch2_step(0x2);//8mA
+			mt6331_upmu_set_isink_breath2_ton_sel(0x08);
+			mt6331_upmu_set_isink_breath2_toff_sel(0x04);
+			mutex_lock(&leds_pmic_mutex);
+			mt6331_upmu_set_rg_drv_32k_ck_pdn(0x0); // Disable power down  
+			if (level) 
+			{
+				mt6331_upmu_set_isink_ch0_en(0x01);
+				mt6331_upmu_set_isink_ch1_en(0x01);
+				mt6331_upmu_set_isink_ch2_en(0x01);
+				led_flag = true;
+			}
+			else 
+			{
+				mt6331_upmu_set_isink_ch0_en(0x0);
+				mt6331_upmu_set_isink_ch1_en(0x0);
+				mt6331_upmu_set_isink_ch2_en(0x0);
+				led_flag = false;	
+			}
+			mutex_unlock(&leds_pmic_mutex);
+			break;
+		default:
+			return -1;
+			break;
+	}
+	return 0;
+}
+
 #ifdef IWLED_SUPPORT
 static void mt_vmled_init(void)
 {
@@ -873,6 +1322,8 @@ int mt_mt65xx_led_set_cust(struct cust_mt65xx_led *cust, int level)
 	struct nled_setting led_tmp_setting = { 0, 0, 0 };
 	int tmp_level = level;
 	static bool button_flag;
+	static int led_type=0;
+	static unsigned int old_level = 0;		//add by lizhiye
 	unsigned int BacklightLevelSupport = Cust_GetBacklightLevelSupport_byPWM();
 	/* Mark out since the level is already cliped before sending in */
 	/*
@@ -891,13 +1342,29 @@ int mt_mt65xx_led_set_cust(struct cust_mt65xx_led *cust, int level)
 	}
 #endif
 
+	//modify begin by lizhiye, 20151211
+	if (strcmp(cust->name, "lcd-backlight") == 0) 
+	{
+		if((old_level != level) || (level == 0))
+		{
+			old_level = level;
+			LEDS_DEBUG("mt65xx_leds_set_cust: set brightness, name:%s, mode:%d, level:%d\n", cust->name, cust->mode, level);
+		}
+	}
+	else
+	{
+		LEDS_DEBUG("mt65xx_leds_set_cust: set brightness, name:%s, mode:%d, level:%d\n",
+		   	cust->name, cust->mode, level);
+	}
+	//modify end by lizhiye, 20151211
+
 	switch (cust->mode) {
 
 	case MT65XX_LED_MODE_PWM:
 		if (strcmp(cust->name, "lcd-backlight") == 0) {
 			bl_brightness_hal = level;
 			if (level == 0) {
-				mt_pwm_disable(cust->data, cust->config_data.pmic_pad);
+				//mt_pwm_disable(cust->data, cust->config_data.pmic_pad);
 
 			} else {
 
@@ -948,8 +1415,27 @@ int mt_mt65xx_led_set_cust(struct cust_mt65xx_led *cust, int level)
 				}
 				button_flag = true;
 			}
+			return mt_brightness_set_pmic(cust->data, level, bl_div_hal);
 		}
-		return mt_brightness_set_pmic(cust->data, level, bl_div_hal);
+		else
+		{
+			led_type =0;
+			if(strcmp(cust->name,"red") == 0)
+				led_type=1;
+			else if(strcmp(cust->name,"green") == 0)
+				led_type=2;
+			else if(strcmp(cust->name,"blue") == 0)
+				led_type=3;
+			else if(strcmp(cust->name,"yellow") == 0)
+				led_type=4;
+			else if(strcmp(cust->name,"cyan") == 0)
+				led_type=5;
+			else if(strcmp(cust->name,"violet") == 0)
+				led_type=6;
+			else if(strcmp(cust->name,"white") == 0)
+				led_type=7;
+			return longcheer_brigness_led(led_type,level);
+		}	
 
 	case MT65XX_LED_MODE_CUST_LCM:
 		if (strcmp(cust->name, "lcd-backlight") == 0) {
@@ -958,7 +1444,7 @@ int mt_mt65xx_led_set_cust(struct cust_mt65xx_led *cust, int level)
 			power_switch(level);
 #endif
 		}
-		LEDS_DEBUG("brightness_set_cust:backlight control by LCM\n");
+		//LEDS_DEBUG("brightness_set_cust:backlight control by LCM\n");
 		return ((cust_brightness_set) (cust->data)) (level, bl_div_hal);
 
 	case MT65XX_LED_MODE_CUST_BLS_PWM:
@@ -969,8 +1455,13 @@ int mt_mt65xx_led_set_cust(struct cust_mt65xx_led *cust, int level)
 #endif
 		}
 		backlight_debug_log(level);
-		return ((cust_set_brightness) (cust->data)) (level);
-
+		LEDS_DEBUG("brightness mapping value:%ld\n",((long)((level*CONFIG_LIGHTNESS_MAPPING_VALUE)/255)));
+		return ((cust_set_brightness) (cust->data)) ( (long)(level*CONFIG_LIGHTNESS_MAPPING_VALUE/255) );
+	case MT65XX_LED_MODE_CUST_FLASH:
+		if (strcmp(cust->name, "flashlight") == 0) {
+			flashlight_onoff(level);
+		}
+		break;
 	case MT65XX_LED_MODE_NONE:
 	default:
 		break;
@@ -1038,7 +1529,7 @@ int mt_mt65xx_blink_set(struct led_classdev *led_cdev,
 	struct mt65xx_led_data *led_data = container_of(led_cdev, struct mt65xx_led_data, cdev);
 	static int got_wake_lock;
 	struct nled_setting nled_tmp_setting = { 0, 0, 0 };
-
+	int led_type=0;
 	/* only allow software blink when delay_on or delay_off changed */
 	if (*delay_on != led_data->delay_on || *delay_off != led_data->delay_off) {
 		led_data->delay_on = *delay_on;
@@ -1052,17 +1543,39 @@ int mt_mt65xx_blink_set(struct led_classdev *led_cdev,
 				nled_tmp_setting.blink_on_time = led_data->delay_on;
 				mt_led_set_pwm(led_data->cust.data, &nled_tmp_setting);
 				return 0;
-			} else if ((led_data->cust.mode == MT65XX_LED_MODE_PMIC)
-				   && (led_data->cust.data == MT65XX_LED_PMIC_NLED_ISINK0
-				       || led_data->cust.data == MT65XX_LED_PMIC_NLED_ISINK1
-				       || led_data->cust.data == MT65XX_LED_PMIC_NLED_ISINK2
-				       || led_data->cust.data == MT65XX_LED_PMIC_NLED_ISINK3)) {
+			} else if ((led_data->cust.mode == MT65XX_LED_MODE_PMIC) && (led_data->cust.data == MT65XX_LED_PMIC_NLED_ISINK3)){
 				nled_tmp_setting.nled_mode = NLED_BLINK;
 				nled_tmp_setting.blink_off_time = led_data->delay_off;
 				nled_tmp_setting.blink_on_time = led_data->delay_on;
 				mt_led_blink_pmic(led_data->cust.data, &nled_tmp_setting);
 				return 0;
-			} else if (!got_wake_lock) {
+			} 
+			else if((led_data->cust.mode == MT65XX_LED_MODE_PMIC) && (led_data->cust.data == MT65XX_LED_PMIC_NLED_ISINK0
+				|| led_data->cust.data == MT65XX_LED_PMIC_NLED_ISINK1 || led_data->cust.data == MT65XX_LED_PMIC_NLED_ISINK2))
+			{
+				nled_tmp_setting.nled_mode = NLED_BLINK;
+				nled_tmp_setting.blink_off_time = led_data->delay_off;
+				nled_tmp_setting.blink_on_time = led_data->delay_on;
+				    LEDS_DEBUG("blink: set brightness, name:%s, mode:%d,\n", 
+								led_data->cust.name, led_data->cust.mode);
+				led_type =0;
+				if(strcmp(led_data->cust.name,"red") == 0)
+					led_type=1;
+				else if(strcmp(led_data->cust.name,"green") == 0)
+					led_type=2;
+				else if(strcmp(led_data->cust.name,"blue") == 0)
+					led_type=3;
+				else if(strcmp(led_data->cust.name,"yellow") == 0)
+					led_type=4;
+				else if(strcmp(led_data->cust.name,"cyan") == 0)
+					led_type=5;
+				else if(strcmp(led_data->cust.name,"violet") == 0)
+					led_type=6;
+				else if(strcmp(led_data->cust.name,"white") == 0)
+					led_type=7;
+				return longcheer_breath_led(led_type,1);
+			}
+			else if (!got_wake_lock) {
 				wake_lock(&leds_suspend_lock);
 				got_wake_lock = 1;
 			}
@@ -1072,14 +1585,32 @@ int mt_mt65xx_blink_set(struct led_classdev *led_cdev,
 				nled_tmp_setting.nled_mode = NLED_OFF;
 				mt_led_set_pwm(led_data->cust.data, &nled_tmp_setting);
 				return 0;
-			} else if ((led_data->cust.mode == MT65XX_LED_MODE_PMIC)
-				   && (led_data->cust.data == MT65XX_LED_PMIC_NLED_ISINK0
-				       || led_data->cust.data == MT65XX_LED_PMIC_NLED_ISINK1
-				       || led_data->cust.data == MT65XX_LED_PMIC_NLED_ISINK2
-				       || led_data->cust.data == MT65XX_LED_PMIC_NLED_ISINK3)) {
+			} 
+			else if ((led_data->cust.mode == MT65XX_LED_MODE_PMIC) && ( led_data->cust.data == MT65XX_LED_PMIC_NLED_ISINK3)){
 				mt_brightness_set_pmic(led_data->cust.data, 0, 0);
 				return 0;
-			} else if (got_wake_lock) {
+			}
+			else if((led_data->cust.mode == MT65XX_LED_MODE_PMIC) && (led_data->cust.data == MT65XX_LED_PMIC_NLED_ISINK0
+				|| led_data->cust.data == MT65XX_LED_PMIC_NLED_ISINK1 || led_data->cust.data == MT65XX_LED_PMIC_NLED_ISINK2))
+			{
+				led_type =0;
+				if(strcmp(led_data->cust.name,"red") == 0)
+					led_type=1;
+				else if(strcmp(led_data->cust.name,"green") == 0)
+					led_type=2;
+				else if(strcmp(led_data->cust.name,"blue") == 0)
+					led_type=3;
+				else if(strcmp(led_data->cust.name,"yellow") == 0)
+					led_type=4;
+				else if(strcmp(led_data->cust.name,"cyan") == 0)
+					led_type=5;
+				else if(strcmp(led_data->cust.name,"violet") == 0)
+					led_type=6;
+				else if(strcmp(led_data->cust.name,"white") == 0)
+					led_type=7;
+				return longcheer_breath_led(led_type,0);
+			} 
+			else if (got_wake_lock) {
 				wake_unlock(&leds_suspend_lock);
 				got_wake_lock = 0;
 			}

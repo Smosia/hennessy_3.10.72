@@ -470,6 +470,18 @@ static ssize_t show_pwm_register(struct device *dev, struct device_attribute *at
 
 static DEVICE_ATTR(pwm_register, 0664, show_pwm_register, store_pwm_register);
 
+//add by dingyin
+struct mt65xx_led_data *g_flash_led_data=NULL;
+extern void led_classdev_suspend(struct led_classdev *led_cdev);
+void flashlight_clear_brightness(void)
+{
+	LEDS_DRV_DEBUG("[flashlight] clear[%s] [%d][%d]\n", g_flash_led_data->cdev.name, g_flash_led_data->cdev.brightness, g_flash_led_data->level);
+	g_flash_led_data->cdev.brightness = 0;
+	g_flash_led_data->level = 0;
+	//led_classdev_suspend(g_flash_led_cdev);
+	return;
+}
+EXPORT_SYMBOL(flashlight_clear_brightness);
 
 /****************************************************************************
  * driver functions
@@ -506,7 +518,11 @@ static int __init mt65xx_leds_probe(struct platform_device *pdev)
 		INIT_WORK(&g_leds_data[i]->work, mt_mt65xx_led_work);
 
 		ret = led_classdev_register(&pdev->dev, &g_leds_data[i]->cdev);
-
+		//add by dingyin
+		if (strcmp(g_leds_data[i]->cdev.name, "flashlight") == 0)
+		{
+			g_flash_led_data = g_leds_data[i];
+		}
 		if (strcmp(g_leds_data[i]->cdev.name, "lcd-backlight") == 0) {
 			rc = device_create_file(g_leds_data[i]->cdev.dev, &dev_attr_duty);
 			if (rc) {
