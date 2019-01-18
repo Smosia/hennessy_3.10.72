@@ -489,8 +489,32 @@ int disp_lcm_set_backlight(disp_lcm_handle *plcm, void *handle, int level)
 	}
 }
 
-
-
+int disp_lcm_enable_cabc(disp_lcm_handle *plcm,  void* handle,int enable)
+{
+	DISPFUNC();
+	LCM_DRIVER *lcm_drv = NULL;
+	
+	if(_is_lcm_inited(plcm))
+	{
+		lcm_drv = plcm->drv;
+		if(lcm_drv->enable_cabc_cmdq)
+		{
+			lcm_drv->enable_cabc_cmdq(handle,enable);
+		}
+		else
+		{
+			DISPERR("FATAL ERROR, lcm_drv->enable_cabc_cmdq is null\n");
+			return -1;
+		}
+		
+		return 0;
+	}
+	else
+	{
+		DISPERR("lcm_drv is null\n");
+		return -1;
+	}
+}
 
 int disp_lcm_ioctl(disp_lcm_handle *plcm, LCM_IOCTL ioctl, unsigned int arg)
 {
