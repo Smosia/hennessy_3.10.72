@@ -635,9 +635,6 @@ static ssize_t devinfo_show(struct device *dev1, struct device_attribute *attr, 
 }
 static DEVICE_ATTR(devinfo, S_IRUGO  | S_IWUSR, devinfo_show, store_value);
 
-
-extern void dump_mmc();
-
 static int consumerir_probe(struct platform_device *plat_dev)
 {
 	struct cdev *c_dev;
@@ -710,7 +707,7 @@ static int consumerir_probe(struct platform_device *plat_dev)
 	}
 
 	CONSUMERIR_ERR("end\n");
-	dump_mmc();
+
 	return 0;
 }
 

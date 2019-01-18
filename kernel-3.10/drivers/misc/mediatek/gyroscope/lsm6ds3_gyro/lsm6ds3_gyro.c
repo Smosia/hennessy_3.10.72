@@ -1542,7 +1542,6 @@ static void lsm6ds3_gyro_late_resume(struct early_suspend *h)
 /*----------------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------------*/
-#include <linux/dev_info.h>
 static int lsm6ds3_gyro_i2c_probe(struct i2c_client *client, const struct i2c_device_id *id)
 {
 	struct i2c_client *new_client;
@@ -1653,16 +1652,6 @@ static int lsm6ds3_gyro_i2c_probe(struct i2c_client *client, const struct i2c_de
 #ifdef LSM6DS3_GYRO_NEW_ARCH
 	lsm6ds3_gyro_init_flag = 0;
 #endif
-
-		struct devinfo_struct *dev = (struct devinfo_struct*)kmalloc(sizeof(struct devinfo_struct), GFP_KERNEL);;
-		dev->device_type = "Gyro";
-		dev->device_vendor = "ST"; 
-		dev->device_ic = "lsm6ds3";
-		dev->device_version = DEVINFO_NULL;
-		dev->device_module = DEVINFO_NULL; 
-		dev->device_info = DEVINFO_NULL;
-		dev->device_used = DEVINFO_USED;	
-		  DEVINFO_CHECK_ADD_DEVICE(dev);
 
 	GYRO_LOG("%s: OK\n", __func__);    
 	return 0;
