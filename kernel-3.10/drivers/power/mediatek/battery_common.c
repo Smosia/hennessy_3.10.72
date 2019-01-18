@@ -3061,6 +3061,7 @@ void BAT_thread(void)
 int bat_thread_kthread(void *x)
 {
 	ktime_t ktime = ktime_set(3, 0);	/* 10s, 10* 1000 ms */
+	u8 count = 0;
 
 	/* Run on a process content */
 	while (1) {

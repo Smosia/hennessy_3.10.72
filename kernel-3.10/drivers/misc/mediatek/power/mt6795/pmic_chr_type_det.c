@@ -47,6 +47,8 @@ extern void Charger_Detect_Init(void);
 extern void Charger_Detect_Release(void);
 extern unsigned int get_pmic_mt6332_cid(void);
 
+int FG_charging_type = CHARGER_UNKNOWN;
+
 #if defined(CONFIG_POWER_EXT) || defined(CONFIG_MTK_FPGA)
 
 int hw_charging_get_charger_type(void)
@@ -333,7 +335,7 @@ int hw_charging_get_charger_type(void)
 
     /********* Finally setting *******************************/
     hw_bc12_done();
-
+    FG_charging_type = CHR_Type_num;
     return CHR_Type_num;
 #endif
 }
