@@ -835,8 +835,7 @@
 			interrupts = <0 87 0x8>;
 			def_speed = <130>;
 		};
-		
-/*	
+
 		I2C4@0x11011000 {
 			compatible = "mediatek,I2C4";
 			cell-index = <4>;
@@ -844,7 +843,6 @@
 			interrupts = <0 88 0x8>;
 			def_speed = <140>;
 		};
-*/
 
 		SPI1@0x1100A000 {
 			compatible = "mediatek,SPI1";
