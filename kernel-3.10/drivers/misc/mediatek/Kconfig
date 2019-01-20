@@ -314,4 +314,5 @@ source "drivers/misc/mediatek/wake_gesture_sensor/Kconfig"
 source "drivers/misc/mediatek/selinux_warning/Kconfig"
 source "drivers/misc/mediatek/usb2jtag/Kconfig"
 source "drivers/misc/mediatek/hall_sensor/Kconfig"
+source "drivers/misc/mediatek/fingerprint/Kconfig"
 endif

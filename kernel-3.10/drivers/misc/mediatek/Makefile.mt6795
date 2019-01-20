@@ -75,6 +75,9 @@ obj-y   += devinfo/
 
 obj-y   += cqdma/
 #obj-y   += eint/
+
+obj-$(CONFIG_MTK_FINGERPRINT)   += fingerprint/
+
 obj-$(CONFIG_TRUSTONIC_TEE_SUPPORT) += gud/
 obj-$(CONFIG_TRUSTONIC_TEE_SUPPORT) += secmem/
 obj-$(CONFIG_MTK_MJC_DRIVER)   += mjc/

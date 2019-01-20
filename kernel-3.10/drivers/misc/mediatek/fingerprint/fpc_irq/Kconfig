@@ -1,0 +1,4 @@
+config FINGERPRINT_FPC_IRQ
+     default y
+     tristate "FPC_IRQ family fingerprint sensor support"	
+     depends on SPI_MASTER

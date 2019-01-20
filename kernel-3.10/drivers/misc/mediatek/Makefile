@@ -250,6 +250,8 @@ obj-$(CONFIG_MTK_AEE_MRDUMP)	+= mrdump/
 obj-$(CONFIG_MTK_WMT_CCCI)	+= wmt_ccci/
 obj-$(CONFIG_MTK_VCOREFS)	+= vcorefs/
 
+obj-$(CONFIG_MTK_FINGERPRINT)   += fingerprint/
+
 obj-$(CONFIG_TRUSTONIC_TEE_SUPPORT) += gud/
 obj-$(CONFIG_TRUSTONIC_TEE_SUPPORT) += secmem/
 obj-$(CONFIG_MTK_C2K_SUPPORT) += c2k_ccci/

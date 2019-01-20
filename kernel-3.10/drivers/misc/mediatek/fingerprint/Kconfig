@@ -1,0 +1,11 @@
+#
+#Fingerprint
+#
+
+config MTK_FINGERPRINT
+	bool "CONFIG_MTK_FINGERPRINT"
+	default n
+
+source "drivers/misc/mediatek/fingerprint/FPC_1022/Kconfig"
+source "drivers/misc/mediatek/fingerprint/fpc_irq/Kconfig"
+source "drivers/misc/mediatek/fingerprint/gf516m/Kconfig"

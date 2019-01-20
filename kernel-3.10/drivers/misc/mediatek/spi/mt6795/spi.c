@@ -468,6 +468,22 @@ static void disable_clk(void)
 	return;
 }
 
+//add by dingyin for TEE spi clk
+void mt_spi_enable_clk(void)
+{
+	enable_clk();
+	return;
+}
+EXPORT_SYMBOL(mt_spi_enable_clk);
+
+void mt_spi_disable_clk(void)
+{
+	disable_clk();
+	return;
+}
+EXPORT_SYMBOL(mt_spi_disable_clk);
+//add by dingyin for TEE spi clk
+
 static int is_pause_mode(struct spi_message	*msg)
 {
 	struct mt_chip_conf *conf;	
