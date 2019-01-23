@@ -47,6 +47,7 @@ static ddp_module_notify g_ddp_notify;
 static volatile int g_aal_hist_available;
 static volatile int g_aal_dirty_frame_retrieved = 1;
 static volatile int g_aal_is_init_regs_valid;
+static volatile int g_aal_backlight_notified = 1023;
 
 static int disp_aal_init(DISP_MODULE_ENUM module, int width, int height, void *cmdq)
 {
@@ -189,6 +190,7 @@ void disp_aal_notify_backlight_changed(int bl_1024)
 	max_backlight = disp_pwm_get_max_backlight(DISP_PWM0);
 	if (bl_1024 > max_backlight)
 		bl_1024 = max_backlight;
+	g_aal_backlight_notified = bl_1024;
 
 	service_flags = 0;
 	if (bl_1024 == 0) {
@@ -311,6 +313,9 @@ int disp_aal_set_param(DISP_AAL_PARAM __user *param, void *cmdq)
 #endif
 		ret = disp_aal_write_param_to_reg(cmdq, &g_aal_param);
 	}
+
+	if (g_aal_backlight_notified == 0)
+		backlight_value = 0;
 
 	if (ret == 0)
 		ret |= disp_pwm_set_backlight_cmdq(DISP_PWM0, backlight_value, cmdq);

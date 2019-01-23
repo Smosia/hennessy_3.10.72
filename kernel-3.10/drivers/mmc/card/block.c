@@ -3367,8 +3367,9 @@ static const struct mmc_fixup blk_fixups[] =
      /*
      * Toshiba eMMC after enable cache feature, write performance drop, because flush operation waste much time
      */
-	MMC_FIXUP(CID_NAME_ANY, CID_MANFID_TOSHIBA, CID_OEMID_ANY, add_quirk_mmc,
-		  MMC_QUIRK_DISABLE_CACHE),
+	// del by dingyin for Toshiba eMMC performence
+	//MMC_FIXUP(CID_NAME_ANY, CID_MANFID_TOSHIBA, CID_OEMID_ANY, add_quirk_mmc,
+	//	  MMC_QUIRK_DISABLE_CACHE),
 #endif
 
 	/* Hynix 4.41 trim will lead boot up failed. */

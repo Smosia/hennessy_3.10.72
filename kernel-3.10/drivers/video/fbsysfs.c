@@ -494,6 +494,28 @@ static ssize_t show_bl_curve(struct device *device,
 }
 #endif
 
+extern int primary_display_enable_cabc(unsigned int enable);
+static ssize_t store_mtk_lcm_enable_cabc(struct device *device, struct device_attribute *attr,
+			  const char *buf, size_t count)
+{
+	char ** last = NULL;
+	unsigned long value = simple_strtoul(buf, last, 0);
+
+	printk("mtk_cabc, buf=%s\n", buf);
+	primary_display_enable_cabc((unsigned int)value);
+
+	return count;
+}
+
+extern int esd_lcm_backlight_flag;
+static ssize_t show_lcm_lcd_backlight(struct device *device,  struct device_attribute *attr, char *buf)
+{
+	ssize_t len = 0;
+	esd_lcm_backlight_flag = 1;
+	len += snprintf(&buf[len], PAGE_SIZE, "esd_lcm_backlight_flag:%d\n", esd_lcm_backlight_flag);
+	return len;
+}
+
 /* When cmap is added back in it should be a binary attribute
  * not a text one. Consideration should also be given to converting
  * fbdev to use configfs instead of sysfs */
@@ -510,6 +532,8 @@ static struct device_attribute device_attrs[] = {
 	__ATTR(stride, S_IRUGO, show_stride, NULL),
 	__ATTR(rotate, S_IRUGO|S_IWUSR, show_rotate, store_rotate),
 	__ATTR(state, S_IRUGO|S_IWUSR, show_fbstate, store_fbstate),
+	__ATTR(mtk_lcd_cabc, S_IRUGO|S_IWUSR, NULL, store_mtk_lcm_enable_cabc),
+	__ATTR(lcd_backlight, S_IRUGO, show_lcm_lcd_backlight, NULL),
 #ifdef CONFIG_FB_BACKLIGHT
 	__ATTR(bl_curve, S_IRUGO|S_IWUSR, show_bl_curve, store_bl_curve),
 #endif

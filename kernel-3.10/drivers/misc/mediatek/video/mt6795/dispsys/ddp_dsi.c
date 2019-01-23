@@ -3732,6 +3732,7 @@ int ddp_dsi_dump(DISP_MODULE_ENUM module, int level)
 	}
 }
 
+int esd_lcm_backlight_flag = 0;
 extern int ddp_mutex_enable(int mutex_id, DDP_SCENARIO_ENUM scenario, void *handle);
 int ddp_dsi_build_cmdq(DISP_MODULE_ENUM module, void *cmdq_trigger_handle, CMDQ_STATE state)
 {
@@ -3916,6 +3917,10 @@ int ddp_dsi_build_cmdq(DISP_MODULE_ENUM module, void *cmdq_trigger_handle, CMDQ_
 
 			DISPCHECK("[DSI]enter cmp read_data0 byte0=0x%x byte1=0x%x byte2=0x%x byte3=0x%x\n",
 				  read_data0.byte0, read_data0.byte1, read_data0.byte2, read_data0.byte3);
+
+			if(esd_lcm_backlight_flag)
+				dsi_params->lcm_esd_check_table[i].cmd = 0x52;
+
 			DISPCHECK
 			    ("[DSI]enter cmp check_table cmd=0x%x,count=0x%x,para_list[0]=0x%x,para_list[1]=0x%x\n",
 			     dsi_params->lcm_esd_check_table[i].cmd, dsi_params->lcm_esd_check_table[i].count,
@@ -3933,8 +3938,15 @@ int ddp_dsi_build_cmdq(DISP_MODULE_ENUM module, void *cmdq_trigger_handle, CMDQ_
 				/* DSI_OUTREG32(NULL, &DSI_REG[dsi_i]->DSI_RX_DATA0,0); */
 				ret = 0;	/* esd pass */
 			} else {
-				ret = 1;	/* esd fail */
-				break;
+				if(esd_lcm_backlight_flag) {
+					ret = 0; // esd pass
+					DISPCHECK("[DSI]enter cmp esd_lcm_backlight_flag=%d\n", esd_lcm_backlight_flag);
+				}
+				else {
+					printk("[esd] esd check fail, then enter recovery\n");	//add by lizhiye, 20151211
+					ret = 1; // esd fail
+					break;
+				}
 			}
 		}
 
