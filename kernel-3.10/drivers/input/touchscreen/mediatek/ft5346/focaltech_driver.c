@@ -146,24 +146,6 @@ static int g_v_magnify_x =TPD_VELOCITY_CUSTOM_X;
 static int g_v_magnify_y =TPD_VELOCITY_CUSTOM_Y;
 
 
-#ifdef CONFIG_DEVINFO_CTP
-#include<linux/dev_info.h>
-static char *Version;
-static void devinfo_ctp_regchar(char *ic, char *module,char * vendor,char *version,char *used)
-{
- 	struct devinfo_struct *s_DEVINFO_ctp =(struct devinfo_struct*) kmalloc(sizeof(struct devinfo_struct), GFP_KERNEL);	
-	s_DEVINFO_ctp->device_type="CTP";
-	s_DEVINFO_ctp->device_module=module;
-	s_DEVINFO_ctp->device_vendor=vendor;
-	s_DEVINFO_ctp->device_ic=ic;
-	s_DEVINFO_ctp->device_info=DEVINFO_NULL;
-	s_DEVINFO_ctp->device_version=version;
-	s_DEVINFO_ctp->device_used=used;
-	printk("ft5346: version:%s\n", version);
-	devinfo_check_add_device(s_DEVINFO_ctp);
-}
-#endif
-
 #define LCT_ADD_TP_VERSION
 #ifdef LCT_ADD_TP_VERSION
 #include <linux/proc_fs.h>
@@ -977,38 +959,6 @@ reset_proc:
 	{
 		DBG("tpd, create_proc_entry ctp_lockdown_status_proc failed\n");
 	}
-#endif
-
-#ifdef CONFIG_DEVINFO_CTP
-{
-	Version = (char *)kmalloc(10, GFP_KERNEL);
-	memset(Version, 0, sizeof(char) * 10);
-	if((tp_version / 16) >= 1)
-	{
-		sprintf(Version, "T%d.%d", tp_version / 16, tp_version % 16);
-	}
-	else
-	{
-		sprintf(Version, "T%d.%d", (tp_version % 16) / 10, (tp_version % 16) % 10);
-	}
-	devinfo_ctp_regchar("mxt336t", "o-film", "Atmel", DEVINFO_NULL, DEVINFO_UNUSED);
-	if(vendor_id == 0x3B)
-	{
-		devinfo_ctp_regchar("ft5346", "BoEn", "FocalTech", Version, DEVINFO_USED);
-		devinfo_ctp_regchar("ft5346", "MutTon", "FocalTech", DEVINFO_NULL, DEVINFO_UNUSED);
-	}
-	else	if(vendor_id == 0x53)
-	{
-		devinfo_ctp_regchar("ft5346", "BoEn", "FocalTech", DEVINFO_NULL, DEVINFO_UNUSED);
-		devinfo_ctp_regchar("ft5346", "MutTon", "FocalTech", Version, DEVINFO_USED);
-	}
-	else
-	{
-		devinfo_ctp_regchar("ft5346", "BoEn", "FocalTech", Version, DEVINFO_USED);
-		devinfo_ctp_regchar("ft5346", "MutTon", "FocalTech", DEVINFO_NULL, DEVINFO_UNUSED);
-	}
-		
-}
 #endif
 
 #ifdef MT_PROTOCOL_B

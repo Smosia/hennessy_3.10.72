@@ -643,31 +643,6 @@ static inline int board_hw_reset(const struct mxt_platform_data *pdata)
 	return -EIO;
 }
 
-#ifdef CONFIG_DEVINFO_CTP
-u32 file_config_crc = 0;
-char file_fw_name[20] = {};
-#endif
-
-#ifdef CONFIG_DEVINFO_CTP
-#include<linux/dev_info.h>
-static char *Version = NULL;
-static void devinfo_ctp_regchar(char *ic, char *module,char * vendor,char *version,char *used)
-{
- 	struct devinfo_struct *s_DEVINFO_ctp =(struct devinfo_struct*) kmalloc(sizeof(struct devinfo_struct), GFP_KERNEL);	
-	s_DEVINFO_ctp->device_type="CTP";
-	s_DEVINFO_ctp->device_module=module;
-	s_DEVINFO_ctp->device_vendor=vendor;
-	s_DEVINFO_ctp->device_ic=ic;
-	s_DEVINFO_ctp->device_info=DEVINFO_NULL;
-	s_DEVINFO_ctp->device_version=version;
-	s_DEVINFO_ctp->device_used=used;
-
-	printk("atmel: version:%s\n", version);
-	devinfo_check_add_device(s_DEVINFO_ctp);
-}
-#endif
-
-
 /*************************sunwf add start (frome atomic_op.h)***********************/
 #if 0
 static inline unsigned long test_flag(unsigned long mask, const volatile unsigned long *addr)
@@ -3183,10 +3158,6 @@ static int mxt_check_reg_init(struct mxt_data *data)
 #endif
 	data_pos += offset;
 
-#ifdef CONFIG_DEVINFO_CTP	//add by lizhiye
-	file_config_crc = config_crc;
-#endif	
-	
 	/* The Info Block CRC is calculated over mxt_info and the object table
 	 * If it does not match then we are trying to load the configuration
 	 * from a different chip or firmware version, so the configuration CRC
@@ -4820,37 +4791,6 @@ static ssize_t mxt_update_fw_store(struct device *dev,
 	error = mxt_update_file_name(dev, &data->fw_name, buf, count, false);
 	if (error)
 		return error;
-
-#ifdef CONFIG_DEVINFO_CTP	//add by lizhiye	   
-	if(strcmp("A4_15_2.2_AA.fw", data->fw_name) == 0)
-	{
-		strcpy(file_fw_name, "2.2.AA");
-	}
-	else if(strcmp("A4_15_2.1_AA.fw", data->fw_name) == 0)
-	{
-		strcpy(file_fw_name, "2.1.AA");
-	}
-	else
-	{
-		strcpy(file_fw_name, "2.2.AA");
-	}
-#endif
-
-#ifdef CONFIG_DEVINFO_CTP
-{
-	static int temp = 0;
-	if(temp == 0)
-	{
-		temp = 1;
-		Version = (char *)kmalloc(16, GFP_KERNEL);
-		memset(Version, 0, sizeof(char) * 16);
-		sprintf(Version, "%s.%06x", file_fw_name, file_config_crc);
-		devinfo_ctp_regchar("mxt336t", "o-film", "Atmel", Version, DEVINFO_USED);
-		devinfo_ctp_regchar("ft5346", "BoEn", "FocalTech", DEVINFO_NULL, DEVINFO_UNUSED);
-		devinfo_ctp_regchar("ft5346", "MutTon", "FocalTech", DEVINFO_NULL, DEVINFO_UNUSED);
-	}
-}
-#endif
 
 	error = mxt_check_firmware_version(data,data->fw_name);
 	if (error)
