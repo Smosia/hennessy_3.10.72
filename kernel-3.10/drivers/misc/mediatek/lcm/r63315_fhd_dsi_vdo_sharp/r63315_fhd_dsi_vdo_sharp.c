@@ -220,14 +220,6 @@ static void lcm_get_params(LCM_PARAMS *params)
 	params->height = FRAME_HEIGHT;
 	params->physical_width = 68;
 	params->physical_height = 121;
-	
-#ifdef CONFIG_DEVINFO_LCM
-	params->module="sharp";
-	params->vendor="sharp";
-	params->ic="R63315";
-	params->info="1080*1920";
-	//params->version=NULL; 
-#endif
 
 #if (LCM_DSI_CMD_MODE)
 	params->dsi.mode   = CMD_MODE;
