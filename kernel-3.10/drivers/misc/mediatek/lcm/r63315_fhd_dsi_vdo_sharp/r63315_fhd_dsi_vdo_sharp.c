@@ -218,8 +218,8 @@ static void lcm_get_params(LCM_PARAMS *params)
 
 	params->width  = FRAME_WIDTH;
 	params->height = FRAME_HEIGHT;
-	params->physical_width = 68;
-	params->physical_height = 121;
+	params->physical_width = 68000;
+	params->physical_height = 121000;
 
 #if (LCM_DSI_CMD_MODE)
 	params->dsi.mode   = CMD_MODE;
